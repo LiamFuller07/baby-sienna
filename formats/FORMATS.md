@@ -52,7 +52,7 @@ A record holds `locator` (unique in the file, in its kind's grammar), `text` (ve
 | Kind | Inputs (examples) | One record per | Locator | Spans a citation may use | Context | Printed as |
 |---|---|---|---|---|---|---|
 | `sheet` | .csv, .xlsx (.xls is unchecked) | non-empty cell | `Steps!C3` | `Steps!C2:D4` · `Steps row 5` · `Steps rows 2-4` | row 1 of the column | Workbook |
-| `document` | .md, .txt, .docx (.pdf, email and images are unchecked) | paragraph, heading, list item or table row; in an email export, one message | `¶4`, or `p2 ¶3` when the file has pages | `¶2-4` · `p2` · `p2 ¶1-3` | the nearest heading; for a message, its author | Document |
+| `document` | .md, .txt, .docx, .eml; .pdf with the optional reader; images remain unchecked | text block, paragraph, heading, list item or table row; email headers and selected body | `¶4`, or `p2 ¶3` when the file has pages | `¶2-4` · `p2` · `p2 ¶1-3` | the nearest heading when available | Document |
 | `transcript` | timed .txt, .vtt, .srt (audio is unchecked) | turn | `00:00:31`, or `00:00:31.400` | `00:00:05-00:00:47` | the speaker | Meeting notes |
 | `web` | a saved .html page (.mhtml is unchecked) | paragraph, heading, list item or table row | `¶3` | `¶2-3` | the nearest heading | Website |
 
@@ -113,7 +113,7 @@ A record holds `locator` (unique in the file, in its kind's grammar), `text` (ve
 
 | Section | Element citations | Inline |
 |---|---|---|
-| process-map | `cite` on systems, lanes, nodes, gaps and clarifications. Groups and edges carry none | `[SRC locator]` markers in gap and clarification prose: a grounded citation of the card, printed in place |
+| process-map | `cite` on systems, lanes, nodes, gaps and clarifications; optional `cite` on edges. Groups carry none | `[SRC locator]` markers in gap and clarification prose: a grounded citation of the card, printed in place |
 | process-map-ai-opportunity | `cite` on each `ai[]` item | none: `does` and `agentic` are our design |
 | document | — | `[SRC locator]` brackets in a sentence, and Grounded, Inferred and Gap lines straight after a block (section 4) |
 | proposal | `cite: [{source, locator?}]` on claims | the builder draws `[D1 ¶3]` markers from `cite` (section 5) |
@@ -131,7 +131,7 @@ A record holds `locator` (unique in the file, in its kind's grammar), `text` (ve
 | process-map · node.inferred | inferred | inferred | map-7: the reading printed on the card is at most cardReadingMax characters |
 | process-map · node.gap | grounded, inferred | grounded | the step exists in the sources; its gap card proves what is missing (map-6) |
 | process-map · group | none | nothing | no citation: a view is our framing of the board |
-| process-map · edge | none | nothing | no citation: the nodes at its ends hold the evidence. A branch label's numbers come from a record its decision cites |
+| process-map · edge | grounded, inferred | nothing | Optional connection evidence is checked and printed separately from the endpoints. Existing maps remain compatible. |
 | process-map · gap | grounded, inferred, absent | absent **and** grounded | a cited weakness is not a gap: a gap proves with an absent search what the sources do not say; a weakness the sources state is a clarification |
 | process-map · clarification | grounded, inferred, absent | grounded | the grounded citations are what the sources show |
 | process-map-ai-opportunity · ai.named | grounded, inferred | grounded, with a quote holding an AI term | ai-3: the client asked for it in their own words, in a source that is not web |

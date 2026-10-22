@@ -22,8 +22,8 @@
     "document": {
       "label": "Document",
       "deckKind": "document",
-      "read": [".md", ".txt", ".docx"],
-      "unchecked": [".pdf", ".doc", ".odt", ".rtf", ".pptx", ".eml", ".msg", ".mbox", ".png", ".jpg", ".jpeg"],
+      "read": [".md", ".txt", ".docx", ".pdf", ".eml", ".vsdx"],
+      "unchecked": [".doc", ".odt", ".rtf", ".pptx", ".msg", ".mbox", ".png", ".jpg", ".jpeg"],
       "record": "^(?:p([1-9][0-9]{0,4}) )?¶([1-9][0-9]{0,5})$",
       "spans": {
         "paragraphs": "^(?:p([1-9][0-9]{0,4}) )?¶([1-9][0-9]{0,5})-([1-9][0-9]{0,5})$",
@@ -69,7 +69,7 @@
       "node.inferred": {"allowed": ["inferred"], "require": [["inferred"]], "note": "map-7: the reading printed on the card is at most cardReadingMax characters"},
       "node.gap":      {"allowed": ["grounded", "inferred"], "require": [["grounded"]], "note": "the step exists in the sources; its gap card proves what is missing (map-6)"},
       "group":         {"allowed": [], "require": [], "note": "no citation: a view is our framing of the board"},
-      "edge":          {"allowed": [], "require": [], "note": "no citation: the nodes at its ends hold the evidence. A branch label's numbers come from a record its decision cites"},
+      "edge":          {"allowed": ["grounded", "inferred"], "require": [], "note": "Optional connection evidence is checked and printed separately from the endpoints. Existing maps remain compatible."},
       "gap":           {"allowed": ["grounded", "inferred", "absent"], "require": [["absent"], ["grounded"]], "note": "a cited weakness is not a gap: a gap proves with an absent search what the sources do not say; a weakness the sources state is a clarification"},
       "clarification": {"allowed": ["grounded", "inferred", "absent"], "require": [["grounded"]], "note": "the grounded citations are what the sources show"}
     },

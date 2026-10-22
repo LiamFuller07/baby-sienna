@@ -36,6 +36,13 @@ a{color:inherit}
 /* ---------------------------------------------------------------- page */
 .pm-page{padding:28px 28px 32px}
 .pm-wrap{max-width:1384px;margin:0 auto}
+.pm-review{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+.pm-review>.pm-evidence{display:flex;flex-direction:column;max-height:calc(100vh - 36px);overflow:auto;position:sticky;top:18px;margin-top:24px}
+.pm-review .pm-src-list>li{grid-template-columns:1fr}
+.pm-review .pm-src-used{text-align:left}
+.pm-review .pm-src-body{overflow-wrap:anywhere}
+@media(max-width:1000px){.pm-review{display:block}.pm-review>.pm-evidence{position:static;max-height:none}}
+@media print{.pm-review{display:block}.pm-review>.pm-evidence{position:static;max-height:none;overflow:visible}}
 
 /* header */
 .pm-head{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:18px 40px;align-items:start}
@@ -249,6 +256,7 @@ a{color:inherit}
     <!--slot:legend-end-->
   </aside>
 </header>
+<div class="pm-review">
 <!--bs:shell-->
 <section class="pm-board-sec" id="{{pre}}board" data-pm-board aria-label="{{label}}">
   <div class="pm-bar"><!--slot:toolbar--><div class="pm-seg" role="group" aria-label="Zoom"><button type="button" data-zoom="fit" aria-pressed="{{fit}}">Fit</button><button type="button" data-zoom="100" aria-pressed="{{full}}">100%</button></div></div>
@@ -260,6 +268,7 @@ a{color:inherit}
 </section>
 <!--/bs:shell-->
 <section class="pm-evidence" aria-label="Evidence"><!--slot:evidence-start-->{{evidence}}</section>
+</div>
 {{footer}}
 </div></main>
 <script id="pm-script">

@@ -606,6 +606,66 @@ class MapModel:
         return out
 
     # -- routing (README section 2, the case table) and build-6
+    def clear_route(self, points):
+        return not any(n.crosses(a, b) for a, b in zip(points, points[1:]) for n in self.nodes)
+
+    def free_pill(self, points, width, placed):
+        """Longest horizontal stretch clear of cards, badges, detail text and earlier labels."""
+        best = None
+        for a, b in zip(points, points[1:]):
+            if a[1] != b[1]:
+                continue
+            y, lo, hi = a[1], min(a[0], b[0]), max(a[0], b[0])
+            blocked = []
+            for n in self.nodes:
+                if n.dec and abs(y - n.cy) < HALF + 9:
+                    blocked.append((n.cx - HALF, n.cx + HALF))
+                elif not n.dec and n.y - 9 < y < n.y + CH + 9:
+                    blocked.append((n.x, n.x + CW))
+            for bx0, by0, bx1, by1 in self.marks() + placed:
+                if by0 - 9 < y < by1 + 9:
+                    blocked.append((bx0, bx1))
+            free = [(lo, hi)]
+            for c0, c1 in sorted(blocked):
+                free = [(x, z) for f0, f1 in free for x, z in
+                        ([(f0, f1)] if c1 <= f0 or c0 >= f1 else
+                         ([(f0, c0)] if c0 > f0 else []) + ([(c1, f1)] if c1 < f1 else []))]
+            for f0, f1 in free:
+                if f1 - f0 >= width + 16 and (best is None or f1 - f0 > best[2] - best[1]):
+                    best = (y, f0, f1)
+        return best
+
+    def detour(self, source, target, width=0, placed=None):
+        """Deterministic orthogonal fallback through column gaps and row channels.
+
+        Endpoints keep their identity and direction. Never change graph edges or
+        relax collision checks just to get a page to build.
+        """
+        placed = placed or []
+        channels = sorted({max(self.lanes_top + 4, min(self.H - 12, y))
+                           for n in self.nodes for y in (n.y - 24, n.y - 12, n.y + CH + 12, n.y + CH + 24)})
+        choices = []
+        for sp in ('R', 'L'):
+            a = source.port(sp)
+            sx = source.x + CW + 16 if sp == 'R' else source.x - 12
+            for tp in ('L', 'R'):
+                end = target.port(tp)
+                tx = target.x - 12 if tp == 'L' else target.x + CW + 16
+                for y in channels:
+                    pts = simplify([a, (sx, a[1]), (sx, y), (tx, y), (tx, end[1]), end])
+                    if not self.clear_route(pts):
+                        continue
+                    pill = self.free_pill(pts, width, placed) if width else None
+                    if width and pill is None:
+                        continue
+                    cost = sum(abs(b[0]-a[0]) + abs(b[1]-a[1]) for a,b in zip(pts,pts[1:]))
+                    cost += (16 if sp == 'L' else 0) + (16 if tp == 'R' else 0)
+                    choices.append((cost, sp, tp, y, pts, pill))
+        if not choices:
+            return None
+        best = min(choices, key=lambda c: c[:4])
+        return best[4], best[5]
+
     def route(self):
         ix = {n.id: n.i for n in self.nodes}
         used_ports = {n.id: set() for n in self.nodes}
@@ -648,6 +708,10 @@ class MapModel:
                         pts = [v, (s.cx, ch), (gx, ch), (gx, t.cy), tl]
             pts = simplify(pts)
             name = f"{self.where}#/edges/{k} ({s.id} -> {t.id})"
+            if not self.clear_route(pts):
+                alternative = self.detour(s, t)
+                if alternative:
+                    pts = alternative[0]
             for a, b in zip(pts, pts[1:]):
                 for n in self.nodes:
                     if n.crosses(a, b):
@@ -697,6 +761,10 @@ class MapModel:
                     if best is None or f1 - f0 > best[2] - best[1]:
                         best = (y, f0, f1)
             name = f"{self.where}#/edges/{r['k']} ({e['from']} -> {e['to']}, “{label}”)"
+            if best is None or best[2] - best[1] < w + 16:
+                alternative = self.detour(self.N[e['from']], self.N[e['to']], w, placed)
+                if alternative:
+                    r['pts'], best = alternative
             if best is None or best[2] - best[1] < w + 16:
                 have = 0 if best is None else best[2] - best[1]
                 errors.append(f"build-6 {name}: the pill needs a free stretch of {num(w + 16)} units and has {num(have)} "
@@ -1113,7 +1181,9 @@ def sources_html(reg, target=None, only=None):
             else:
                 recs = e["recs"]
                 lis = "".join(f"<li>{rec_line(r)}</li>" for r in recs[:10])
-                more = f'<li>and {len(recs) - 10} more</li>' if len(recs) > 10 else ""
+                remaining = ''.join(f'<li>{rec_line(r)}</li>' for r in recs[10:])
+                more = (f'<li><details><summary>{len(recs) - 10} more records</summary>'
+                        f'<ul>{remaining}</ul></details></li>') if remaining else ""
                 body = f'{plural(len(recs), "record")}<ul class="pm-src-recs">{lis}{more}</ul>'
             used = ", ".join(f'<a href="#{href}">{esc(name)}</a>' if href else esc(name) for name, href in e["used"])
             rows += (f'<li id="{e["anchor"]}"{t}><span class="pm-src-loc">{esc(loc)}</span>'
@@ -1509,7 +1579,15 @@ def render_page(mm, am, ui=None, ai_ui=None):
         slots["script"] = F["script"]
         slots["evidence-start"] = am.card_html(F)
     shell = shell_html(shell_tpl, mm, parts, board_label(mm), slots=slots)
-    evidence = gaps_html(mm) + clar_html(mm) + sources_html(mm.reg)
+    connections = ""
+    for i, edge in enumerate(mm.edges, 1):
+        label = f'{edge["from"]} → {edge["to"]}'
+        pairs = mm.reg.cites(edge.get("cite", []), (label, mm.pre + f"connection-{i}"))
+        if pairs:
+            connections += f'<li id="{mm.pre}connection-{i}"><b>{esc(label)}</b>{prov_html(pairs)}</li>'
+    connection_card = ('<article class="pm-ev-card"><h2>Connection evidence</h2><ol class="pm-ev-list">'
+                       + connections + '</ol></article>') if connections else ""
+    evidence = sources_html(mm.reg) + connection_card + gaps_html(mm) + clar_html(mm)
     page = tpl.replace("<!--bs:shell-->\n" + shell_tpl + "<!--/bs:shell-->\n", shell)
     page = fill(page, title=esc(title), pre=mm.pre, header=header_html(mm.meta, mm.m.get("systems", []), kicker, title, subtitle),
                 evidence=evidence, footer=footer_html(mm.meta, date))

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "id": "source-fused-discovery-v1",
+  "domain": "source.shop",
+  "excludedHosts": [
+    "sales-rgp.source.shop",
+    "sales-genesis.source.shop"
+  ],
+  "source": {
+    "repository": "QuickFind-Limited/SourceCore",
+    "revision": "84e67dd81a569c8c21503b8da0b7c489bd87603a",
+    "theme": "PartnerCentre/app/globals.fused.css"
+  },
+  "coreTokens": {
+    "--bg-page": "#faf9f6",
+    "--bg-surface": "#ffffff",
+    "--primitive-cream-100": "#faf9f6",
+    "--bg-subtle": "#f3efe7",
+    "--bg-sunken": "#e8e3d8",
+    "--fg-base": "#111111",
+    "--fg-muted": "#626260",
+    "--fg-subtle": "#7b7b78",
+    "--fg-disabled": "#a3a39f",
+    "--border-base": "#dedbd6",
+    "--accent": "#ff5600",
+    "--fg-success": "#047857",
+    "--fg-danger": "#b01515",
+    "--data-categorical-blue": "#005be3",
+    "--radius-sm": "4px",
+    "--radius-md": "8px",
+    "--radius-lg": "14px",
+    "--shadow-xs": "0 1px 0 rgba(17, 17, 17, 0.04)",
+    "--shadow-md": "0 4px 16px -4px rgba(17, 17, 17, 0.08), 0 0 0 1px rgba(17, 17, 17, 0.06)",
+    "--shadow-lg": "0 24px 48px -16px rgba(17, 17, 17, 0.16), 0 0 0 1px rgba(17, 17, 17, 0.06)"
+  },
+  "adapters": {
+    "sourcecore": {},
+    "discovery": {
+      "--bg-page": "--canvas",
+      "--bg-surface": "--surface",
+      "--primitive-cream-100": "--surface-2",
+      "--bg-subtle": "--surface-3",
+      "--bg-sunken": "--accent-100",
+      "--fg-base": "--text",
+      "--fg-muted": "--text-muted",
+      "--fg-subtle": "--text-subtle",
+      "--fg-disabled": "--text-faint",
+      "--border-base": "--line",
+      "--accent": "--accent-500",
+      "--fg-success": "--good-fg",
+      "--fg-danger": "--danger-fg",
+      "--data-categorical-blue": "--info-fg",
+      "--radius-sm": "--radius-sm",
+      "--radius-md": "--radius-md",
+      "--radius-lg": "--radius-lg",
+      "--shadow-xs": "--shadow-1",
+      "--shadow-md": "--shadow-2",
+      "--shadow-lg": "--shadow-3"
+    }
+  }
+}

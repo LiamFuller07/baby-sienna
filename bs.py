@@ -29,6 +29,8 @@ Each finding is one line:  LEVEL  RULE  file#/json/pointer (or file:line)  messa
 import argparse
 import csv
 import datetime
+import email.policy
+from email.parser import BytesParser
 import hashlib
 import html
 import importlib.util
@@ -753,6 +755,10 @@ def extract_units(kind, path):
     ext = path.suffix.lower()
     if ext not in KINDS[kind]["read"]:
         return None
+    if kind == "document" and ext in (".pdf", ".vsdx"):
+        return read_pdf(path)
+    if kind == "document" and ext == ".eml":
+        return read_eml(path)
     if kind == "sheet":
         return sheet_units(read_xlsx(path) if ext in (".xlsx", ".xlsm") else read_csv(path, "\t" if ext == ".tsv" else ","))
     if kind == "transcript":
@@ -762,6 +768,66 @@ def extract_units(kind, path):
     if ext == ".docx":
         return docx_units(path)
     return md_units(read_text(path))
+
+
+def chunks(text, limit=4000):
+    """Lossless, bounded units. Splitting never deletes whitespace or source text."""
+    return [text[i:i + limit] for i in range(0, len(text), limit)]
+
+
+def read_pdf(path):
+    """Embedded text only; diagram geometry and image-only pages require review."""
+    if not path.read_bytes().startswith(b"%PDF-"):
+        raise ReadError("is not PDF bytes (native Visio is not supported)")
+    try:
+        import pymupdf
+    except ImportError:
+        raise ReadError("requires the optional PDF reader: install requirements-pdf.txt")
+    try:
+        with pymupdf.open(stream=path.read_bytes(), filetype="pdf") as doc:
+            if doc.needs_pass:
+                raise ReadError("is encrypted and cannot be read")
+            units = []
+            for page in doc:
+                paragraph = 0
+                for block in page.get_text("blocks", sort=False):
+                    if block[6] != 0:
+                        continue
+                    for text in chunks(block[4]):
+                        if text.strip():
+                            paragraph += 1
+                            units.append((f"p{page.number + 1} ¶{paragraph}", text, None))
+            if not units:
+                raise ReadError("has no embedded text; retain the original for visual transcription")
+            return units
+    except ReadError:
+        raise
+    except Exception as e:
+        raise ReadError(f"cannot be read as PDF ({type(e).__name__})")
+
+
+def read_eml(path):
+    """Headers and the selected message body; attachment binaries remain in the original."""
+    try:
+        msg = BytesParser(policy=email.policy.default).parsebytes(path.read_bytes())
+        texts = [f"{key}: {value}" for key, value in msg.items()]
+        body = msg.get_body(preferencelist=("plain", "html"))
+        if body is not None:
+            payload = body.get_content()
+            if not isinstance(payload, str):
+                raise ReadError("has a non-text message body")
+            if body.get_content_subtype() == "html":
+                texts.extend(t for _, t, _ in html_units(payload))
+            else:
+                texts.append(payload)
+        units = [part for text in texts for part in chunks(text) if part.strip()]
+        if not units:
+            raise ReadError("contains no readable headers or body")
+        return [(f"¶{i}", text, None) for i, text in enumerate(units, 1)]
+    except ReadError:
+        raise
+    except (ValueError, LookupError, UnicodeError) as e:
+        raise ReadError(f"cannot decode the email ({type(e).__name__})")
 
 
 # ================================================================== records
@@ -868,6 +934,8 @@ def check_records(ws, rep, schemas):
 def check_verbatim(rep, where, data, src, f, locs):
     kind, ext = data["kind"], f.suffix.lower()
     k = KINDS[kind]
+    if ext in (".pdf", ".vsdx", ".eml") and data["coverage"] != "partial":
+        rep.err("rec-5", where + "#/coverage", "PDF text excludes visual semantics; email text excludes attachment contents", RECONVERT + " with --partial")
     if ext not in k["read"] + k["unchecked"]:
         rep.err("rec-5", where + "#/kind", f"a {ext or 'extensionless'} file cannot be a {kind} source",
                 f"{kind} inputs: {', '.join(k['read'] + k['unchecked'])}")
@@ -1211,11 +1279,14 @@ def check_map(rep, path, data, idx, schemas):
     seen_e = set()
     for i, e in enumerate(edges):
         w, kind, a = f"{where}#/edges/{i}", e.get("kind", "flow"), node_by[e["from"]]
+        evs = eval_cites(rep, w + "/cite", e.get("cite"), ctx)
+        check_category(rep, w, "process-map", "edge", evs)
         if e["from"] == e["to"]:
             rep.err("map-5", w, "an edge joins two different nodes")
-        if (e["from"], e["to"]) in seen_e:
+        edge_key = (e["from"], e["to"], e.get("kind", "flow"), e.get("label", ""))
+        if edge_key in seen_e:
             rep.err("map-5", w, f"edge {e['from']} -> {e['to']} is listed twice")
-        seen_e.add((e["from"], e["to"]))
+        seen_e.add(edge_key)
         if kind == "conditional" and a.get("kind") != "decision":
             rep.err("map-4", w, f"a conditional edge leaves a decision; {e['from']} is a step")
         if kind != "conditional" and a.get("kind") == "decision":
@@ -1224,8 +1295,14 @@ def check_map(rep, path, data, idx, schemas):
             check_prose(rep, w + "/label", e["label"], pool(node_evs[e["from"]]), ctx, "label")
     for d in [n for n in nodes if n.get("kind") == "decision"]:
         labels = [e["label"] for e in edges if e["from"] == d["id"] and e.get("kind") == "conditional"]
-        if len(labels) < 2 or len(set(labels)) != len(labels):
+        incomplete = d.get("branchesIncomplete", False)
+        if incomplete and not any(d["id"] in c["nodes"] for c in clars):
+            rep.err("map-4", f"{where}#/nodes/{node_ix[d['id']]}", "an incomplete decision needs a cited clarification")
+        if (len(labels) < 2 and not incomplete) or len(set(labels)) != len(labels):
             rep.err("map-4", f"{where}#/nodes/{node_ix[d['id']]}", f"decision {d['id']} needs two or more conditional branches with different labels")
+    for n in nodes:
+        if n.get("branchesIncomplete") and n.get("kind") != "decision":
+            rep.err("map-4", f"{where}#/nodes/{node_ix[n['id']]}", "only a decision can have incomplete branches")
     # cards (map-6)
     in_cards = {}
     for i, g in enumerate(gaps):
@@ -1867,6 +1944,8 @@ def convert(ws, rel, a):
         raise SystemExit(f"cannot run: {rel} {e}")
     if units is None:
         raise SystemExit(f"cannot run: no reader for {f.suffix} as {a.kind}; the converter agent converts it into this form")
+    if f.suffix.lower() in (".pdf", ".vsdx", ".eml") and not a.partial:
+        raise SystemExit("cannot run: use --partial; PDF text excludes visual semantics, email text excludes attachment contents")
     data = {"id": a.id, "title": a.title, "kind": a.kind, "captured": a.captured}
     data.update({k: v for k, v in (("detail", a.detail), ("url", a.url)) if v})
     if a.legacy:

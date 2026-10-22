@@ -27,6 +27,58 @@ python3 bs.py build examples           # build every page into examples/out/
 
 Python 3.8+ standard library only. A real engagement lives in `work/<engagement>/` (gitignored); see AGENTS.md.
 
+### Running a real evidence folder
+
+Keep originals in an ignored workspace and retain their received filenames. Run
+`status`, convert each input, author cited sections, then `check` and `build`.
+Email `.eml` files now have a standard-library reader. PDF embedded-text extraction
+uses the optional, pinned local reader in `requirements-pdf.txt`:
+
+```sh
+python3 -m pip install -r requirements-pdf.txt
+python3 bs.py convert WS inputs/process.pdf --id PDF1 --kind document --title "Received process" --captured 2026-10-22 --partial
+python3 bs.py check WS
+python3 bs.py build WS
+python3 scripts/build_workspace_menu.py WS
+python3 -m http.server 4899 --bind 127.0.0.1 --directory WS/out
+```
+
+Open the local server's root for the material menu. It filters by material type,
+source type and title, and embeds the original report templates. Empty material
+types are hidden. Maps show citations in a right-hand panel on wide screens,
+with full span text available through expandable source entries.
+
+PDF and email records **must be partial**: PDF text does not prove arrows or
+image content; email extraction excludes binary attachment contents. Original
+bytes remain intact. A `.vsdx` file is readable only when its bytes are actually
+PDF; this is not native Visio support. Images remain visibly UNCHECKED and need
+visual transcription/review. `DONE` means the pages are built and structurally
+valid, not that warnings or human evidence-review duties have disappeared.
+
+Connections can now carry their own optional `cite` list, independent of node
+citations. Retain direct evidence for the route itself; endpoint text alone does
+not establish sequence. Missing decision branches may use `branchesIncomplete:
+true`, but require a cited clarification. Map-level source annotations use a
+clarification with an empty `nodes` list, without becoming fake process steps.
+
+The map router retains the template's normal routes and uses checked orthogonal
+detours for obstructed lines or labels. It never deletes an edge to make it fit.
+Distinct labelled branches may reach the same destination; exact duplicate
+edges remain invalid. Larger processes still need separate maps with explicit
+continuations.
+
+Verification without a browser:
+
+```sh
+python3 bs.py check --selftest --builtin
+python3 -m unittest discover -s tests -v
+python3 scripts/source_design.py check --site http://127.0.0.1:4899 --local-source-app --css design-system/workspace/source-tokens.css
+```
+
+The menu is a local Source application using the pinned Fused tokens and bundled
+Geist font. The report templates retain their own design. Token checks, CLI
+checks and deterministic builds do not establish browser acceptance or deployment.
+
 ## Layout
 
 ```

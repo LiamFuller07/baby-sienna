@@ -40,7 +40,7 @@ Arrays are in display order: lanes top to bottom, groups left to right, nodes gr
 - An edge may cross groups and lanes; a line that crosses lanes is the hand-over.
 
 **Citations on a map** (rules in `formats/FORMATS.md` section 2.3):
-- Nodes, systems, lanes, gaps and clarifications cite; groups and edges do not.
+- Nodes, systems, lanes, gaps and clarifications cite; groups do not. Edges may carry their own `cite` list, checked and printed in the Connection evidence card. Endpoint citations alone do not establish a connection.
 - Gap and clarification prose may hold `[SRC locator]` markers, which count as the card's grounded citations.
 - A `quote` on a map citation is a check aid (cite-2); the board does not print it.
 - Where it prints: a node's first grounded address is on its detail line, and a decision's under its bottom vertex. Card citations are in the card's provenance line. Everything else (systems, lanes, a node's other addresses) is printed as a Sources entry whose "Used by" names the element (build-4).
@@ -79,6 +79,17 @@ The formats fix the layout, so one map always gives the same board (build-3).
 | feedback (target listed earlier) | dashed; from the source's top edge centre, up into the channel 10 units above the source row, along it, then into the target's top edge centre (its bottom edge centre when the target sits higher, so the line never crosses it) |
 
 A branch pill shows the label only. It is centred on the line's longest horizontal stretch. If a line would cross a card, or a pill would not fit its stretch with 16 units to spare, the build fails and names the edge (build-6). The fix is to shorten the label or set `col`.
+
+Before failing, the router now searches deterministic detours through column
+gaps and row channels. A detour must pass the same card-collision and free-label
+checks as the normal route. Graph endpoints and direction never change.
+Two differently labelled branches may share a destination; identical edges
+remain invalid. A decision with unavailable branches may set
+`branchesIncomplete: true` only with a cited clarification attached to it.
+Map-level source notes can be clarifications with an empty `nodes` list.
+Sources are shown first in a right-hand evidence panel on wide screens, and
+below the map on small screens and in print. Large source spans expand to show
+all records instead of dropping everything after the first ten.
 
 **Room the AI layer relies on.**
 - 20 units of lane padding below each card row.

@@ -38,3 +38,11 @@ python3 bs.py build   WS [SECTION/NAME | data-received]
 ## Done means
 
 `python3 bs.py check <ws>` exits 0, `python3 bs.py build <ws>` exits 0, and `python3 bs.py status <ws>` says DONE.
+
+Warnings and evidence-review limitations remain visible even at DONE. PDF and
+email conversions use `--partial`. Preserve connection citations independently
+of node citations, and never invent a missing branch to satisfy a layout rule.
+After building, `python3 scripts/build_workspace_menu.py <ws>` creates the local
+material selector. Its application chrome uses the pinned Source Fused tokens;
+embedded report templates retain their separate design. Check those tokens with
+the command in README.md. No browser testing or publication is implied by a build.
