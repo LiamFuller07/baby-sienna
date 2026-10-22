@@ -1,0 +1,15 @@
+{
+ "id": "WEB1",
+ "title": "Request tracking tools (placeholder page)",
+ "kind": "web",
+ "captured": "2026-10-16",
+ "url": "https://example.com/request-tracking",
+ "file": "inputs/tracking-tools.html",
+ "sha256": "09c71b0309881213611c3aab6b6cb34f51cbd7bde36351a3da193f2ef373d058",
+ "coverage": "complete",
+ "records": [
+  {"locator": "¶1", "text": "Request tracking tools"},
+  {"locator": "¶2", "text": "Tracking tools can read a request form and fill in the tracker fields.", "context": "Request tracking tools"},
+  {"locator": "¶3", "text": "Each change to a request is kept in one history.", "context": "Request tracking tools"}
+ ]
+}

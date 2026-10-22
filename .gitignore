@@ -1,5 +1,43 @@
-.env
+# Client material never enters git: real engagements and the earlier client pages.
+/work/
+/reference/
 
-.idea/
+# Raw input formats anywhere outside the placeholder example.
+*.xlsx
+*.xls
+*.xlsm
+*.ods
+*.csv
+*.tsv
+*.docx
+*.doc
+*.pptx
+*.pdf
+*.vtt
+*.srt
+*.eml
+*.msg
+*.mbox
+*.zip
+!/examples/inputs/*
 
-venv/
+# Built pages: every one is generated, so only its sources are committed.
+out/
+/design-system/*/specimen.html
+/design-system/document/example-a4.html
+/design-system/document/example-screen.html
+/design-system/proposal/example-proposal.html
+/design-system/proposal/template.html
+/design-system/proposal/previews/
+/design-system/proposal/qa/*-previews/
+/design-system/proposal/qa/stress.json
+/design-system/proposal/qa/stress.html
+/design-system/proposal/qa/contact-sheet.png
+
+# Design references from other firms and clients, wherever they are saved.
+*reference*.html
+
+# Python and OS noise
+__pycache__/
+*.pyc
+.DS_Store

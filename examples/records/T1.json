@@ -1,0 +1,18 @@
+{
+ "id": "T1",
+ "title": "Follow-up call notes (placeholder)",
+ "kind": "transcript",
+ "captured": "2026-10-15",
+ "detail": "Call with Team A and Team B, speakers pseudonymised",
+ "file": "inputs/follow-up-call.txt",
+ "sha256": "b22028a859e4c9350d625271d9767d3d1fc21361d1b8b11a67ce185c25434d8b",
+ "coverage": "complete",
+ "records": [
+  {"locator": "00:00:05", "text": "Team A sends each request by email.", "context": "Speaker A"},
+  {"locator": "00:00:18", "text": "Team B logs it in the tracker, then checks it is complete.", "context": "Speaker B"},
+  {"locator": "00:00:31", "text": "Incomplete requests go back to Team A.", "context": "Speaker B"},
+  {"locator": "00:00:47", "text": "Team B approves requests up to 5,000.", "context": "Speaker A"},
+  {"locator": "00:01:02", "text": "Logging each request by hand takes time.", "context": "Speaker B"},
+  {"locator": "00:01:15", "text": "We would like AI to draft the review summary.", "context": "Speaker A"}
+ ]
+}

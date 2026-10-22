@@ -1,0 +1,6 @@
+00:00:05 Speaker A: Team A sends each request by email.
+00:00:18 Speaker B: Team B logs it in the tracker, then checks it is complete.
+00:00:31 Speaker B: Incomplete requests go back to Team A.
+00:00:47 Speaker A: Team B approves requests up to 5,000.
+00:01:02 Speaker B: Logging each request by hand takes time.
+00:01:15 Speaker A: We would like AI to draft the review summary.

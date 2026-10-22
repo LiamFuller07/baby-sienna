@@ -1,0 +1,466 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "proposal.schema.json",
+  "title": "Source proposal deck",
+  "description": "The data an AI fills to make a client proposal deck. build_proposal.py validates a proposal.json against this schema, then builds one self-contained HTML deck of 1280x720 slides. Limits (maxLength, maxItems) are layout limits: within them nothing overflows its slide. Keys starting with x- are read by build_proposal.py only and are ignored by standard validators.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "sources", "slides"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "meta": {"$ref": "#/$defs/meta"},
+    "sources": {
+      "description": "The source register: every record a claim about the client can cite. Listed in this order on the Sources slide.",
+      "type": "array",
+      "maxItems": 24,
+      "items": {"$ref": "#/$defs/source"}
+    },
+    "slides": {
+      "description": "The deck in order. The first slide is the cover. Required types: cover, situation, focus, deliverables, process, needs, commercials. A sources slide is added at the end when the deck cites anything and has none.",
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 30,
+      "items": {"$ref": "#/$defs/slide"}
+    }
+  },
+  "$defs": {
+    "line": {"type": "string", "minLength": 1},
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "client", "date"],
+      "properties": {
+        "title": {"description": "Browser tab title, e.g. 'Process mapping pilot for Client A'.", "type": "string", "minLength": 1, "maxLength": 90},
+        "client": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": {"description": "The client's name as it appears in copy. Use a placeholder such as 'Client A' in examples and templates.", "type": "string", "minLength": 1, "maxLength": 40},
+            "label": {"description": "Context label at the top right of the cover. Defaults to the client name.", "type": "string", "maxLength": 48}
+          }
+        },
+        "date": {"description": "ISO date, shown in the footer as '22 October 2026'.", "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+        "status": {"description": "Footer label. Default 'Proposal for discussion'.", "type": "string", "maxLength": 40},
+        "confidential": {"description": "Optional footer flag, e.g. 'Confidential'.", "type": "string", "maxLength": 30}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "kind"],
+      "properties": {
+        "id": {"description": "Short ID cited on slides: capitals, digits and hyphens, e.g. S1 or WB1.", "type": "string", "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)*$", "maxLength": 12},
+        "title": {"description": "What the record is, e.g. 'Introductory call notes'.", "type": "string", "minLength": 1, "maxLength": 70},
+        "kind": {"type": "string", "enum": ["document", "workbook", "meeting-notes", "interview", "public-filing", "website", "data", "other"]},
+        "date": {"description": "When it was written or shared, free form, e.g. '2026-10-08' or 'Sep 2026'.", "type": "string", "maxLength": 20},
+        "detail": {"description": "One line: who provided it, length, version.", "type": "string", "maxLength": 60},
+        "url": {"type": "string", "pattern": "^https?://", "maxLength": 200}
+      }
+    },
+    "cite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "source": {"description": "A source id from sources[].", "type": "string", "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)*$"},
+        "locator": {"description": "Where in the source: 'p2 ¶3', 'Steps!H9', 'Steps row 5', '00:14:20'.", "type": "string", "maxLength": 20}
+      }
+    },
+    "cites": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {"$ref": "#/$defs/cite"},
+      "x-messages": {"minItems": "empty cite list: a client claim needs at least one {\"source\": \"D1\", \"locator\": \"p2 ¶3\"}"}
+    },
+    "to_confirm": {"description": "Use instead of cite only when no source exists yet: say what needs confirming and with whom. Shown on the slide as TO CONFIRM.", "type": "string", "minLength": 8, "maxLength": 90},
+    "claim": {
+      "description": "A statement about the client. It must cite a source record, or say what is still to confirm.",
+      "x-claim": true,
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1, "maxLength": 50},
+        "cite": {"$ref": "#/$defs/cites", "maxItems": 1},
+        "to_confirm": {"$ref": "#/$defs/to_confirm"}
+      },
+      "anyOf": [{"required": ["cite"]}, {"required": ["to_confirm"]}],
+      "x-messages": {"anyOf": "uncited client claim: add \"cite\": [{\"source\": \"D1\", \"locator\": \"p2 ¶3\"}] naming a record in sources[], or \"to_confirm\": \"what to check, and with whom\""}
+    },
+    "point": {
+      "description": "A cited point about the client's situation.",
+      "x-claim": true,
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heading", "text"],
+      "properties": {
+        "heading": {"type": "string", "minLength": 1, "maxLength": 48},
+        "text": {"type": "string", "minLength": 1, "maxLength": 150},
+        "cite": {"$ref": "#/$defs/cites"},
+        "to_confirm": {"$ref": "#/$defs/to_confirm"}
+      },
+      "anyOf": [{"required": ["cite"]}, {"required": ["to_confirm"]}],
+      "x-messages": {"anyOf": "uncited client claim: add \"cite\": [{\"source\": \"D1\", \"locator\": \"p2 ¶3\"}] naming a record in sources[], or \"to_confirm\": \"what to check, and with whom\""}
+    },
+    "stat": {
+      "description": "A figure about the client. Use a placeholder such as [N] in examples.",
+      "x-claim": true,
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "label"],
+      "properties": {
+        "value": {"description": "Short: '[N]', '38%', '1,240'.", "type": "string", "minLength": 1, "maxLength": 6},
+        "label": {"type": "string", "minLength": 1, "maxLength": 36},
+        "cite": {"$ref": "#/$defs/cites"},
+        "to_confirm": {"$ref": "#/$defs/to_confirm"}
+      },
+      "anyOf": [{"required": ["cite"]}, {"required": ["to_confirm"]}],
+      "x-messages": {"anyOf": "uncited client claim: add \"cite\": [{\"source\": \"D1\", \"locator\": \"p2 ¶3\"}] naming a record in sources[], or \"to_confirm\": \"what to check, and with whom\""}
+    },
+    "eyebrow": {"description": "Small orange label above the title. Each type has a default.", "type": "string", "maxLength": 40},
+    "title": {"description": "The slide's message in a few words, on one line. No full stop. Do not repeat the eyebrow.", "type": "string", "minLength": 1, "maxLength": 46, "pattern": "[^.]$"},
+    "lead": {"description": "One or two sentences under the title (two lines at most).", "type": "string", "maxLength": 150},
+    "art": {"type": "string", "enum": ["report", "process_map", "ai_map", "recommendation"]},
+
+    "slide": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {"type": "string", "enum": ["cover", "divider", "situation", "focus", "outputs", "deliverables", "process", "needs", "team", "commercials", "closing", "sources"]}
+      },
+      "allOf": [
+        {"if": {"required": ["type"], "properties": {"type": {"const": "cover"}}}, "then": {"$ref": "#/$defs/cover"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "divider"}}}, "then": {"$ref": "#/$defs/divider"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "situation"}}}, "then": {"$ref": "#/$defs/situation"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "focus"}}}, "then": {"$ref": "#/$defs/focus"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "outputs"}}}, "then": {"$ref": "#/$defs/outputs"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "deliverables"}}}, "then": {"$ref": "#/$defs/deliverables"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "process"}}}, "then": {"$ref": "#/$defs/process"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "needs"}}}, "then": {"$ref": "#/$defs/needs"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "team"}}}, "then": {"$ref": "#/$defs/team"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "commercials"}}}, "then": {"$ref": "#/$defs/commercials"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "closing"}}}, "then": {"$ref": "#/$defs/closing"}},
+        {"if": {"required": ["type"], "properties": {"type": {"const": "sources"}}}, "then": {"$ref": "#/$defs/sources_slide"}}
+      ]
+    },
+
+    "cover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "lead"],
+      "properties": {
+        "type": {"const": "cover"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 40, "pattern": "[^.]$"},
+        "qualifier": {"description": "Lighter words after the title, e.g. 'for Client A' or '(pilot)'.", "type": "string", "maxLength": 24},
+        "lead": {"type": "string", "minLength": 1, "maxLength": 210},
+        "support": {"description": "One muted line: the audience or the one caveat.", "type": "string", "maxLength": 140},
+        "label": {"description": "Overrides meta.client.label for this cover.", "type": "string", "maxLength": 48},
+        "art": {"$ref": "#/$defs/art"}
+      }
+    },
+    "divider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title"],
+      "properties": {
+        "type": {"const": "divider"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 40, "pattern": "[^.]$"},
+        "subtitle": {"type": "string", "maxLength": 140}
+      }
+    },
+    "situation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "points"],
+      "properties": {
+        "type": {"const": "situation"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"},
+        "points": {"type": "array", "minItems": 2, "maxItems": 3, "items": {"$ref": "#/$defs/point"}},
+        "stats": {"type": "array", "maxItems": 2, "items": {"$ref": "#/$defs/stat"}},
+        "implication": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "heading": {"description": "Default 'What this means'.", "type": "string", "maxLength": 32},
+            "text": {"type": "string", "minLength": 1, "maxLength": 100}
+          }
+        }
+      }
+    },
+    "focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "options"],
+      "properties": {
+        "type": {"const": "focus"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"},
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "text"],
+            "properties": {
+              "label": {"description": "Eyebrow, e.g. 'Option A'. Default 'Option A', 'Option B' ...", "type": "string", "maxLength": 20},
+              "title": {"type": "string", "minLength": 1, "maxLength": 26},
+              "text": {"type": "string", "minLength": 1, "maxLength": 100},
+              "questions": {"description": "Questions this focus would answer.", "type": "array", "maxItems": 2, "items": {"type": "string", "minLength": 1, "maxLength": 36}},
+              "evidence": {"description": "Why this area: a claim about the client, so it must cite.", "$ref": "#/$defs/claim"},
+              "recommended": {"type": "boolean"}
+            }
+          }
+        },
+        "note": {"type": "string", "maxLength": 120}
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "items"],
+      "properties": {
+        "type": {"const": "outputs"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"},
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "title", "text"],
+            "properties": {
+              "kind": {"$ref": "#/$defs/art"},
+              "eyebrow": {"description": "Default '01 Report', '02 Process map' ...", "type": "string", "maxLength": 28},
+              "title": {"type": "string", "minLength": 1, "maxLength": 24},
+              "text": {"type": "string", "minLength": 1, "maxLength": 80},
+              "caption": {"type": "string", "maxLength": 40}
+            }
+          }
+        },
+        "note": {"type": "string", "maxLength": 100}
+      }
+    },
+    "deliverables": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "items"],
+      "properties": {
+        "type": {"const": "deliverables"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"},
+        "items": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title"],
+            "properties": {
+              "title": {"type": "string", "minLength": 1, "maxLength": 36},
+              "text": {"type": "string", "maxLength": 70},
+              "optional": {"description": "True for an add-on agreed at scoping; drawn with an open mark.", "type": "boolean"}
+            }
+          }
+        },
+        "note": {"description": "E.g. 'Or other deliverables Client A would like to explore.'", "type": "string", "maxLength": 90}
+      }
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "steps"],
+      "properties": {
+        "type": {"const": "process"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"},
+        "layout": {"description": "timeline (default): numbered steps across the slide on a line. steps: numbered steps in two columns, like the one-pager.", "type": "string", "enum": ["timeline", "steps"]},
+        "steps": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "text"],
+            "properties": {
+              "title": {"type": "string", "minLength": 1, "maxLength": 28},
+              "text": {"type": "string", "minLength": 1, "maxLength": 110},
+              "when": {"description": "E.g. 'Week 1' or 'Weeks 2-3'.", "type": "string", "maxLength": 16},
+              "output": {"description": "What the client has at the end of the step, e.g. 'Agreed scope and plan'.", "type": "string", "maxLength": 44}
+            }
+          }
+        },
+        "total": {"description": "One line on the overall timing, e.g. 'About four weeks from scope to results'.", "type": "string", "maxLength": 90}
+      }
+    },
+    "needs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "items"],
+      "properties": {
+        "type": {"const": "needs"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"},
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["role", "text"],
+            "properties": {
+              "role": {"type": "string", "minLength": 1, "maxLength": 24},
+              "time": {"description": "The commitment, e.g. '[N] hours a week'.", "type": "string", "maxLength": 32},
+              "text": {"type": "string", "minLength": 1, "maxLength": 150}
+            }
+          }
+        },
+        "note": {"type": "string", "maxLength": 120}
+      }
+    },
+    "team": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title"],
+      "properties": {
+        "type": {"const": "team"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"},
+        "people": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "role"],
+            "properties": {
+              "name": {"description": "Use '[Name]' in templates and examples.", "type": "string", "minLength": 1, "maxLength": 22},
+              "role": {"type": "string", "minLength": 1, "maxLength": 28},
+              "text": {"type": "string", "maxLength": 64}
+            }
+          }
+        },
+        "firms": {
+          "description": "Placeholder logo tiles only. There is deliberately no image field: real partner logos need permission and are placed by hand.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["logos"],
+          "properties": {
+            "heading": {"description": "Default 'Firms we work with'.", "type": "string", "maxLength": 32},
+            "logos": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 6,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name"],
+                "properties": {"name": {"description": "Placeholder name, e.g. 'Partner firm 1'.", "type": "string", "minLength": 1, "maxLength": 24}}
+              }
+            },
+            "note": {"description": "E.g. 'And others'.", "type": "string", "maxLength": 40}
+          }
+        }
+      },
+      "anyOf": [{"required": ["people"]}, {"required": ["firms"]}],
+      "x-messages": {"anyOf": "a team slide needs people[] or firms (or both)"}
+    },
+    "commercials": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "next_step", "terms"],
+      "properties": {
+        "type": {"const": "commercials"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"},
+        "next_step": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "heading": {"description": "Default 'Next step'.", "type": "string", "maxLength": 32},
+            "text": {"type": "string", "minLength": 1, "maxLength": 170},
+            "actions": {"type": "array", "maxItems": 3, "items": {"type": "string", "minLength": 1, "maxLength": 48}}
+          }
+        },
+        "terms": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["price"],
+          "properties": {
+            "heading": {"description": "Default 'Commercial terms'.", "type": "string", "maxLength": 32},
+            "price": {"description": "Use '[PRICE]' in templates and examples.", "type": "string", "minLength": 1, "maxLength": 16},
+            "price_note": {"type": "string", "maxLength": 48},
+            "rows": {
+              "type": "array",
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["label", "value"],
+                "properties": {
+                  "label": {"type": "string", "minLength": 1, "maxLength": 14},
+                  "value": {"type": "string", "minLength": 1, "maxLength": 40}
+                }
+              }
+            },
+            "note": {"type": "string", "maxLength": 90}
+          }
+        }
+      }
+    },
+    "closing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title"],
+      "properties": {
+        "type": {"const": "closing"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 40, "pattern": "[^.]$"},
+        "text": {"type": "string", "maxLength": 140},
+        "contact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": {"description": "Use '[Name]' in templates and examples.", "type": "string", "minLength": 1, "maxLength": 28},
+            "role": {"type": "string", "maxLength": 40},
+            "email": {"type": "string", "maxLength": 40},
+            "phone": {"type": "string", "maxLength": 24}
+          }
+        }
+      }
+    },
+    "sources_slide": {
+      "description": "The appendix register. Its rows come from sources[]; split over more slides when long.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {"const": "sources"},
+        "eyebrow": {"$ref": "#/$defs/eyebrow"},
+        "title": {"$ref": "#/$defs/title"},
+        "lead": {"$ref": "#/$defs/lead"}
+      }
+    }
+  }
+}

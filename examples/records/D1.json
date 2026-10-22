@@ -1,0 +1,17 @@
+{
+ "id": "D1",
+ "title": "Introductory call notes (placeholder)",
+ "kind": "document",
+ "captured": "2026-09-01",
+ "detail": "Notes taken by Source during the first call",
+ "file": "inputs/intro-notes.md",
+ "sha256": "9d6041cb06bb9e0fa30bdf42ca68f344f07e3875bf5be337c35462af83a430ea",
+ "coverage": "complete",
+ "records": [
+  {"locator": "¶1", "text": "Introductory call notes"},
+  {"locator": "¶2", "text": "Client A handles requests across three teams.", "context": "Introductory call notes"},
+  {"locator": "¶3", "text": "Requests pass between the teams by email and a shared tracker.", "context": "Introductory call notes"},
+  {"locator": "¶4", "text": "The steps are listed in a workbook, but owners are not always recorded.", "context": "Introductory call notes"},
+  {"locator": "¶5", "text": "Client A would like a current-state map before choosing what to automate.", "context": "Introductory call notes"}
+ ]
+}

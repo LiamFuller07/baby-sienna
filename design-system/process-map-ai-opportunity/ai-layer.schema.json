@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ai-layer.schema.json",
+  "title": "AI layer (process-map-ai-opportunity)",
+  "description": "process-map-ai-opportunity/<name>.json: the AI layer over one current-state map. It names its base map and adds ai[] items; it never changes the base. Lanes, nodes, edges, cards, systems, client and footer all come from the base. No AI field is stored on a node: each item points at steps or groups. Field meanings and elements are in design-system/process-map-ai-opportunity/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "base", "meta", "ai"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "type": {"const": "process-map-ai-opportunity"},
+    "base": {"description": "The name of a valid map in process-map/ of the same workspace.", "$ref": "process-map.schema.json#/$defs/sectionFile"},
+    "meta": {
+      "description": "Replaces the base's header text and, when given, its date.",
+      "type": "object", "additionalProperties": false, "required": ["title"],
+      "properties": {
+        "kicker": {"type": "string", "minLength": 1, "maxLength": 40},
+        "title": {"type": "string", "minLength": 1, "maxLength": 90},
+        "subtitle": {"type": "string", "maxLength": 240},
+        "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}
+      }
+    },
+    "ai": {"description": "Sorted by id. An empty list is valid and draws the empty state.", "type": "array", "maxItems": 40, "items": {"$ref": "#/$defs/item"}}
+  },
+  "$defs": {
+    "aiId": {"description": "Its two digits are what the square shows (AI-07 shows 07).", "type": "string", "pattern": "^AI-[0-9]{2}$"},
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "title", "origin", "does", "cite"],
+      "properties": {
+        "id": {"$ref": "#/$defs/aiId"},
+        "title": {"description": "Sentence case, starts with a verb, no final full stop.", "type": "string", "minLength": 1, "maxLength": 60, "pattern": "[^.]$"},
+        "origin": {"description": "named: the client asked for it in their own words. suggested: our idea. Drives filled or outlined marks everywhere.", "enum": ["named", "suggested"]},
+        "does": {"description": "What it would do, in one to three sentences.", "type": "string", "minLength": 1, "maxLength": 280},
+        "nodes": {"description": "Base steps (kind step) it touches; each gets a halo and a square. Default [].", "type": "array", "uniqueItems": true, "items": {"$ref": "process-map.schema.json#/$defs/nodeId"}},
+        "groups": {
+          "description": "Base group ids (a view-level item marks the group cell, not its steps), or \"all\" for one board-wide item. Default []. Needs a base with two or more groups.",
+          "oneOf": [
+            {"type": "array", "uniqueItems": true, "items": {"$ref": "process-map.schema.json#/$defs/groupId"}},
+            {"const": "all"}
+          ]
+        },
+        "cite": {"$ref": "citation.schema.json#/$defs/cites"},
+        "agentic": {"$ref": "#/$defs/agentic"}
+      }
+    },
+    "agentic": {
+      "description": "How the item would run as an agent. Our design, not a claim: it cites nothing, but its numbers must occur in records the item cites (prose-4).",
+      "type": "object", "additionalProperties": false,
+      "required": ["trigger", "steps", "decides", "systems", "logging"],
+      "properties": {
+        "trigger": {"type": "string", "minLength": 1, "maxLength": 200},
+        "steps": {"type": "array", "minItems": 2, "maxItems": 8, "items": {"type": "string", "minLength": 1, "maxLength": 160}},
+        "decides": {
+          "description": "Where a person decides. An agentic version with no human decision is invalid.",
+          "type": "array", "minItems": 1, "maxItems": 8,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["after", "who", "what"],
+            "properties": {
+              "after": {"description": "The step number (from 1) after which the person decides.", "type": "integer", "minimum": 1, "maximum": 8},
+              "who": {"description": "A role, e.g. 'Team B'.", "type": "string", "minLength": 1, "maxLength": 40},
+              "what": {"description": "A lower-case clause: 'checks the entry and accepts or corrects it'.", "type": "string", "minLength": 1, "maxLength": 160}
+            }
+          }
+        },
+        "systems": {"description": "Base systems[] ids.", "type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "process-map.schema.json#/$defs/slug"}},
+        "logging": {"description": "What every run records, and where.", "type": "string", "minLength": 1, "maxLength": 240}
+      }
+    }
+  }
+}

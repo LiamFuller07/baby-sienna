@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Document title</title>
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<!-- Source document template. Keep doc.css and fonts/ next to this file and replace the copy.
+     Every pattern appears once. Delete what you do not need.
+     A4: one <div class="page"> per sheet, each with a .flow and a footer; the first sheet also
+     has the header. A single sheet can be <main class="page"> on its own.
+     Long document for screen: <main class="page screen"> holding header, .flow and footer,
+     with no folio in the footer (print adds page numbers). To get one self-contained file,
+     write Markdown and run build_doc.py instead (see README.md). -->
+<main>
+
+<div class="page">
+  <header><img src="fonts/source-wordmark.png" alt="Source"><span>Context label</span></header>
+  <div class="flow">
+
+    <!-- Intro: title with optional qualifier, lead, support line -->
+    <section class="intro">
+      <h1>Document title <span>(qualifier)</span></h1>
+      <p class="lead">The lead says what this document is and what the reader gets from it, in one or two sentences.</p>
+      <p class="support">The support line names the audience or the one caveat that matters.</p>
+    </section>
+
+    <h2>Section heading</h2>
+    <p>Body copy runs at 13px. A citation follows the claim it supports <cite class="c" data-src="WB1" data-loc="H9"><a href="#src-WB1">WB1 H9</a></cite>, and several share one bracket <span class="cites"><cite class="c" data-src="WB1" data-loc="C4"><a href="#src-WB1">WB1 C4</a></cite>; <cite class="c" data-src="DOC" data-loc="§2"><a href="#src-DOC">DOC §2</a></cite></span>.</p>
+
+    <!-- Examples grid: art panel, eyebrow, title, short line, caption -->
+    <div class="examples">
+      <article class="example">
+        <div class="art"><svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder artwork: a page of text with a small table">
+          <rect x="78" y="14" width="144" height="172" fill="#fff" stroke="#dce2dc"/>
+          <rect x="92" y="30" width="58" height="4" fill="#153e2f"/>
+          <g fill="#d0d8d2"><rect x="92" y="42" width="116" height="2.2"/><rect x="92" y="48" width="108" height="2.2"/><rect x="92" y="54" width="84" height="2.2"/></g>
+          <rect x="92" y="66" width="116" height="8" fill="#f4f6f2"/>
+          <g stroke="#dce2dc"><line x1="92" y1="66" x2="208" y2="66"/><line x1="92" y1="74" x2="208" y2="74"/><line x1="92" y1="84" x2="208" y2="84"/><line x1="92" y1="94" x2="208" y2="94"/><line x1="92" y1="104" x2="208" y2="104"/></g>
+          <g fill="#153e2f"><rect x="96" y="78" width="20" height="2.2"/><rect x="96" y="88" width="16" height="2.2"/><rect x="96" y="98" width="22" height="2.2"/></g>
+          <g fill="#d0d8d2"><rect x="134" y="78" width="40" height="2.2"/><rect x="134" y="88" width="34" height="2.2"/><rect x="134" y="98" width="44" height="2.2"/><rect x="190" y="78" width="14" height="2.2"/><rect x="194" y="88" width="10" height="2.2"/><rect x="188" y="98" width="16" height="2.2"/></g>
+          <g fill="#d0d8d2"><rect x="92" y="116" width="112" height="2.2"/><rect x="92" y="122" width="96" height="2.2"/></g>
+          <rect x="92" y="134" width="116" height="26" fill="#f4f6f2"/><rect x="92" y="134" width="1.5" height="26" fill="#153e2f"/>
+          <rect x="99" y="141" width="30" height="2.5" fill="#153e2f"/><g fill="#d0d8d2"><rect x="99" y="148" width="92" height="2"/><rect x="99" y="153" width="70" height="2"/></g>
+          <line x1="92" y1="172" x2="208" y2="172" stroke="#dce2dc"/>
+        </svg></div>
+        <p class="eyebrow">01 Label</p>
+        <h3>Example title</h3>
+        <p>One short line on what this example shows.</p>
+        <p class="caption">Caption: where the example comes from.</p>
+      </article>
+      <article class="example">
+        <div class="art"><svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder artwork: a timeline">
+          <rect x="46" y="18" width="208" height="164" fill="#fff" stroke="#dce2dc"/>
+          <rect x="62" y="34" width="60" height="4.5" fill="#153e2f"/>
+          <line x1="62" y1="48" x2="238" y2="48" stroke="#dce2dc"/>
+          <line x1="72" y1="100" x2="228" y2="100" stroke="#9fb0a6" stroke-width="1.5"/>
+          <g fill="#153e2f"><circle cx="72" cy="100" r="5.5"/><circle cx="124" cy="100" r="5.5"/><circle cx="176" cy="100" r="5.5"/></g>
+          <circle cx="228" cy="100" r="5.5" fill="#fff" stroke="#e9713b" stroke-width="1.6"/>
+          <g fill="#e9713b"><rect x="64" y="74" width="12" height="2.5"/><rect x="116" y="74" width="12" height="2.5"/><rect x="168" y="74" width="12" height="2.5"/><rect x="220" y="74" width="12" height="2.5"/></g>
+          <g fill="#153e2f"><rect x="58" y="118" width="30" height="3.5"/><rect x="110" y="118" width="28" height="3.5"/><rect x="162" y="118" width="30" height="3.5"/><rect x="212" y="118" width="26" height="3.5"/></g>
+          <g fill="#d0d8d2"><rect x="58" y="127" width="36" height="2.5"/><rect x="58" y="133" width="26" height="2.5"/><rect x="110" y="127" width="34" height="2.5"/><rect x="110" y="133" width="22" height="2.5"/><rect x="162" y="127" width="36" height="2.5"/><rect x="162" y="133" width="28" height="2.5"/><rect x="212" y="127" width="28" height="2.5"/><rect x="212" y="133" width="20" height="2.5"/></g>
+          <line x1="62" y1="152" x2="238" y2="152" stroke="#dce2dc"/>
+          <g fill="#d0d8d2"><rect x="62" y="162" width="120" height="2.5"/><rect x="62" y="168" width="90" height="2.5"/></g>
+        </svg></div>
+        <p class="eyebrow">02 Label</p>
+        <h3>Example title</h3>
+        <p>One short line on what this example shows.</p>
+        <p class="caption">Caption: where the example comes from.</p>
+      </article>
+      <article class="example">
+        <div class="art"><pre><code>## Section heading
+A claim [WB1 H9]
+
+1. **First step.**
+2. **Then this.**
+:::callout Next step</code></pre></div>
+        <p class="eyebrow">03 Label</p>
+        <h3>Example title</h3>
+        <p>A short code block can be the art, in place of a drawing.</p>
+        <p class="caption">Caption: where the example comes from.</p>
+      </article>
+    </div>
+
+    <!-- Two-column list (small type) -->
+    <h3>Two-column list</h3>
+    <ul class="two">
+      <li>First short item</li>
+      <li>Second short item</li>
+      <li>Third short item</li>
+      <li>Fourth short item</li>
+      <li>Fifth short item</li>
+      <li>Sixth item, a little longer than the rest</li>
+    </ul>
+
+    <hr>
+
+    <!-- Two columns: bold lead-ins on the left, numbered steps on the right -->
+    <div class="columns">
+      <section>
+        <h2>Two-column text</h2>
+        <p><strong>Bold lead-in.</strong> Each paragraph opens with its point, then explains it in a sentence or two.</p>
+        <p><strong>Second lead-in.</strong> Columns suit two related lists, such as what is needed and how it works.</p>
+        <p>A closing paragraph can stand without a lead-in.</p>
+      </section>
+      <section>
+        <h2>Numbered steps</h2>
+        <ol class="steps">
+          <li><span class="num">01</span><p><strong>First step.</strong> What happens, in one sentence.</p></li>
+          <li><span class="num">02</span><p><strong>Second step.</strong> What happens next, and who does it.</p></li>
+          <li><span class="num">03</span><p><strong>Third step.</strong> How it ends and what the reader receives.</p></li>
+        </ol>
+      </section>
+    </div>
+
+    <!-- Closing: the "Next step" callout with an aside beside it -->
+    <div class="closing">
+      <section class="callout">
+        <h2>Next step</h2>
+        <p>The one action the reader should take, stated plainly.</p>
+        <p>A second paragraph for terms, timing or a contact.</p>
+      </section>
+      <aside>
+        <h2>Aside heading</h2>
+        <p>Short supporting detail in muted type, such as owners or related documents.</p>
+      </aside>
+    </div>
+
+  </div>
+  <footer><span>Footer text / Date</span><span>1 / 2</span></footer>
+</div>
+
+<div class="page">
+  <div class="flow">
+
+    <!-- Provenance lines: Grounded, Inferred or Gap, straight after the claim -->
+    <h2>Claims and their provenance</h2>
+    <p>A claim stated in a source carries a grounded line <cite class="c" data-src="WB1" data-loc="H9"><a href="#src-WB1">WB1 H9</a></cite>.</p>
+    <p class="prov prov-grounded"><b>Grounded</b> · <a href="#src-WB1">WB1</a> H9</p>
+    <p>A reading of the evidence carries an inferred line that says what it is read from.</p>
+    <p class="prov prov-inferred"><b>Inferred</b> · from <a href="#src-WB1">WB1</a> col H</p>
+    <p>A fact that no source holds carries a gap line.</p>
+    <p class="prov prov-gap"><b>Gap</b> · not in <a href="#src-WB1">WB1</a>: who owns the figure</p>
+    <!-- A source id with no name yet is itself a gap: its marker, its links and its Sources row turn orange -->
+    <p>A claim cited to a source that has no name yet <cite class="c missing" data-src="WB2" data-loc="C4"><a href="#src-WB2">WB2 C4</a></cite>.</p>
+    <p class="prov prov-grounded"><b>Grounded</b> · <a href="#src-WB2" class="missing">WB2</a> C4</p>
+
+    <h2>Table</h2>
+    <div class="table">
+      <table>
+        <thead><tr><th>Item</th><th>Detail</th><th style="text-align:right">Value</th></tr></thead>
+        <tbody>
+          <tr><td>First row</td><td>Short description of the row</td><td style="text-align:right">00</td></tr>
+          <tr><td>Second row</td><td>Short description of the row</td><td style="text-align:right">00</td></tr>
+          <tr><td>Third row</td><td>Short description of the row</td><td style="text-align:right">00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Code</h2>
+    <pre><code>python3 build_doc.py input.md output.html --a4 --sources sources.json</code></pre>
+
+    <h2>List</h2>
+    <ul>
+      <li>A bullet list at body size, for points that read as sentences.</li>
+      <li>Keep each item to one line where you can.</li>
+    </ul>
+
+    <!-- Sources: every id cited above, with its full name -->
+    <section class="sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li id="src-WB1"><b>WB1</b><span>Full name of the first source <span class="note">· an optional note</span></span></li>
+        <li id="src-DOC"><b>DOC</b><span>Full name of the second source</span></li>
+        <li id="src-WB2"><b>WB2</b><span><span class="missing"><b>Gap</b> · no name in the sources file</span></span></li>
+      </ol>
+    </section>
+
+  </div>
+  <footer><span>Footer text / Date</span><span>2 / 2</span></footer>
+</div>
+
+</main>
+</body>
+</html>

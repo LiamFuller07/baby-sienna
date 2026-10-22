@@ -1,0 +1,306 @@
+/* Source proposal deck (deck.css)
+   The Source document brand on 16:9 slides. Every slide is a fixed
+   1280 x 720 px frame (PowerPoint widescreen, 13.33 x 7.5 in at 96 px/in).
+   build_proposal.py inlines this file, both font weights and the wordmark,
+   so a built deck loads nothing from the network.
+
+   Contents: 1 Font and tokens  2 Deck (screen) and frame  3 Slide chrome
+   4 Cover, divider, closing  5 Citations  6 Slide bodies  7 Art
+   8 Print */
+
+/* 1. Font and tokens ------------------------------------------------------ */
+@font-face{font-family:Source;src:url(fonts/source-400.ttf) format('truetype');font-weight:400;font-display:block}
+@font-face{font-family:Source;src:url(fonts/source-600.ttf) format('truetype');font-weight:600;font-display:block}
+:root{
+  --ink:#153e2f;    /* titles, headings, lead, bold lead-ins, the callout edge */
+  --text:#293f34;   /* body copy */
+  --muted:#65736b;  /* support lines, labels, captions, citations, footer */
+  --line:#dce2dc;   /* every hairline and panel border */
+  --soft:#f4f6f2;   /* panels: art, callout, table head */
+  --accent:#e9713b; /* pointers only: eyebrows, step numerals, "To confirm" */
+  --desk:#e9ede8;   /* the surface behind the slides; the divider tint */
+  /* Process-map art uses the map system's own tokens (see 7. Art). */
+  --pm-ink:#111;--pm-muted:#626260;--pm-soft:#7b7b78;--pm-line-strong:#c8c8c4;
+  --pm-accent:#ff5600;--pm-flow:#454542;--pm-lane-0:#f3efe7;--pm-lane-1:#ece8e0;--pm-bg:#faf9f6;--pm-ai-ring:#ffe2cf;
+  --pm-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --s:1;            /* screen scale, set by the deck script */
+}
+
+/* 2. Deck (screen) and frame ------------------------------------------------
+   Screen: slides stack on the desk, scaled to the window width. The script
+   sets --s; arrow keys, Page Up/Down and Space step through. */
+*{box-sizing:border-box}
+html{background:var(--desk)}
+body{margin:0;background:var(--desk);color:var(--text);font-family:Source,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.deck{display:flex;flex-direction:column;align-items:center;gap:var(--g,24px);padding:var(--g,24px)}
+.frame{flex:none;width:calc(1280px * var(--s));height:calc(720px * var(--s));scroll-margin-top:var(--g,24px);box-shadow:0 8px 40px #12301f12;background:#fff}
+.slide{position:relative;width:1280px;height:720px;overflow:hidden;transform:scale(var(--s));transform-origin:0 0;
+  display:flex;flex-direction:column;padding:52px 64px 112px;background:#fff;color:var(--text);font-size:16px;line-height:1.5}
+.slide p{margin:0;text-wrap:pretty}
+.slide strong{font-weight:600;color:var(--ink)}
+.slide a{color:inherit;text-decoration:none}
+
+/* 3. Slide chrome: eyebrow, title, lead, body, source line, footer --------- */
+.slide-head{flex:none}
+.eyebrow{margin:0 0 12px!important;font-size:14px;line-height:18px;letter-spacing:.01em;color:var(--accent)}
+.slide h1{margin:0;font-size:40px;line-height:1.12;font-weight:600;letter-spacing:-1.3px;color:var(--ink);max-width:1060px;text-wrap:balance}
+.lead{margin-top:14px!important;max-width:900px;font-size:20px;line-height:1.45;color:var(--ink);text-wrap:pretty}
+.slide-body{flex:1;min-height:0;margin-top:34px;display:flex;flex-direction:column}
+.note{font-size:14px;line-height:1.45;color:var(--muted)}
+.slide-body>.note{margin-top:auto!important;padding-top:16px}
+/* The source line: every source cited on the slide, full names on the Sources slide */
+.srcline{position:absolute;left:64px;right:64px;bottom:70px;height:16px;font-size:12px;line-height:16px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srcline b{margin-right:8px;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink)}
+.srcline .sep{margin:0 7px;color:var(--line)}
+.srcline .tbc-count{color:var(--accent)}
+.slide-foot{position:absolute;left:64px;right:64px;bottom:26px;display:flex;align-items:center;gap:20px;padding-top:12px;border-top:1px solid var(--line);
+  font-size:11px;line-height:16px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.wm{display:block;flex:none;width:62px;height:16px;background:url(fonts/source-wordmark.png) left center/contain no-repeat}
+.folio{margin-left:auto;letter-spacing:.04em}
+
+/* 4. Cover, divider, closing ----------------------------------------------- */
+.slide--cover{padding-top:48px;padding-bottom:84px}
+.cover-top{flex:none;display:flex;align-items:center;justify-content:space-between}
+.cover-top .wm{width:154px;height:40px}
+.cover-label{font-size:13px;letter-spacing:.06em;color:var(--muted)}
+.cover-main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);gap:56px;align-items:center;padding-bottom:6px}
+.cover-main.has-art{grid-template-columns:minmax(0,1fr) 456px;align-items:center}
+.slide--cover h1{font-size:60px;line-height:1.06;letter-spacing:-2.2px;max-width:860px}
+.slide--cover h1 span{font-size:32px;font-weight:400;letter-spacing:-.6px;white-space:nowrap}
+.cover-lead{margin-top:28px!important;max-width:720px;font-size:22px;line-height:1.5;color:var(--ink);text-wrap:pretty}
+.cover-support{margin-top:14px!important;max-width:720px;font-size:16px;line-height:1.5;color:var(--muted)}
+.cover-art{height:318px}
+.cover-art .art{height:100%;max-height:none}
+
+.slide--dark{background:var(--ink);color:#fff}
+.slide--dark .slide-foot{border-top-color:rgba(255,255,255,.2);color:rgba(255,255,255,.66)}
+.slide--dark .wm{filter:brightness(0) invert(1)}
+.slide--divider .slide-body,.slide--closing .slide-body{margin-top:0;justify-content:center}
+.slide--divider .eyebrow,.slide--closing .eyebrow{font-size:16px;line-height:20px;margin-bottom:18px!important}
+.slide--dark h1{color:#fff;font-size:60px;line-height:1.06;letter-spacing:-2.2px;max-width:900px}
+.dark-sub{margin-top:22px!important;max-width:760px;font-size:22px;line-height:1.5;color:rgba(255,255,255,.78);text-wrap:pretty}
+.contact{display:flex;gap:56px;margin-top:56px;padding-top:22px;border-top:1px solid rgba(255,255,255,.2);max-width:900px}
+.contact div{display:flex;flex-direction:column;gap:2px}
+.contact .k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.contact .v{font-size:18px;line-height:1.45;color:#fff}
+
+/* 5. Citations (always visible) --------------------------------------------
+   Marker  <cite class="c"><a href="#src-S1">S1 p. 2</a></cite>, several in one
+   bracket as <span class="cites">…; …</span>. Unsourced claims carry
+   <span class="tbc">To confirm</span> and say what needs checking. */
+cite.c,.cites{font-style:normal;font-size:12px;letter-spacing:.02em;color:var(--muted)}
+cite.c{white-space:nowrap}
+cite.c::before,.cites::before{content:"["}
+cite.c::after,.cites::after{content:"]"}
+.cites cite.c::before,.cites cite.c::after{content:none}
+.tbc{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.tbc-why{font-size:13px;color:var(--muted)}
+
+/* 6. Slide bodies ------------------------------------------------------------ */
+/* Situation: cited points on the left, figures and "what this means" on the right */
+.sit{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:56px;flex:1;min-height:0}
+.sit.no-side{grid-template-columns:minmax(0,900px)}
+.points{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.points li{flex:1;display:flex;flex-direction:column;justify-content:center}
+.points li{padding:12px 0 13px;border-top:1px solid var(--line)}
+.points li:last-child{border-bottom:1px solid var(--line)}
+.points h3{margin:0 0 4px;font-size:18px;line-height:1.3;font-weight:600;color:var(--ink)}
+.points p{font-size:16px;line-height:1.5}
+.sit-side{display:flex;flex-direction:column;gap:18px;min-height:0}
+.stats{flex:1;display:flex;flex-direction:column}
+.stat{flex:1;display:grid;grid-template-columns:132px minmax(0,1fr);column-gap:18px;align-content:center;align-items:center;padding:12px 0 13px;border-top:1px solid var(--line)}
+.stat .v{font-size:44px;line-height:1;font-weight:400;letter-spacing:-1.6px;color:var(--ink);white-space:nowrap}
+.stat .l{display:block;font-size:15px;line-height:1.4;color:var(--text)}
+.callout{padding:20px 22px;background:var(--soft);border-left:2px solid var(--ink)}
+.callout h2{margin:0 0 6px;font-size:16px;line-height:1.3;font-weight:600;color:var(--ink)}
+.callout p{font-size:15px;line-height:1.5}
+.sit-side .callout{flex:none}
+
+/* Focus: option cards */
+.cards{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:24px;flex:1;min-height:0}
+.card{display:flex;flex-direction:column;padding:20px 24px 18px;border:1px solid var(--line);min-width:0}
+.card.is-rec{border-color:var(--ink)}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:12px;height:22px;margin-bottom:8px}
+.card-top .eyebrow{margin:0!important}
+.rec{font-size:10.5px;line-height:14px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);background:var(--soft);padding:3px 8px 2px}
+.card h2{margin:0 0 6px;font-size:21px;line-height:1.25;font-weight:600;color:var(--ink)}
+.card>p{font-size:15px;line-height:1.5}
+.qs{margin-top:12px}
+.k{display:block;font-size:11px;line-height:1.4;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.qs ul{list-style:none;margin:6px 0 0;padding:0}
+.qs li{position:relative;padding-left:16px;font-size:14px;line-height:1.45;margin-top:3px}
+.qs li::before{content:"\2013";position:absolute;left:0;color:var(--muted)}
+.evidence{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);font-size:13px;line-height:1.45;color:var(--muted)}
+.card .qs+.evidence,.card>p+.evidence{margin-top:auto}
+.evidence .k{margin-bottom:3px}
+
+/* Outputs: examples grid (art panel, eyebrow, title, line, caption) */
+/* one shared art row (150-300px, whatever the text leaves) and one text row, so panels match */
+.examples{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));grid-template-rows:minmax(150px,300px) auto;align-content:start;column-gap:22px}
+.example{min-width:0;min-height:0;display:grid;grid-row:span 2;grid-template-rows:subgrid}
+.examples.one{grid-template-rows:auto}
+.examples.one .example{grid-row:auto;grid-template-rows:none;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);column-gap:48px;align-items:center}
+.examples.one .art{height:300px}
+.art{min-height:0;background:var(--soft);border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden}
+.art>svg{width:100%;height:100%;display:block}
+.example .eyebrow{margin:14px 0 6px!important;font-size:13px;line-height:16px}
+.example h3{margin:0 0 5px;font-size:18px;line-height:1.3;font-weight:600;color:var(--ink)}
+.example p{font-size:14.5px;line-height:1.45}
+.example .caption{margin-top:6px;font-size:12px;line-height:1.4;color:var(--muted)}
+
+/* Deliverables: two columns of rows; filled mark = core, open mark = optional */
+.deliv{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(var(--rows,3),minmax(0,1fr));grid-auto-flow:column;column-gap:56px}
+.deliv li{list-style:none;display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:12px;align-content:center;padding:14px 0 15px;border-top:1px solid var(--line)}
+.deliv li.last-in-col{border-bottom:1px solid var(--line)}
+.deliv{margin:0;padding:0}
+.mark{width:14px;height:14px;margin-top:6px;background:var(--ink);display:flex;align-items:center;justify-content:center}
+.mark svg{width:10px;height:10px;display:block}
+.deliv .is-opt .mark{background:#fff;border:1.5px solid var(--muted)}
+.deliv h3{margin:0;font-size:19px;line-height:1.35;font-weight:600;color:var(--ink)}
+.deliv p{margin-top:3px!important;font-size:15.5px;line-height:1.45;color:var(--text)}
+.opt{margin-left:8px;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);vertical-align:2px}
+.legend{display:flex;gap:22px;align-items:center;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend .mark{margin:0;width:12px;height:12px}
+.legend .mark svg{width:8px;height:8px}
+.legend .is-opt .mark{background:#fff;border:1.5px solid var(--muted)}
+.deliv-foot{flex:none;padding-top:18px;display:flex;justify-content:space-between;gap:32px;align-items:baseline}
+
+/* Process: a timeline of numbered steps (or a numbered list) */
+.timeline{list-style:none;margin:auto 0;padding:0;display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:0 32px}
+.timeline li{position:relative;min-width:0;display:flex;flex-direction:column}
+.t-top{display:flex;align-items:baseline;gap:12px;height:20px}
+.num{font-size:15px;line-height:20px;color:var(--accent);font-feature-settings:"tnum"}
+.when{font-size:13px;line-height:20px;color:var(--muted)}
+.t-track{position:relative;height:30px}
+.t-track::before{content:"";position:absolute;left:0;right:-32px;top:14px;border-top:1px solid var(--line)}
+.timeline li:last-child .t-track::before{right:0}
+.t-track::after{content:"";position:absolute;left:0;top:9px;width:9px;height:9px;border-radius:50%;background:#fff;border:1.5px solid var(--ink)}
+.timeline h3{margin:6px 0 6px;font-size:20px;line-height:1.3;font-weight:600;color:var(--ink)}
+.timeline p{font-size:16px;line-height:1.5}
+.t-out{margin-top:auto!important;padding-top:18px}
+.t-out span:last-child{display:block;margin-top:6px;padding:10px 14px;background:var(--soft);font-size:14.5px;line-height:1.4;color:var(--ink)}
+.steps{list-style:none;margin:auto 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:56px}
+.steps li{display:grid;grid-template-columns:40px minmax(0,1fr);column-gap:10px;padding:18px 0 20px;border-top:1px solid var(--line)}
+.steps li:last-child,.steps li:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--line)}
+.steps .num{line-height:26px}
+.s-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.steps h3{margin:0;font-size:20px;line-height:1.3;font-weight:600;color:var(--ink)}
+.steps p{font-size:16px;line-height:1.5}
+.s-out{margin-top:8px!important;font-size:14.5px!important;color:var(--ink)}
+.s-out .k{display:inline;margin-right:8px}
+.total{flex:none;padding-top:16px;font-size:14px;color:var(--muted)}
+.total b{font-weight:600;color:var(--ink)}
+
+/* Needs: one row per role */
+.needs{flex:1;min-height:0;list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.needs li{flex:1;display:grid;grid-template-columns:48px 300px minmax(0,1fr);column-gap:20px;align-items:center;padding:16px 0 17px;border-top:1px solid var(--line)}
+.needs li:last-child{border-bottom:1px solid var(--line)}
+.role-ic{width:40px;height:40px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center}
+.role-ic svg{width:20px;height:20px;display:block}
+.needs h3{margin:0;font-size:20px;line-height:1.3;font-weight:600;color:var(--ink)}
+.needs .time{margin-top:3px!important;font-size:14px;color:var(--muted)}
+.needs p.what{font-size:17px;line-height:1.5}
+
+/* Team: people on the left, firms (placeholder logos only) on the right */
+.team{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:64px;margin:auto 0;align-items:start}
+.team.no-firms{grid-template-columns:minmax(0,1fr)}
+.team.no-people{grid-template-columns:minmax(0,1fr)}
+.people{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:34px 36px;align-content:start}
+.person{display:grid;grid-template-columns:64px minmax(0,1fr);column-gap:18px;padding-top:20px;border-top:1px solid var(--line)}
+.avatar{width:64px;height:64px;border-radius:50%;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.avatar svg{width:28px;height:28px}
+.person h3{margin:4px 0 0;font-size:19px;line-height:1.3;font-weight:600;color:var(--ink)}
+.person .role{font-size:14px;line-height:1.4;color:var(--muted)}
+.person .bio{margin-top:8px!important;font-size:15.5px;line-height:1.45}
+.firms{padding-top:18px;border-top:1px solid var(--line)}
+.firms h2{margin:0 0 14px;font-size:17px;line-height:1.3;font-weight:600;color:var(--ink)}
+.logos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.logo-ph{height:72px;border:1px dashed #b9c3bb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff}
+.logo-ph .k{font-size:9.5px}
+.logo-ph span:last-child{font-size:13px;color:var(--text)}
+.firms .note{margin-top:14px!important}
+
+/* Commercials: next-step callout and terms */
+.comm{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:56px;align-items:start}
+.comm .callout{padding:30px 34px;display:flex;flex-direction:column}
+.comm .callout h2{font-size:20px;margin-bottom:10px}
+.comm .callout p{font-size:18px;line-height:1.55;max-width:560px}
+.comm .callout>p{margin-bottom:28px}
+.actions{list-style:none;margin:0;padding:18px 0 0;border-top:1px solid var(--line)}
+.actions li{display:grid;grid-template-columns:36px minmax(0,1fr);font-size:17px;line-height:1.5;margin-top:8px}
+.actions .num{font-size:14px;line-height:24px}
+.terms h2{margin:0 0 4px;font-size:17px;line-height:1.3;font-weight:600;color:var(--ink)}
+.price{display:block;margin-top:10px;font-size:48px;line-height:1.05;letter-spacing:-1.6px;color:var(--ink)}
+.price-note{margin-top:6px!important;font-size:14px;color:var(--muted)}
+.terms dl{margin:20px 0 0}
+.terms dl div{display:grid;grid-template-columns:118px minmax(0,1fr);column-gap:16px;padding:10px 0 11px;border-top:1px solid var(--line)}
+.terms dl div:last-child{border-bottom:1px solid var(--line)}
+.terms dt{font-size:11px;line-height:22px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.terms dd{margin:0;font-size:15px;line-height:1.5}
+.terms .note{margin-top:14px!important;font-size:13px}
+
+/* Sources (appendix): the register of every source record */
+.src-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px;line-height:1.45}
+.src-table td,.src-table th{overflow-wrap:anywhere}
+.src-table th{padding:7px 12px;background:var(--soft);border-block:1px solid var(--line);text-align:left;font-size:11px;font-weight:400;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.src-table td{padding:8px 12px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+.src-table td:first-child{font-weight:600;color:var(--ink);white-space:nowrap}
+.src-table .d{display:block;font-size:13px;line-height:18px;color:var(--muted)}
+.src-table .tbc-row td:first-child{padding-top:10px}
+.src-table .on a{color:var(--ink)}
+.src-table .none{color:var(--muted)}
+
+/* 7. Art --------------------------------------------------------------------
+   Illustrations drawn as inline SVG. Report and recommendation art use the
+   document tokens; process-map art (map and AI map) uses the map
+   system's look: warm lanes, white nodes with hairlines, dark flow lines,
+   orange gap badges and AI marks. */
+.rp-t{font-family:Source,Arial,sans-serif;fill:var(--ink)}
+.rp-k{font-family:Source,Arial,sans-serif;font-size:6.2px;letter-spacing:.04em;fill:var(--muted)}
+.rp-v{font-family:Source,Arial,sans-serif;font-size:17px;letter-spacing:-.5px;fill:var(--ink)}
+.rp-x{font-family:Source,Arial,sans-serif;font-size:7.2px;fill:var(--text)}
+.rp-line{stroke:var(--line);stroke-width:1}
+.rp-txt{fill:#e3e8e3}
+.rp-bar{fill:var(--ink)}
+.rp-trk{fill:#e8ece8}
+.rp-acc{fill:var(--accent)}
+.pm-bg{fill:#fff}
+.pm-l0{fill:var(--pm-lane-0)}.pm-l1{fill:var(--pm-lane-1)}
+.pm-gutter{stroke:var(--pm-bg);stroke-width:1.5}
+.pm-lab{font-family:var(--pm-sans);font-size:7.4px;font-weight:600;fill:var(--pm-flow)}
+.pm-flow{fill:none;stroke:var(--pm-flow);stroke-width:1.2;stroke-linejoin:round}
+.pm-feed{fill:none;stroke:var(--pm-flow);stroke-width:1.2;stroke-dasharray:3.5 2.2;stroke-linejoin:round}
+.pm-arw{fill:var(--pm-flow)}
+.pm-node{fill:#fff;stroke:var(--pm-line-strong);stroke-width:1}
+.pm-node.inf{stroke:var(--pm-soft);stroke-width:1.2;stroke-dasharray:3.5 2.2;fill:#fbfaf8}
+.pm-dec{fill:#fff;stroke:#2a2a28;stroke-width:1.2}
+.pm-t{font-family:var(--pm-sans);font-size:7.2px;font-weight:700;fill:var(--pm-ink)}
+.pm-o{font-family:var(--pm-sans);font-size:5.8px;font-weight:600;fill:var(--pm-ink)}
+.pm-d{font-family:var(--pm-sans);font-size:5.8px;fill:var(--pm-muted)}
+.pm-dl{font-family:var(--pm-sans);font-size:6.2px;font-weight:700;fill:var(--pm-ink)}
+.pm-pill{fill:#fff;stroke:#dedbd6;stroke-width:.8}
+.pm-pt{font-family:var(--pm-sans);font-size:5.4px;font-weight:700;fill:var(--pm-soft)}
+.pm-gap{fill:var(--pm-accent)}
+.pm-gn{font-family:var(--pm-sans);font-size:6.4px;font-weight:800;fill:#fff}
+.pm-clar{fill:#fff;stroke:var(--pm-accent);stroke-width:1.1;stroke-dasharray:2.2 1.5}
+.pm-cn{font-family:var(--pm-sans);font-size:6.4px;font-weight:800;fill:var(--pm-accent)}
+.pm-halo{fill:var(--pm-ai-ring);stroke:var(--pm-accent);stroke-width:1.4}
+.pm-ai-named{fill:var(--pm-accent);stroke:var(--pm-accent);stroke-width:1}
+.pm-ai-sugg{fill:#fff;stroke:var(--pm-accent);stroke-width:1}
+.pm-ain{font-family:var(--pm-sans);font-size:5.4px;font-weight:800;fill:#fff}
+.pm-ais{font-family:var(--pm-sans);font-size:5.4px;font-weight:800;fill:#b84000}
+.pm-k{font-family:var(--pm-sans);font-size:6px;font-weight:700;letter-spacing:.08em;fill:var(--pm-muted)}
+.pm-sum{font-family:var(--pm-sans);font-size:6px;fill:var(--pm-muted)}
+.pm-sum b,.pm-sumb{font-weight:700;fill:var(--pm-ink)}
+
+/* 8. Print: one slide per 1280 x 720 page, unscaled --------------------------- */
+@page{size:1280px 720px;margin:0}
+@media print{
+  html,body{background:#fff}
+  .deck{display:block;padding:0}
+  .frame{width:1280px;height:720px;margin:0;box-shadow:none;break-after:page;page-break-after:always;overflow:hidden}
+  .frame:last-child{break-after:auto;page-break-after:auto}
+  .slide{transform:none}
+  *{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}

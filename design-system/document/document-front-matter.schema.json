@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "document-front-matter.schema.json",
+  "title": "Document front matter",
+  "description": "The front matter of document/<name>.md: the four keys build_doc.py reads, plus mode, which bs.py reads and strips before it calls the builder. It sits between --- lines at the very top, one 'key: value' per line, and every key is optional. The body is the document type's Markdown subset, unchanged (design-system/document/README.md); its citations are in formats/FORMATS.md section 4.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "title": {"description": "Browser tab title. Defaults to the # title.", "type": "string", "minLength": 1, "maxLength": 120},
+    "label": {"description": "Context label, top right of the first sheet's header.", "type": "string", "minLength": 1, "maxLength": 80},
+    "date": {"description": "Shown after the footer text, as written (e.g. '22 October 2026').", "type": "string", "minLength": 1, "maxLength": 40},
+    "footer": {"description": "Footer text, printed 'FOOTER TEXT / DATE'.", "type": "string", "minLength": 1, "maxLength": 90},
+    "mode": {"description": "a4 (the default): A4 sheets split at <!-- page --> lines. screen: one column for reading on screen. bs.py passes it to build_doc.py as --a4 or --screen, and it is part of the build hash.", "enum": ["a4", "screen"]}
+  }
+}

@@ -1,38 +1,39 @@
-# Sienna – Your Dynamic AI Voice Companion (baby version)
+# baby-sienna
 
-This repository contains the source code for Sienna. It can run locally on the
-user’s machine.
+A template toolkit that turns a folder of client inputs into cited, self-contained pages. Every claim on every page cites a source record, and every record is the verbatim text of a file you received.
 
-## Requirements
-Sienna requires the following to run properly:
-- An audio input and output device
-- A web browser and Internet connection
-	- So far, Sienna has only been tested in Firefox, but it should be able to
-	run in other browsers.
-- Python ≥ 3.10
-- The following Python packages: `Flask Flask_Cors Flask_SocketIO openai python-dotenv websockets`
-	- You may need to install additional packages depending on your operating
-	environment.
+Start with **[AGENTS.md](AGENTS.md)**, the single guide for people and AI agents.
 
-*Note:* Sienna has been confirmed to run on Ubuntu Desktop, Fedora Workstation,
-and Windows 10. It **may or may not** work on other systems, so please report
-any additional testing.
+## The templates
 
-## Usage
-To run Sienna, type `python3 index.py` to start the server. Then, navigate to
-http://localhost:3000 in your browser. The Sienna UI should be displayed.
+| Template | What it shows | Example output (`python3 bs.py build examples`) |
+|---|---|---|
+| Data received | Every raw file received: folders, kinds, status, record, and where it is cited | `examples/out/data-received.html` |
+| Process map | The current-state swimlane board: steps, owners, decisions, gaps and clarifications | `examples/out/process-map/current-state.html` |
+| AI opportunities | The same process with AI opportunities: named by the client, or our suggestion | `examples/out/process-map-ai-opportunity/current-state-ai.html` |
+| Reference document | A Source-style A4 or screen document, every claim cited | `examples/out/document/request-handling-summary.html` |
+| Citation points | Every citation point the pages use, back to the data | in progress |
 
-### API Keys
-To run Sienna yourself, you will need an API key from OpenAI and ElevenLabs.
-**These are not free of charge**.
+`design-system/proposal/` is being retired from the showcase and will leave in the next commit.
 
-Once you have your keys, please set them as environment variables like this:
-```
-ELEVENLABS_API_KEY=<ElevenLabs API key>
-OPENAI_API_KEY=<OpenAI API key>
+## Quick start
+
+```sh
+python3 bs.py status examples          # the state and the next step
+python3 bs.py check examples           # every format and citation rule
+python3 bs.py check --selftest         # break the examples one rule at a time; every break is caught
+python3 bs.py build examples           # build every page into examples/out/
 ```
 
-Alternatively, you can put the above into a file named `.env`, and save this
-file in the same directory as the Python script.
+Python 3.8+ standard library only. A real engagement lives in `work/<engagement>/` (gitignored); see AGENTS.md.
 
-**Embedings functionality added in most recent commit from Local.**
+## Layout
+
+```
+bs.py            the one command: status | convert | check | build
+formats/         the shared formats: records, citations, rules (FORMATS.md)
+design-system/   one folder per template: format, look and builder
+examples/        the placeholder workspace, the only sample data
+```
+
+Client material never enters this repository: `work/` and `reference/` are gitignored, and examples use placeholder content only.

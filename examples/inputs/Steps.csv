@@ -1,0 +1,7 @@
+Step,Owner,System,Note
+Submit request,Team A,Email,Request sent by email
+Log request,Team B,Tracker,Logged in the tracker by hand
+Review request,Team B,,Checks the request is complete
+Request complete?,Team B,,Yes goes to approval; no goes back to Team A
+Approve request,Team B,,Approves requests up to the limit
+Record outcome,,Tracker,Outcome logged

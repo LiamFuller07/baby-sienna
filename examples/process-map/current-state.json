@@ -1,0 +1,64 @@
+{
+ "type": "process-map",
+ "meta": {
+  "kicker": "Operations",
+  "title": "Request handling: current state",
+  "subtitle": "{count:steps} steps and {count:decisions} decision across {count:groups} views, from the step list and the follow-up call.",
+  "flags": ["confidential", "draft"],
+  "client": "Client A",
+  "date": "2026-10-22",
+  "footer": "Source · current-state process map"
+ },
+ "systems": [
+  {"id": "email", "label": "Email", "icon": "email", "cite": [{"source": "WB1", "locator": "Steps!C2"}]},
+  {"id": "tracker", "label": "Tracker", "icon": "spreadsheet", "cite": [{"source": "WB1", "locator": "Steps!C3"}]}
+ ],
+ "lanes": [
+  {"id": "team-a", "label": "Team A"},
+  {"id": "team-b", "label": "Team B"}
+ ],
+ "groups": [
+  {"id": "G01", "label": "Intake"},
+  {"id": "G02", "label": "Review and approval"}
+ ],
+ "nodes": [
+  {"id": "SUB-01", "title": "Submit request", "lane": "team-a", "group": "G01", "state": "grounded", "owner": "Team A", "systems": ["email"],
+   "cite": [{"source": "WB1", "locator": "Steps row 2"}, {"source": "T1", "locator": "00:00:05"}]},
+  {"id": "LOG-01", "title": "Log request", "lane": "team-b", "group": "G01", "state": "grounded", "owner": "Team B", "systems": ["tracker"],
+   "cite": [{"source": "WB1", "locator": "Steps row 3"}]},
+  {"id": "REV-01", "title": "Review request", "lane": "team-b", "group": "G02", "state": "grounded",
+   "cite": [{"source": "WB1", "locator": "Steps row 4"}, {"source": "T1", "locator": "00:00:18", "quote": "checks it is complete"}]},
+  {"id": "REV-02", "title": "Request complete?", "kind": "decision", "lane": "team-b", "group": "G02", "state": "grounded",
+   "cite": [{"source": "WB1", "locator": "Steps row 5"}]},
+  {"id": "RES-01", "title": "Complete and resubmit", "lane": "team-a", "group": "G02", "state": "inferred",
+   "cite": [{"type": "inferred", "reading": "Team A completes the request again", "from": [{"source": "T1", "locator": "00:00:31"}, {"source": "WB1", "locator": "Steps!D5"}]}]},
+  {"id": "APP-01", "title": "Approve request", "lane": "team-b", "group": "G02", "state": "grounded",
+   "cite": [{"source": "WB1", "locator": "Steps row 6"}, {"source": "T1", "locator": "00:00:47"}]},
+  {"id": "REC-01", "title": "Record outcome", "lane": "team-b", "group": "G02", "state": "gap", "systems": ["tracker"],
+   "cite": [{"source": "WB1", "locator": "Steps row 7"}]}
+ ],
+ "edges": [
+  {"from": "SUB-01", "to": "LOG-01"},
+  {"from": "LOG-01", "to": "REV-01"},
+  {"from": "REV-01", "to": "REV-02"},
+  {"from": "REV-02", "to": "APP-01", "kind": "conditional", "label": "Yes"},
+  {"from": "REV-02", "to": "RES-01", "kind": "conditional", "label": "No"},
+  {"from": "RES-01", "to": "REV-01"},
+  {"from": "APP-01", "to": "REC-01"}
+ ],
+ "gaps": [
+  {"id": "GAP-01", "title": "No owner is named for recording the outcome",
+   "text": "The step list names the step [WB1 Steps!A7] but leaves its owner blank, and the call does not mention the outcome. It is drawn in Team B’s lane because Team B keeps the tracker [T1 00:00:18].",
+   "nodes": ["REC-01"],
+   "cite": [{"source": "WB1", "locator": "Steps row 7"},
+            {"type": "absent", "needle": "Team", "in": [{"source": "WB1", "locator": "Steps row 7"}]},
+            {"type": "absent", "needle": "outcome", "in": [{"source": "T1"}]}]}
+ ],
+ "clarifications": [
+  {"id": "P01", "title": "Who sets the approval limit?",
+   "shows": "The call gives a limit of 5,000 [T1 00:00:47], and the step list says Team B “Approves requests up to the limit”.",
+   "ask": "Who sets the limit, and where is it written down?",
+   "nodes": ["APP-01"],
+   "cite": [{"source": "WB1", "locator": "Steps!D6"}]}
+ ]
+}

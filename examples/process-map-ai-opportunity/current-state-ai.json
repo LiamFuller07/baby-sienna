@@ -1,0 +1,39 @@
+{
+ "type": "process-map-ai-opportunity",
+ "base": "current-state",
+ "meta": {
+  "kicker": "AI opportunities",
+  "title": "Request handling: AI opportunities",
+  "subtitle": "Where AI could help, marked on the current-state map."
+ },
+ "ai": [
+  {"id": "AI-01", "title": "Draft the review summary", "origin": "named",
+   "does": "Drafts a summary of each request for Team B to check during review.",
+   "nodes": ["REV-01"],
+   "cite": [{"source": "T1", "locator": "00:01:15", "quote": "We would like AI to draft the review summary"}]},
+  {"id": "AI-02", "title": "Read each request into the tracker", "origin": "suggested",
+   "does": "Reads the request email and fills in the tracker, so Team B no longer logs it by hand.",
+   "nodes": ["LOG-01"],
+   "cite": [{"source": "WB1", "locator": "Steps!D3", "quote": "Logged in the tracker by hand"},
+            {"type": "inferred", "reading": "Logging each request by hand is slow and could be automated",
+             "from": [{"source": "WB1", "locator": "Steps!D3"}, {"source": "T1", "locator": "00:01:02"}]}],
+   "agentic": {
+    "trigger": "A new request arrives by email.",
+    "steps": ["Read the request email.", "Fill in the tracker fields from the request.", "Send the new tracker entry to Team B."],
+    "decides": [{"after": 3, "who": "Team B", "what": "checks the entry and accepts it or corrects it"}],
+    "systems": ["email", "tracker"],
+    "logging": "Each run records the email, the fields it filled and the decision Team B made."
+   }},
+  {"id": "AI-03", "title": "Check requests are complete on arrival", "origin": "suggested",
+   "does": "Checks each request for missing details before review, so fewer requests go back to Team A.",
+   "groups": ["G02"],
+   "cite": [{"type": "inferred", "reading": "Incomplete requests cause rework for Team A",
+             "from": [{"source": "T1", "locator": "00:00:31"}, {"source": "WB1", "locator": "Steps!D4"}]}]},
+  {"id": "AI-04", "title": "Keep each request’s history in one place", "origin": "suggested",
+   "does": "Records every change to a request in the tracker, so each team can see where a request is.",
+   "groups": "all",
+   "cite": [{"type": "inferred", "reading": "Only the outcome is logged in the tracker today",
+             "from": [{"source": "WB1", "locator": "Steps!D7"}, {"source": "WB1", "locator": "Steps!C3"}]},
+            {"source": "WEB1", "locator": "¶3"}]}
+ ]
+}

@@ -1,0 +1,336 @@
+{
+  "$schema": "proposal.schema.json",
+  "meta": {
+    "title": "[Proposal title] for [Client]",
+    "client": {
+      "name": "[Client]",
+      "label": "[Client name or context label]"
+    },
+    "date": "2026-10-22",
+    "status": "Proposal for discussion"
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "title": "[Source record title]",
+      "kind": "meeting-notes",
+      "date": "[Date]",
+      "detail": "[Who provided it, length or version]"
+    },
+    {
+      "id": "S2",
+      "title": "[Source record title]",
+      "kind": "document",
+      "date": "[Date]",
+      "detail": "[Who provided it, length or version]"
+    }
+  ],
+  "slides": [
+    {
+      "type": "cover",
+      "title": "[Proposal title]",
+      "qualifier": "[qualifier]",
+      "lead": "[Lead: what the client chooses, what we do and what they receive, in one or two sentences.]",
+      "support": "[Support line: the audience, or the one caveat that matters.]"
+    },
+    {
+      "type": "situation",
+      "title": "[Where the client is today]",
+      "lead": "[What we understand so far. Every point names its source.]",
+      "points": [
+        {
+          "heading": "[Point heading]",
+          "text": "[A fact about the client, in one or two lines, with its citation.]",
+          "cite": [
+            {
+              "source": "S1",
+              "locator": "p2"
+            }
+          ]
+        },
+        {
+          "heading": "[Point heading]",
+          "text": "[A fact about the client, in one or two lines, with its citation.]",
+          "cite": [
+            {
+              "source": "S2",
+              "locator": "¶3"
+            }
+          ]
+        },
+        {
+          "heading": "[Point heading]",
+          "text": "[A point with no source yet carries TO CONFIRM instead.]",
+          "to_confirm": "[What to check, and with whom]"
+        }
+      ],
+      "stats": [
+        {
+          "value": "[N]",
+          "label": "[What the figure counts]",
+          "cite": [
+            {
+              "source": "S2"
+            }
+          ]
+        },
+        {
+          "value": "[N]",
+          "label": "[What the figure counts]",
+          "cite": [
+            {
+              "source": "S1",
+              "locator": "p4"
+            }
+          ]
+        }
+      ],
+      "implication": {
+        "text": "[What this means for the proposal, in one or two sentences.]"
+      }
+    },
+    {
+      "type": "divider",
+      "eyebrow": "[Section label]",
+      "title": "[Section title]",
+      "subtitle": "[One line on what this section covers.]"
+    },
+    {
+      "type": "focus",
+      "title": "[Choose the focus]",
+      "lead": "[Ask the client to pick one area, and say why each is a good size.]",
+      "options": [
+        {
+          "title": "[Area one]",
+          "text": "[What this area covers, from start to end.]",
+          "questions": [
+            "[A question it answers]",
+            "[Another question]"
+          ],
+          "evidence": {
+            "text": "[Why here: a cited fact.]",
+            "cite": [
+              {
+                "source": "S1",
+                "locator": "p1"
+              }
+            ]
+          },
+          "recommended": true
+        },
+        {
+          "title": "[Area two]",
+          "text": "[What this area covers, from start to end.]",
+          "questions": [
+            "[A question it answers]",
+            "[Another question]"
+          ]
+        },
+        {
+          "title": "[Area three]",
+          "text": "[What this area covers, from start to end.]",
+          "questions": [
+            "[A question it answers]",
+            "[Another question]"
+          ]
+        }
+      ],
+      "note": "[Or another area the client would like to explore.]"
+    },
+    {
+      "type": "outputs",
+      "title": "[What you could receive]",
+      "lead": "[Agree the questions, then choose the outputs that will be useful.]",
+      "items": [
+        {
+          "kind": "report",
+          "title": "[Output title]",
+          "text": "[One line on what it shows.]"
+        },
+        {
+          "kind": "recommendation",
+          "title": "[Output title]",
+          "text": "[One line on what it shows.]",
+          "caption": "[Optional caption]"
+        },
+        {
+          "kind": "process_map",
+          "title": "[Output title]",
+          "text": "[One line on what it shows.]"
+        },
+        {
+          "kind": "ai_map",
+          "title": "[Output title]",
+          "text": "[One line on what it shows.]"
+        }
+      ],
+      "note": "[Illustrations only.]"
+    },
+    {
+      "type": "deliverables",
+      "title": "[The deliverables, in a few words]",
+      "lead": "[Which outputs are core and which are optional.]",
+      "items": [
+        {
+          "title": "[Core deliverable]",
+          "text": "[One line on what it contains.]"
+        },
+        {
+          "title": "[Core deliverable]",
+          "text": "[One line on what it contains.]"
+        },
+        {
+          "title": "[Core deliverable]",
+          "text": "[One line on what it contains.]"
+        },
+        {
+          "title": "[Optional deliverable]",
+          "text": "[One line on what it contains.]",
+          "optional": true
+        }
+      ],
+      "note": "[Or other deliverables the client would like to explore.]"
+    },
+    {
+      "type": "process",
+      "layout": "steps",
+      "title": "[How it will work, as a message]",
+      "lead": "[The steps and the overall timing in one sentence.]",
+      "steps": [
+        {
+          "title": "[Step one]",
+          "when": "[Week 1]",
+          "text": "[What happens in this step and who is involved.]",
+          "output": "[What the client has at the end]"
+        },
+        {
+          "title": "[Step two]",
+          "when": "[Weeks 1-2]",
+          "text": "[What happens in this step and who is involved.]",
+          "output": "[What the client has at the end]"
+        },
+        {
+          "title": "[Step three]",
+          "when": "[Weeks 2-3]",
+          "text": "[What happens in this step and who is involved.]",
+          "output": "[What the client has at the end]"
+        },
+        {
+          "title": "[Step four]",
+          "when": "[Week 4]",
+          "text": "[What happens in this step and who is involved.]",
+          "output": "[What the client has at the end]"
+        }
+      ],
+      "total": "[Overall timing in one line.]"
+    },
+    {
+      "type": "needs",
+      "title": "[What we need, as a message]",
+      "lead": "[The roles and access we ask for, and how much time.]",
+      "items": [
+        {
+          "role": "[Role]",
+          "time": "[N] hours a week",
+          "text": "[What this person does during the work, in one or two lines.]"
+        },
+        {
+          "role": "[Role]",
+          "time": "[N] hours each",
+          "text": "[What these people do during the work, in one or two lines.]"
+        },
+        {
+          "role": "Access to documents",
+          "time": "[When]",
+          "text": "[Which documents, templates or examples we need.]"
+        }
+      ],
+      "note": "[One line on how the details are agreed.]"
+    },
+    {
+      "type": "team",
+      "title": "[The team, as a message]",
+      "lead": "[Who stays with the work, and where partner firms add depth.]",
+      "people": [
+        {
+          "name": "[Name]",
+          "role": "[Role]",
+          "text": "[What they own on this work.]"
+        },
+        {
+          "name": "[Name]",
+          "role": "[Role]",
+          "text": "[What they own on this work.]"
+        }
+      ],
+      "firms": {
+        "logos": [
+          {
+            "name": "Partner firm 1"
+          },
+          {
+            "name": "Partner firm 2"
+          },
+          {
+            "name": "Partner firm 3"
+          },
+          {
+            "name": "Partner firm 4"
+          }
+        ],
+        "note": "And others"
+      }
+    },
+    {
+      "type": "commercials",
+      "title": "[The next step, as a message]",
+      "next_step": {
+        "text": "[What the client decides now, and what happens once they do.]",
+        "actions": [
+          "[First action]",
+          "[Second action]",
+          "[Third action]"
+        ]
+      },
+      "terms": {
+        "price": "[PRICE]",
+        "price_note": "[Fixed fee, or how the price is set]",
+        "rows": [
+          {
+            "label": "Scope",
+            "value": "[What the price covers]"
+          },
+          {
+            "label": "Timing",
+            "value": "[Duration from the start date]"
+          },
+          {
+            "label": "Payment",
+            "value": "[TERMS]"
+          },
+          {
+            "label": "Valid until",
+            "value": "[DATE]"
+          }
+        ],
+        "note": "[How follow-on work would be scoped and priced.]"
+      }
+    },
+    {
+      "type": "closing",
+      "eyebrow": "[Thank you]",
+      "title": "[Closing message]",
+      "text": "[One line that restates the next step.]",
+      "contact": {
+        "name": "[Name]",
+        "role": "[Role], Source",
+        "email": "[email]",
+        "phone": "[phone]"
+      }
+    },
+    {
+      "type": "sources",
+      "title": "Sources"
+    }
+  ]
+}

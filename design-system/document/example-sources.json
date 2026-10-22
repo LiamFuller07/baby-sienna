@@ -1,0 +1,6 @@
+{
+  "DOC": "README.md, the guide to the Source document type (this folder)",
+  "CSS": "doc.css, the Source document stylesheet (this folder)",
+  "BLD": "build_doc.py, the Markdown builder (this folder)",
+  "WB1": {"name": "Sample workbook, Sheet1", "note": "illustrative only, to show the citation format"}
+}

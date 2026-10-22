@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "source-record.schema.json",
+  "title": "Source record file",
+  "description": "The standard format every input is converted into: records/<id>.json, one file per raw input. The header describes the input once, and its fields are exactly the flags of bs.py convert. 'records' holds the input's units (cells, paragraphs, turns) verbatim, in reading order. A record's address is '<id> <locator>', e.g. 'WB1 Steps!C3'. A record file is never edited by hand: one that fails a check is deleted and its input converted again.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "kind", "captured", "file", "sha256", "coverage", "records"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "id": {"description": "--id. Equals the file name.", "$ref": "citation.schema.json#/$defs/sourceId"},
+    "title": {"description": "--title. What the input is, in plain words. Printed in every Sources block.", "type": "string", "minLength": 3, "maxLength": 70},
+    "kind": {"description": "--kind. Selects the locator grammar and the readers (citation-types.json > kinds).", "enum": ["sheet", "document", "transcript", "web"]},
+    "captured": {"description": "--captured. When the material was received or retrieved (ISO date).", "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "detail": {"description": "--detail. One line: who provided it, size, version, how speakers were pseudonymised. Printed after the title.", "type": "string", "minLength": 1, "maxLength": 60},
+    "url": {"description": "--url. Where a web page was retrieved from. Required for kind web; its domain is printed.", "type": "string", "pattern": "^https?://[^\\s/]+", "maxLength": 200},
+    "legacy": {"description": "--legacy. Plain metadata: the material was already old when it arrived. Nothing renders from it and no rule reads it.", "const": true},
+    "file": {"description": "The raw input, relative to the workspace. It stays inside inputs/.", "type": "string", "pattern": "^inputs/(?!(.*/)?\\.\\.(/|$))[^\\\\]+$", "maxLength": 200},
+    "sha256": {"description": "sha256 of the raw file at conversion (64 lower-case hex). Inputs never change, so it always matches.", "type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "coverage": {"description": "complete (the default): the records hold every non-empty unit of the input, and the input is the whole material. partial (--partial): an excerpt, or only some units recorded. An absent search over a partial source is PROVISIONAL.", "enum": ["complete", "partial"]},
+    "records": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/record"}}
+  },
+  "allOf": [
+    {"if": {"required": ["kind"], "properties": {"kind": {"const": "web"}}}, "then": {"required": ["url"]}}
+  ],
+  "$defs": {
+    "record": {
+      "type": "object", "additionalProperties": false, "required": ["locator", "text"],
+      "properties": {
+        "locator": {"description": "The unit's position in its kind's record grammar. Unique in the file.", "$ref": "citation.schema.json#/$defs/locator"},
+        "text": {"description": "Verbatim: exactly as the input stores it. Never summarised, corrected or reformatted.", "type": "string", "minLength": 1, "maxLength": 4000},
+        "context": {"description": "What the text sits under: the column header, the nearest heading, or the speaker.", "type": "string", "minLength": 1, "maxLength": 120}
+      }
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "title": "Request handling pilot for Client A",
+    "client": {"name": "Client A"},
+    "date": "2026-10-22",
+    "status": "Proposal for discussion"
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "title": "Request handling pilot",
+      "qualifier": "for Client A",
+      "lead": "Client A chooses the process to map and the outputs it wants. Over a few weeks, Source gathers the evidence, builds the maps and reviews them with your nominated expert.",
+      "support": "Placeholder content: every name and figure in this deck is invented.",
+      "art": "process_map"
+    },
+    {
+      "type": "situation",
+      "title": "Where Client A is today",
+      "lead": "What we understand so far from the material Client A has shared. Each point names its source.",
+      "points": [
+        {"heading": "Requests cross several teams", "text": "Requests pass between the teams by email and a shared tracker.",
+         "cite": [{"source": "D1", "locator": "¶3"}, {"source": "T1", "locator": "00:00:05"}]},
+        {"heading": "Owners are not always recorded", "text": "The steps are listed in a workbook, but at least one step has no owner.",
+         "cite": [{"source": "WB1", "locator": "Steps row 7"}]},
+        {"heading": "Logging takes time", "text": "Each request is logged in the tracker by hand.",
+         "cite": [{"source": "T1", "locator": "00:01:02"}]}
+      ],
+      "stats": [
+        {"value": "[N]", "label": "teams involved in the process", "cite": [{"source": "D1", "locator": "¶2"}]},
+        {"value": "[N]", "label": "systems used along the way", "to_confirm": "Confirm the systems in use with Team B"}
+      ],
+      "implication": {"text": "A shared map of how requests really move comes before deciding what to change or automate."}
+    },
+    {
+      "type": "focus",
+      "title": "Choose the focus",
+      "lead": "Pick one area for the pilot. Each option is small enough to map in a few weeks.",
+      "options": [
+        {"title": "Request handling", "text": "From a submitted request to a recorded outcome, including review and approval.",
+         "questions": ["Where do requests wait?", "Which steps are done by hand?"],
+         "evidence": {"text": "Named in the first call as the area to map", "cite": [{"source": "D1", "locator": "¶5"}]},
+         "recommended": true},
+        {"title": "Approvals", "text": "How approval limits are set, applied and recorded.",
+         "questions": ["Who sets each limit?", "Where is it written down?"]}
+      ],
+      "note": "Or another area Client A would like to explore."
+    },
+    {
+      "type": "outputs",
+      "title": "What you could receive",
+      "lead": "Agree the questions you want answered, then choose the outputs that will be useful.",
+      "items": [
+        {"kind": "process_map", "title": "Current-state map", "text": "How work moves between people, teams and systems."},
+        {"kind": "ai_map", "title": "AI-opportunity map", "text": "Where AI could remove manual steps, marked on the same map."},
+        {"kind": "report", "title": "Findings report", "text": "What we found, the gaps and the opportunities to explore."}
+      ],
+      "note": "Illustrations only. Each output is shaped to the area Client A chooses."
+    },
+    {
+      "type": "deliverables",
+      "title": "Three core outputs, one optional",
+      "items": [
+        {"title": "Current-state process map", "text": "Every step, owner, hand-over and system, with sources."},
+        {"title": "Gaps and clarifications", "text": "What is missing or unclear, ready to talk through."},
+        {"title": "AI-opportunity map", "text": "Where automation could help, marked on the map."},
+        {"title": "Findings report", "text": "A short write-up of what we found.", "optional": true}
+      ]
+    },
+    {
+      "type": "process",
+      "title": "From scope to results in four weeks",
+      "steps": [
+        {"title": "Set the scope", "when": "Week 1", "text": "Confirm the focus, the outputs and the people we will speak to.", "output": "Agreed scope and plan"},
+        {"title": "Gather the evidence", "when": "Weeks 1-2", "text": "Short interviews and the documents you share.", "output": "Interview notes"},
+        {"title": "Build the maps", "when": "Weeks 2-3", "text": "We draft the maps, then check them with your expert.", "output": "Draft maps for review"},
+        {"title": "Share the results", "when": "Week 4", "text": "Present the findings and agree next steps.", "output": "Final outputs"}
+      ]
+    },
+    {
+      "type": "needs",
+      "title": "Two roles and a few documents",
+      "items": [
+        {"role": "An expert reviewer", "time": "[N] hours a week", "text": "Someone who knows the area and can review our outputs and challenge the findings."},
+        {"role": "Interview attendees", "time": "[N] hours each", "text": "People who do the work and can explain it in short interviews."}
+      ]
+    },
+    {
+      "type": "commercials",
+      "title": "Agree the scope, then start",
+      "next_step": {"text": "Choose the area, the outputs and the people, then agree a start date.", "actions": ["Agree the focus and the outputs", "Name the expert reviewer"]},
+      "terms": {"price": "[PRICE]", "price_note": "Fixed fee for the pilot", "rows": [{"label": "Payment", "value": "[TERMS]"}, {"label": "Valid until", "value": "[DATE]"}]}
+    },
+    {
+      "type": "sources",
+      "title": "Sources"
+    }
+  ]
+}

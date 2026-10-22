@@ -1,0 +1,281 @@
+<!--
+  fills.html: the AI layer's slot fills, and nothing else (README section 2). build_map.py reads each part
+  below and puts it in the named slot of design-system/process-map/board.html; the SVG marks, the summary,
+  the card rows and the tooltip lines are computed there from the layer file. {{name}} is filled by the
+  build. The base board is never changed: removing every .pm-ai* element gives the base page's board.
+-->
+<!--fill:style-->
+<style id="pm-ai-style">
+:root{--ai-tint:#fff4ec;--ai-ring:#ffe6d6}
+/* ---------------------------------------------------------------- visibility: the layer draws while the board has .has-ai */
+html.pm-js .pm-board:not(.has-ai) .pm-ai{display:none}
+html.pm-js .pm-board:not(.has-ai) .pm-ai.is-ai-peek{display:inline}
+.pm-board .pm-node,.pm-board .pm-decision-group,.pm-board .pm-edge,.pm-board .pm-pill-g,.pm-ai-node,.pm-ai-marks{transition:opacity .15s ease}
+/* halo: under the node, outside its border */
+.pm-ai-halo{fill:var(--ai-ring);stroke:var(--accent);stroke-width:2}
+.pm-ai-node.is-ai-hover .pm-ai-halo,.pm-board.is-ai-focus .pm-ai-node.is-ai-hit .pm-ai-halo{stroke-width:3.5}
+/* squares: AI marks are squares, never circles; filled = named, outlined = suggested */
+.pm-ai-sq rect{stroke:var(--accent);stroke-width:1.5}
+.pm-ai-sq.is-named rect{fill:var(--accent)}
+.pm-ai-sq.is-suggested rect{fill:var(--paper)}
+.pm-ai-sq text,.pm-ai-more text{font-size:9px;font-weight:800;text-anchor:middle}
+.pm-ai-sq.is-named text{fill:var(--ink)}
+.pm-ai-sq.is-suggested text{fill:var(--accent-ink)}
+.pm-ai-sq.is-ai-on rect{stroke:var(--ink)}
+.pm-ai-more rect{fill:var(--paper);stroke:var(--line-strong);stroke-width:1}
+.pm-ai-more text{fill:var(--ink)}
+/* view underline and all-views bracket */
+rect.pm-ai-rail{fill:var(--accent)}
+rect.pm-ai-rail.is-ai-on,.pm-ai-view.is-ai-on rect.pm-ai-rail{stroke:var(--accent);stroke-width:1.5}
+path.pm-ai-rail{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:square}
+path.pm-ai-rail.is-ai-on,.pm-ai-all.is-ai-on path.pm-ai-rail{stroke-width:3.5}
+.pm-ai-all-text{fill:var(--accent-ink);font-size:10px;font-weight:700;letter-spacing:.04em}
+.pm-ai-band-hit{fill:var(--accent);fill-opacity:0}
+.pm-ai-band-hit.is-ai-on{fill-opacity:.08}
+/* hit targets: transparent, over everything */
+.pm-ai-hit{fill:transparent;cursor:pointer;outline:none}
+.pm-ai-hit:focus-visible,.pm-ai-hit.is-focus{stroke:var(--ink);stroke-width:2}
+/* a card row in focus: its steps stay, the rest steps back */
+.pm-board.is-ai-focus .pm-node:not(.is-ai-hit),
+.pm-board.is-ai-focus .pm-decision-group,
+.pm-board.is-ai-focus .pm-edge,
+.pm-board.is-ai-focus .pm-pill-g,
+.pm-board.is-ai-focus .pm-ai-node:not(.is-ai-hit),
+.pm-board.is-ai-focus .pm-ai-marks:not(.is-ai-hit){opacity:.26}
+.pm-node.is-ai-flash .pm-node-rect{stroke:var(--ink);stroke-width:2}
+
+/* ---------------------------------------------------------------- toolbar: toggle, then the summary strip */
+.pm-ai-toggle{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 10px 0 9px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);color:var(--ink);font:600 12px/1 var(--sans);cursor:pointer;white-space:nowrap}
+.pm-ai-toggle-ind{width:12px;height:12px;border-radius:2px;border:1.5px solid var(--accent);background:var(--accent)}
+.pm-ai-toggle-state{padding-left:8px;border-left:1px solid var(--line);color:var(--accent-ink);font-weight:700}
+.pm-ai-toggle[aria-pressed="false"] .pm-ai-toggle-ind{background:var(--paper);border-color:var(--soft)}
+.pm-ai-toggle[aria-pressed="false"] .pm-ai-toggle-state{color:var(--muted)}
+.pm-ai-toggle:hover,.pm-ai-toggle.is-hover{border-color:var(--ink)}
+.pm-ai-toggle:focus-visible,.pm-ai-toggle.is-focus{outline:2px solid var(--ink);outline-offset:2px}
+.pm-ai-toggle:disabled{cursor:default;color:var(--muted);background:var(--bg);border-color:var(--line)}
+.pm-ai-toggle:disabled .pm-ai-toggle-ind{background:transparent;border:1.5px dashed var(--line-strong)}
+.pm-ai-toggle:disabled .pm-ai-toggle-state{color:var(--muted)}
+.pm-ai-summary{flex:1 1 360px;min-width:0;margin:0;overflow:hidden;color:var(--muted);font-size:12px;line-height:1.4}
+.pm-ai-summary-in{display:flex;flex-wrap:wrap;align-items:center;gap:4px 0;margin-left:-19px}
+.pm-ai-summary-in > span{position:relative;display:inline-flex;align-items:center;gap:5px;margin-left:19px;white-space:nowrap}
+.pm-ai-summary-in > span::before{content:"·";position:absolute;left:-12px;color:var(--line-strong);font-weight:700}
+.pm-ai-summary b{color:var(--ink);font-weight:700}
+.pm-ai-sum-sq{width:10px;height:10px;border-radius:2px;border:1.5px solid var(--accent);background:var(--paper)}
+.pm-ai-sum-sq.is-named{background:var(--accent)}
+.pm-ai-summary .pm-ai-sum-off{display:none}
+.pm-ai-summary.is-off .pm-ai-sum-off{display:inline-flex}
+
+/* ---------------------------------------------------------------- legend block */
+.pm-ai-legend{margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+.pm-ai-legend-h{margin:0 0 8px;color:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.pm-ai-legend-off{display:none}
+.pm-ai-legend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 14px}
+.pm-ai-sw{flex:0 0 auto;width:12px;height:12px;border-radius:2px;border:1.5px solid var(--accent)}
+.pm-ai-sw-named{background:var(--accent)}
+.pm-ai-sw-suggested{background:var(--paper)}
+.pm-ai-sw-halo{width:16px;height:12px;border:2px solid var(--accent);border-radius:3px;background:var(--paper);box-shadow:inset 0 0 0 2px var(--ai-ring),inset 0 0 0 3px var(--line-strong)}
+.pm-ai-sw-rail{width:16px;height:8px;border:0;border-radius:0;border-top:2px solid var(--accent);background:linear-gradient(var(--accent),var(--accent)) left top/2px 7px no-repeat,linear-gradient(var(--accent),var(--accent)) right top/2px 7px no-repeat}
+.pm-legend.is-ai-off .pm-ai-legend{opacity:.4}
+.pm-legend.is-ai-off .pm-ai-legend-off{display:inline}
+
+/* ---------------------------------------------------------------- the AI opportunities card */
+.pm-ai-card h2{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.pm-ai-count{color:var(--muted);font-size:12px;font-weight:600}
+.pm-ai-list{margin:0;padding:0;list-style:none}
+.pm-ai-item{display:grid;grid-template-columns:20px minmax(0,1fr);gap:0 14px;margin:0 -20px;padding:18px 20px;border-top:1px solid var(--line);transition:background .15s ease}
+.pm-ai-item:first-child{border-top:0;padding-top:6px}
+.pm-ai-item.is-ai-active,.pm-ai-item.is-ai-linked{background:var(--ai-tint);box-shadow:inset 3px 0 0 var(--accent)}
+.pm-ai-item.is-ai-pinned{background:var(--ai-tint);box-shadow:inset 3px 0 0 var(--accent),inset 0 0 0 1px var(--ai-ring)}
+.pm-ai-mark{display:grid;place-items:center;width:20px;height:20px;border:1.5px solid var(--accent);border-radius:2px;background:var(--paper);color:var(--accent-ink);font-size:10px;font-weight:800;line-height:1}
+.pm-ai-mark.is-named{background:var(--accent);color:var(--ink)}
+.pm-ai-body{min-width:0}
+.pm-ai-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.pm-ai-title{margin:0;font-size:14.5px;font-weight:700;line-height:1.3}
+.pm-ai-id{margin-right:2px;color:var(--accent-ink)}
+.pm-ai-origin{display:inline-block;padding:2px 6px;border:1.5px solid var(--accent);border-radius:2px;font-size:10px;font-weight:700;letter-spacing:.03em;line-height:1.3;text-transform:uppercase;white-space:nowrap}
+.pm-ai-origin.is-named{background:var(--accent);color:var(--ink)}
+.pm-ai-origin.is-suggested{background:var(--paper);color:var(--accent-ink)}
+.pm-ai-show{margin-left:auto;padding:3px 0;border:0;background:none;color:var(--muted);font:600 11.5px/1.2 var(--sans);text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer}
+.pm-ai-show:hover,.pm-ai-show[aria-pressed="true"]{color:var(--ink);text-decoration-color:var(--accent)}
+.pm-ai-show:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pm-ai-cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:6px 32px}
+.pm-ai-label{display:block;margin:14px 0 5px;color:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.pm-ai-does{margin:0;max-width:68ch;font-size:13.5px;line-height:1.55}
+.pm-ai-steps{display:flex;flex-wrap:wrap;gap:6px}
+.pm-ai-step{display:inline-flex;align-items:baseline;gap:6px;padding:4px 8px;border:1px solid var(--line-strong);border-radius:2px;background:var(--paper);color:var(--ink);font-size:12px;line-height:1.25;text-decoration:none}
+.pm-ai-step b{color:var(--accent-ink);font-size:11px;font-weight:700;white-space:nowrap}
+.pm-ai-step.is-scope{border-style:dashed}
+.pm-ai-step:hover{border-color:var(--accent)}
+.pm-ai-step:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.pm-ai-cite{margin:0;padding:1px 0 1px 12px;border-left:2px solid var(--line-strong);font-size:13px;line-height:1.5}
+.pm-ai-cite.is-inferred{border-left-style:dashed;color:var(--muted)}
+.pm-ai-cite strong{color:var(--ink)}
+.pm-ai-cite + .pm-prov{margin:4px 0 10px}
+/* agentic version: no orange inside */
+.pm-ai-agentic{margin-top:16px;border:1px solid var(--line);border-radius:2px;background:var(--bg)}
+.pm-ai-agentic > summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:9px 12px;cursor:pointer;list-style:none}
+.pm-ai-agentic > summary::-webkit-details-marker{display:none}
+.pm-ai-agentic > summary::before{content:"";align-self:center;width:6px;height:6px;margin-right:2px;border-right:1.5px solid var(--flow);border-bottom:1.5px solid var(--flow);transform:rotate(-45deg);transition:transform .15s ease}
+.pm-ai-agentic[open] > summary::before{transform:rotate(45deg)}
+.pm-ai-agentic > summary:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.pm-ai-ag-title{font-size:12.5px;font-weight:700}
+.pm-ai-ag-meta{color:var(--muted);font-size:11.5px}
+.pm-ai-ag{display:grid;grid-template-columns:120px minmax(0,1fr);margin:0;padding:0 12px 6px;border-top:1px solid var(--line)}
+.pm-ai-ag > div{display:contents}
+.pm-ai-ag dt,.pm-ai-ag dd{padding:10px 0;border-top:1px solid var(--line)}
+.pm-ai-ag > div:first-child dt,.pm-ai-ag > div:first-child dd{border-top:0}
+.pm-ai-ag dt{padding-top:12px;color:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.pm-ai-ag dd{margin:0;font-size:13px;line-height:1.5}
+.pm-ai-flow{position:relative;margin:0;padding:0;list-style:none}
+.pm-ai-flow::before{content:"";position:absolute;left:9px;top:10px;bottom:10px;border-left:1.5px solid var(--line-strong)}
+.pm-ai-flow li{position:relative;display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;padding:3px 0}
+.pm-ai-flow .n{position:relative;display:grid;place-items:center;width:20px;height:20px;border:1px solid var(--line-strong);border-radius:2px;background:var(--paper);color:var(--flow);font-size:10px;font-weight:800}
+.pm-ai-flow .d{position:relative;display:grid;place-items:center;width:20px;height:20px}
+.pm-ai-flow .d::before{content:"";width:11px;height:11px;rotate:45deg;border:1.5px solid var(--ink);background:var(--paper)}
+.pm-ai-flow .is-person b{font-weight:700}
+.pm-ai-sys{display:inline-flex;align-items:center;gap:6px;margin:0 14px 4px 0;color:var(--muted);font-size:12px;white-space:nowrap}
+.pm-ai-sys svg{width:14px;height:14px}
+/* empty state */
+.pm-ai-empty{display:grid;grid-template-columns:20px minmax(0,1fr);gap:4px 14px;align-items:center;padding:14px 16px;border:1px dashed var(--line-strong);border-radius:2px;background:var(--bg)}
+.pm-ai-empty .pm-ai-mark{border:1.5px dashed var(--line-strong);background:transparent}
+.pm-ai-empty p{margin:0;font-size:13px;line-height:1.5}
+/* tooltip lines (the tooltip-lines hook) */
+.pm-ai-tip{display:block;margin-top:7px;padding-top:6px;border-top:1px solid var(--line)}
+.pm-ai-tip-line{display:grid;grid-template-columns:16px minmax(0,1fr);gap:7px;align-items:start;margin-top:4px}
+.pm-ai-tip-line .pm-ai-mark{width:16px;height:16px;font-size:8.5px}
+.pm-ai-tip-foot{display:block;margin-top:6px;color:var(--muted);font-size:11px}
+
+@media (max-width:900px){.pm-ai-cols{grid-template-columns:1fr}}
+@media (max-width:700px){.pm-ai-ag{grid-template-columns:1fr}.pm-ai-ag dt{padding-bottom:0}.pm-ai-ag dd{padding-top:4px;border-top:0}}
+@media print{
+  .pm-board .pm-ai{display:inline!important}
+  .pm-ai-toggle,.pm-ai-show{display:none}
+  .pm-ai-summary .pm-ai-sum-off{display:none!important}
+  .pm-legend.is-ai-off .pm-ai-legend{opacity:1}
+  .pm-ai-item{break-inside:avoid}
+}
+</style>
+<!--fill:legend-end-->
+<div class="pm-ai-legend"><p class="pm-ai-legend-h">AI layer<span class="pm-ai-legend-off"> · hidden</span></p><div class="pm-ai-legend-grid"><span class="pm-legend-item"><span class="pm-ai-sw pm-ai-sw-named" aria-hidden="true"></span>AI named by {{client}}</span><span class="pm-legend-item"><span class="pm-ai-sw pm-ai-sw-suggested" aria-hidden="true"></span>AI suggested by us</span><span class="pm-legend-item"><span class="pm-ai-sw pm-ai-sw-halo" aria-hidden="true"></span>Step with an AI opportunity</span><span class="pm-legend-item"><span class="pm-ai-sw pm-ai-sw-rail" aria-hidden="true"></span>AI across a view or all views</span></div></div>
+<!--fill:toggle-->
+<button class="pm-ai-toggle" type="button" aria-pressed="{{pressed}}"><span class="pm-ai-toggle-ind" aria-hidden="true"></span>AI layer<span class="pm-ai-toggle-state">{{state}}</span></button>
+<!--fill:toggle-none-->
+<button class="pm-ai-toggle" type="button" aria-pressed="false" disabled><span class="pm-ai-toggle-ind" aria-hidden="true"></span>AI layer<span class="pm-ai-toggle-state">None</span></button>
+<!--fill:card-->
+<article class="pm-ev-card pm-ev-wide pm-ai-card" id="{{pre}}ai"><h2>AI opportunities<span class="pm-ai-count">{{count}}</span></h2><ol class="pm-ai-list">{{rows}}</ol></article>
+<!--fill:card-empty-->
+<article class="pm-ev-card pm-ev-wide pm-ai-card" id="{{pre}}ai"><h2>AI opportunities</h2><div class="pm-ai-empty"><span class="pm-ai-mark" aria-hidden="true"></span><p><strong>No AI opportunities identified for this process yet.</strong></p></div></article>
+<!--fill:script-->
+<script id="pm-ai-script">
+(function(){
+'use strict';
+var PM = window.PM = window.PM || {};
+PM.tipLines = PM.tipLines || [];
+PM.tipLines.push(function(root, id){ var d = root.pmAi; return (d && d.tips[id]) || ''; });
+var printQ = window.matchMedia ? matchMedia('print') : null;
+function openAll(on){
+  document.querySelectorAll('.pm-ai-agentic').forEach(function(d){
+    if (on){ d.dataset.wasOpen = d.open ? '1' : ''; d.open = true; }
+    else if ('wasOpen' in d.dataset){ d.open = d.dataset.wasOpen === '1'; delete d.dataset.wasOpen; }
+  });
+}
+window.addEventListener('beforeprint', function(){ openAll(true); });
+window.addEventListener('afterprint', function(){ openAll(false); });
+function Layer(root){
+  var el = root.querySelector('.pm-ai-data'); if (!el || root.pmAi) return;
+  var data = root.pmAi = JSON.parse(el.textContent);
+  var page = root.closest('[data-pm-page]') || document;
+  var svgs = Array.prototype.slice.call(root.querySelectorAll('svg.pm-board'));
+  var card = page.querySelector('.pm-ai-card'), legend = page.querySelector('.pm-legend');
+  var btn = root.querySelector('.pm-ai-toggle'), summary = root.querySelector('.pm-ai-summary');
+  var rows = card ? Array.prototype.slice.call(card.querySelectorAll('.pm-ai-item')) : [];
+  var pinned = null;
+  function each(sel, fn){ svgs.forEach(function(s){ s.querySelectorAll(sel).forEach(fn); }); }
+  function has(e, id){ return (' ' + (e.getAttribute('data-ai') || '') + ' ').indexOf(' ' + id + ' ') >= 0; }
+  function setLayer(on){
+    svgs.forEach(function(s){ s.classList.toggle('has-ai', on); });
+    if (btn && !btn.disabled){ btn.setAttribute('aria-pressed', String(on)); btn.querySelector('.pm-ai-toggle-state').textContent = on ? 'On' : 'Off'; }
+    if (legend) legend.classList.toggle('is-ai-off', !on);
+    if (summary) summary.classList.toggle('is-off', !on);
+  }
+  function clear(){
+    svgs.forEach(function(s){ s.classList.remove('is-ai-focus'); });
+    each('.is-ai-hit,.is-ai-on,.is-ai-peek,.is-ai-hover', function(e){ e.classList.remove('is-ai-hit', 'is-ai-on', 'is-ai-peek', 'is-ai-hover'); });
+  }
+  function focus(id){
+    var it = data.items[id]; if (!it) return;
+    clear();
+    var hits = {};
+    (it.nodes || []).forEach(function(n){ hits[n] = 1; });
+    if (it.groups === 'all'){
+      each('.pm-ai-band-hit', function(e){ e.classList.add('is-ai-on'); });
+    } else {
+      (it.groups || []).forEach(function(g){
+        (data.members[g] || []).forEach(function(n){ hits[n] = 1; });
+        each('.pm-ai-band-hit[data-group="' + g + '"]', function(e){ e.classList.add('is-ai-on'); });
+      });
+      svgs.forEach(function(s){ s.classList.add('is-ai-focus'); });
+    }
+    each('.pm-node[data-node]', function(n){ if (hits[n.getAttribute('data-node')]) n.classList.add('is-ai-hit'); });
+    each('.pm-ai-node,.pm-ai-marks', function(e){ if (has(e, id)) e.classList.add('is-ai-hit', 'is-ai-peek'); });
+    each('.pm-ai-sq', function(e){ if (e.getAttribute('data-ai') === id) e.classList.add('is-ai-on'); });
+    each('.pm-ai-view,.pm-ai-all', function(e){ if (has(e, id)){ e.classList.add('is-ai-peek'); var r = e.querySelector('.pm-ai-rail'); if (r) r.classList.add('is-ai-on'); } });
+    rows.forEach(function(r){ r.classList.toggle('is-ai-active', r.getAttribute('data-ai') === id); });
+  }
+  function release(){
+    if (pinned){ focus(pinned); return; }
+    clear();
+    rows.forEach(function(r){ r.classList.remove('is-ai-active'); });
+  }
+  function pin(id){
+    pinned = id;
+    rows.forEach(function(r){
+      var on = r.getAttribute('data-ai') === id;
+      r.classList.toggle('is-ai-pinned', on);
+      var b = r.querySelector('.pm-ai-show'); if (b) b.setAttribute('aria-pressed', String(on));
+    });
+    release();
+  }
+  function link(ids, on){ rows.forEach(function(r){ r.classList.toggle('is-ai-linked', on && ids.indexOf(r.getAttribute('data-ai')) >= 0); }); }
+  function nodeHover(nid, on){
+    each('.pm-ai-node[data-node="' + nid + '"],.pm-ai-marks[data-node="' + nid + '"]', function(e){ e.classList.toggle('is-ai-hover', on); if (!pinned) e.classList.toggle('is-ai-peek', on); });
+  }
+  rows.forEach(function(r){
+    var id = r.getAttribute('data-ai');
+    r.addEventListener('mouseenter', function(){ focus(id); });
+    r.addEventListener('mouseleave', release);
+    r.addEventListener('focusin', function(){ focus(id); });
+    r.addEventListener('focusout', function(e){ if (!r.contains(e.relatedTarget)) release(); });
+    var b = r.querySelector('.pm-ai-show');
+    if (b) b.addEventListener('click', function(){ pin(pinned === id ? null : id); if (pinned) root.scrollIntoView({behavior: 'smooth', block: 'start'}); });
+  });
+  each('.pm-ai-hit', function(h){
+    var nid = h.getAttribute('data-node'), ids = h.getAttribute('data-ai').split(' ');
+    function on(){ nodeHover(nid, true); link(ids, true); }
+    function off(){ nodeHover(nid, false); link(ids, false); }
+    function open(){ pin(ids[0]); var r = rows.filter(function(x){ return x.getAttribute('data-ai') === ids[0]; })[0]; if (r) r.scrollIntoView({behavior: 'smooth', block: 'center'}); }
+    h.addEventListener('mouseenter', on); h.addEventListener('mouseleave', off);
+    h.addEventListener('focus', on); h.addEventListener('blur', off);
+    h.addEventListener('click', open);
+    h.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  });
+  root.querySelectorAll('.pm-group[data-group]').forEach(function(g){
+    var gid = g.getAttribute('data-group'), ids = [];
+    Object.keys(data.items).forEach(function(id){ var x = data.items[id].groups; if (x === 'all' || (x || []).indexOf(gid) >= 0) ids.push(id); });
+    if (!ids.length) return;
+    g.addEventListener('mouseenter', function(){ link(ids, true); });
+    g.addEventListener('mouseleave', function(){ link(ids, false); });
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && pinned) pin(null); });
+  if (btn && !btn.disabled) btn.addEventListener('click', function(){ setLayer(btn.getAttribute('aria-pressed') !== 'true'); });
+  root.pmAiApi = {focus: focus, release: release, pin: pin, link: link, nodeHover: nodeHover, setLayer: setLayer};
+  setLayer(!btn || btn.disabled || btn.getAttribute('aria-pressed') !== 'false');
+}
+function init(){
+  document.querySelectorAll('[data-pm-board]').forEach(Layer);
+  if (printQ && printQ.matches) openAll(true);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else setTimeout(init, 0);
+})();
+</script>

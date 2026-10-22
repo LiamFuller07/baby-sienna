@@ -1,0 +1,209 @@
+/* Source document system (doc.css)
+   For documents only: documentation, READMEs, one-pagers and write-ups.
+   Process maps have their own system; do not mix the two.
+   Values come from the Source A4 one-pager. A few additions that documentation
+   needs are marked "doc:".
+
+   Contents: 1 Font and tokens  2 Page  3 Type  4 Intro  5 Lists, rule, steps
+   6 Columns, callout, closing  7 Examples  8 Table and code  9 Citations
+   10 Footer  11 Print  12 Narrow screens */
+
+/* 1. Font and tokens ---------------------------------------------------- */
+@font-face{font-family:Source;src:url(fonts/source-400.ttf) format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:Source;src:url(fonts/source-600.ttf) format('truetype');font-weight:600;font-display:swap}
+:root{
+  --ink:#153e2f;    /* headings, bold lead-ins, the callout edge */
+  --text:#293f34;   /* body copy */
+  --muted:#65736b;  /* support lines, labels, captions, citations */
+  --line:#dce2dc;   /* every hairline and panel border */
+  --soft:#f4f6f2;   /* panel fill: art, callout, table head, code */
+  --accent:#e9713b; /* pointers only: eyebrows, step numerals, the word "Gap" */
+  --desk:#e9ede8;   /* the surface the sheet sits on */
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; /* doc: code */
+  /* doc: art only. svg art draws placeholder copy as bars in these two tints. */
+  --art-text:#d0d8d2; /* body-text bars */
+  --art-lead:#9fb0a6; /* lead lines, labels and arrows */
+}
+
+/* 2. Page ---------------------------------------------------------------
+   .page is one white A4 sheet (several sheets stack). .page.screen is the
+   long-document mode: same type and width, no A4 height. Inside a sheet:
+   header, .flow (the content) and footer, which sits at the sheet's foot. */
+*{box-sizing:border-box}
+body{margin:0;padding:30px;background:var(--desk);color:var(--text);font-family:Source,Arial,sans-serif;font-size:13px;line-height:1.5}
+.page{position:relative;width:210mm;min-height:297mm;margin:auto;background:#fff;padding:14mm 15mm 11mm;box-shadow:0 8px 40px #12301f12;display:flex;flex-direction:column}
+.page+.page{margin-top:30px}
+.page.screen{width:auto;max-width:210mm;min-height:0} /* doc: the sheet's measure, about 100 characters a line */
+.flow{margin-bottom:19px}
+.page>header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.page>header img{width:104px;height:auto;display:block}
+.page>header span{font-size:9px;letter-spacing:.06em;color:var(--muted)}
+/* doc: a sheet that runs past A4 shows a dashed orange line where its printed page stops:
+   286mm, the A4 height less the 11mm bottom padding that print repeats on the next page.
+   The label sits under the line in the right margin, clear of the text. While the sheet
+   fits, a white strip over its bottom padding (::before) hides both. */
+@media screen and (min-width:821px){
+  .page:not(.screen)::before{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(11mm + 1px);background:#fff;z-index:1}
+  .page:not(.screen)::after{content:"";position:absolute;left:0;right:0;top:286mm;border-top:1px dashed var(--accent);pointer-events:none}
+  .page:not(.screen)>.flow::after{content:"A4 page ends here";position:absolute;top:calc(286mm + 4px);right:2mm;width:11mm;font-size:7px;line-height:1.3;letter-spacing:.06em;text-transform:uppercase;text-align:right;color:var(--accent);pointer-events:none}
+}
+
+/* 3. Type ---------------------------------------------------------------- */
+h1{font-size:32px;line-height:1.16;font-weight:600;letter-spacing:-1.05px;color:var(--ink);margin:0 0 14px;text-wrap:balance}
+h1 span{font-size:18px;font-weight:400;letter-spacing:-.3px;display:inline-block;max-width:100%} /* the (qualifier): kept whole, wraps only if longer than the line */
+h2{font-size:14px;line-height:1.3;font-weight:600;color:var(--ink);margin:20px 0 9px}
+h3{font-size:12px;line-height:1.35;font-weight:600;color:var(--ink);margin:12px 0 5px}
+h2:first-child,h3:first-child{margin-top:0}
+p{margin:0 0 9px;text-wrap:pretty}
+strong{font-weight:600;color:var(--ink)}
+a{color:inherit;text-decoration:underline 1px var(--line);text-underline-offset:2px}
+a:hover{text-decoration-color:var(--accent)}
+/* doc: long URLs, paths and hashes wrap instead of pushing the page sideways */
+.flow :is(p,li,h1,h2,h3),.sources span{overflow-wrap:anywhere}
+td,th{overflow-wrap:break-word}
+
+/* 4. Intro: h1, lead, support line --------------------------------------- */
+.intro{margin-bottom:19px}
+.lead{font-size:14px;line-height:1.55;color:var(--ink);margin:0 0 8px}
+.support{font-size:11px;color:var(--muted)}
+
+/* 5. Lists, rule, numbered steps -----------------------------------------
+   A step is a two-column grid: the numeral, then its text and anything under
+   it (a nested list, a code block, a second paragraph). */
+ul{margin:0 0 9px;padding-left:16px}
+li{margin-bottom:2px}
+li>ul{margin:2px 0 0;padding-left:16px} /* doc: one nested level */
+li>pre{margin:4px 0 9px} /* doc: a code block inside a bullet or a step */
+ul.two{columns:2;column-gap:24px;font-size:10px;line-height:1.6}
+ul.two li{break-inside:avoid;margin:0}
+hr{border:0;border-top:1px solid var(--line);margin:17px 0 20px}
+ul.two+hr{margin-top:23px}
+ol.steps{list-style:none;margin:0;padding:0}
+ol.steps>li{display:grid;grid-template-columns:17px 1fr;column-gap:5px;align-items:baseline;margin:0}
+ol.steps>li>:not(.num){grid-column:2}
+.num{color:var(--accent);font-size:10px}
+ol.steps>li>p:has(+:is(ul,pre)){margin-bottom:2px}
+ol.steps>li>ul{margin:2px 0 9px}
+/* doc: steps in the body run at 13px, so their numeral steps up to 11px (10:11, as in columns) */
+.flow>ol.steps>li{grid-template-columns:19px 1fr}
+.flow>ol.steps .num{font-size:11px}
+
+/* 6. Two columns, callout ("Next step"), closing grid -------------------- */
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:29px;margin:20px 0 17px}
+.columns>*{min-width:0}
+.columns :is(p,li){font-size:11px;line-height:1.55}
+.columns p{margin-bottom:11px}
+.callout{padding:12px 14px;background:var(--soft);border-left:2px solid var(--ink);margin:16px 0}
+.callout h2{font-size:12px;margin-bottom:5px}
+.callout :is(p,li){font-size:11px;line-height:1.5}
+.callout>*{margin-bottom:0}
+.callout>:first-child{margin-top:0}
+.callout>*+*{margin-top:8px}
+.callout>:is(h2,h3)+*{margin-top:0}
+.callout :is(code,pre){background:#fff} /* doc: code stays visible on the soft panel */
+.closing{display:grid;grid-template-columns:1.65fr 1fr;gap:16px;align-items:start;margin:16px 0}
+.closing .callout{margin:0}
+aside{padding:12px 0}
+aside h2{font-size:12px;margin-bottom:7px}
+aside p{font-size:11px;line-height:1.65;color:var(--muted)}
+
+/* 7. Examples grid: art panel, eyebrow, title, line, caption ------------- */
+.examples{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:13px 0 12px}
+.example{min-width:0}
+.art{height:149px;background:var(--soft);border:1px solid var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;padding:7px;overflow:hidden}
+.art>svg{width:100%;height:100%;display:block}
+.art>img{max-width:100%;max-height:100%;object-fit:contain}
+/* doc: code as art. It wraps to the panel and is centred while it fits. A longer
+   block starts at the top and fades out at the panel's foot: a crop, never a cut. */
+.art>pre{align-self:stretch;width:100%;margin:0;padding:3px 4px;border:0;background:none;display:flex;flex-direction:column;overflow:hidden;font-size:9px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;
+  -webkit-mask-image:linear-gradient(#000 calc(100% - 14px),transparent);mask-image:linear-gradient(#000 calc(100% - 14px),transparent)}
+.art>pre>code{margin:auto;max-width:100%}
+.example h3{margin:0 0 5px}
+.example p{font-size:10px;line-height:1.45;margin:0}
+.example>p:last-child{margin-bottom:9px} /* room under the grid */
+.example .eyebrow{font-size:9px;color:var(--accent);margin:9px 0 4px}
+.example .caption{font-size:8px;color:var(--muted);margin-top:7px}
+
+/* 8. doc: table and code -------------------------------------------------- */
+.table{overflow-x:auto;margin:12px 0 16px}
+table{width:100%;border-collapse:collapse;font-size:11px;line-height:1.45}
+th{font-size:9px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;background:var(--soft);padding:6px 10px;border-block:1px solid var(--line)}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{color:var(--ink)}
+code{font-family:var(--mono);font-size:.88em;color:var(--ink);background:var(--soft);border-radius:3px;padding:1px 4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+pre{margin:12px 0 16px;padding:11px 13px;background:var(--soft);border:1px solid var(--line);border-radius:5px;overflow-x:auto;font:10.5px/1.6 var(--mono);color:var(--ink)}
+pre code{font-size:inherit;background:none;border:0;padding:0}
+:not(pre)>code{display:inline-block;max-width:100%;overflow-wrap:anywhere} /* a chip never splits, unless it is longer than the line */
+
+/* 9. doc: citations (always visible) -------------------------------------
+   Marker   <cite class="c" data-src="G1-S1" data-loc="H9"><a href="#src-G1-S1">G1-S1 H9</a></cite>
+   Long     a locator with spaces or over 16 characters goes in <span class="loc">…</span>
+            after the id, so that it can wrap; the id and the brackets never split
+   Several  <span class="cites"><cite class="c" …>…</cite>; <cite class="c" …>…</cite></span>, one bracket
+   Line     <p class="prov prov-grounded|prov-inferred|prov-gap"><b>Grounded</b> · G1-S1 H9</p>
+   Sources  <section class="sources"><h2>Sources</h2><ol><li id="src-G1-S1"><b>G1-S1</b><span>Full name</span></li></ol></section> */
+cite.c,.cites{font-style:normal;font-size:9px;letter-spacing:.02em;color:var(--muted)}
+cite.c{white-space:nowrap}
+cite.c .loc{white-space:normal}
+cite.c::before,.cites::before{content:"["}
+cite.c::after,.cites::after{content:"]"}
+.cites cite.c::before,.cites cite.c::after{content:none}
+cite.c a{text-decoration:none}
+cite.c a:hover{color:var(--accent)}
+.prov{font-size:10px;line-height:1.5;color:var(--muted);margin:-3px 0 12px}
+.prov b,.sources .missing b{font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.prov-inferred b{color:var(--muted)}
+.prov-gap b{color:var(--accent)}
+.prov a{text-decoration:none}
+.sources{margin-top:22px;padding-top:15px;border-top:1px solid var(--line)}
+.sources h2{font-size:12px;margin-bottom:7px}
+.sources ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:max-content 1fr;gap:3px 16px;font-size:10px;line-height:1.5}
+.sources li{display:grid;grid-column:1/-1;grid-template-columns:subgrid;margin:0}
+.sources b{font-weight:600;color:var(--ink)}
+.sources .note{color:var(--muted)}
+.sources li:target{background:var(--soft)}
+/* doc: an id with no name in the sources file is a gap, shown in the accent */
+cite.c.missing,cite.c.missing a,.prov a.missing,.sources .missing b{color:var(--accent)}
+.sources .missing{color:var(--muted)}
+
+/* 10. Footer --------------------------------------------------------------- */
+.page>footer{margin-top:auto;display:flex;justify-content:space-between;gap:16px;border-top:1px solid var(--line);padding-top:9px;font-size:8px;color:var(--muted);text-transform:uppercase}
+
+/* 11. Print: each A4 sheet is one page; screen mode flows onto numbered A4 pages */
+@page{size:A4;margin:0}
+@page long{size:A4;margin:14mm 15mm 15mm;@bottom-right{content:counter(page) " / " counter(pages);font:8px Source,Arial,sans-serif;color:#65736b;vertical-align:top;padding-top:3mm}}
+@media print{
+  body{padding:0;background:#fff}
+  .page{margin:0;box-shadow:none;-webkit-box-decoration-break:clone;box-decoration-break:clone} /* a sheet that runs over keeps its padding on the next page */
+  .page+.page{margin-top:0;break-before:page}
+  .page.screen{page:long;padding:0;max-width:none}
+  h2,h3{break-after:avoid}
+  .example,.callout,.closing,pre,tr,ol.steps li,.sources li{break-inside:avoid}
+  pre{white-space:pre-wrap;overflow:visible}
+  pre,pre code,td,th{overflow-wrap:anywhere} /* nothing wider than the paper */
+  td,th{min-width:5em} /* but short words in a squeezed column stay whole */
+  .table{overflow:visible}
+  *{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}
+
+/* 12. Narrow screens -------------------------------------------------------- */
+@media screen and (max-width:820px){
+  body{padding:12px}
+  .page{width:100%;min-height:0;padding:26px}
+  .page+.page{margin-top:12px}
+  .examples{gap:10px}
+  .art{height:130px}
+  .art>pre{font-size:8px;line-height:1.45}
+  h1{font-size:29px}
+}
+@media screen and (max-width:560px){
+  .page>header span{font-size:7px}
+  .examples{grid-template-columns:1fr}
+  .example{display:grid;grid-template-columns:130px 1fr;grid-template-rows:repeat(4,auto) 1fr;column-gap:14px}
+  .art{grid-row:1/-1;height:122px}
+  .example .eyebrow{margin-top:4px}
+  .columns{grid-template-columns:1fr;gap:12px}
+  .closing{grid-template-columns:1fr;gap:6px}
+  h1{font-size:27px}
+  h1 span{font-size:16px}
+}
