@@ -12,7 +12,7 @@ Original data received (`out/data-received.html`), 6 of 6. The systems inventory
 - [ ] **Folders of data**: computed from `inputs/`: at least one file (ws-1).
 - [ ] ★ **Systems identified**: `process-map/<name>.json › systems[]` (id, label, icon, cite, role), with `nodes[].systems` (map-8).
 - [ ] ★ **Software used**: `process-map/<name>.json › systems[].software` (name, category, cite) (inv-1).
-- [ ] ★ **Modules likely to be used**: `inventory/<name>.json › modules[]` (id, title, software, steps, likelihood, cite) (inv-2).
+- [ ] ★ **Modules and capabilities**: `inventory/<name>.json › modules[]` (id, title, software, steps, likelihood, cite) (inv-2).
 - [ ] **Folder view**: computed from `inputs/` and `records/`: one row per file (ws-1).
 - [ ] ★ **Citation points section**: a map with cited `systems[]`: every cited row then carries a numbered marker (cite-1).
 
@@ -35,7 +35,7 @@ Both pages are computed, never authored.
 
 Only the workspace, never the page:
 - **In the map** (`process-map/<name>.json › systems[]`, with the process-map skill): `role`, 3–60 characters, what the system does here; `software: {name, category, cite}`. `category` is one of `spreadsheet app`, `ticketing tool`, `ERP suite`, `email client`, `document store`, `database`, `web app`, `other`. Cite the software grounded when a record names the product (the page prints **Named in the sources**), else inferred with a reading that says why.
-- **`inventory/<name>.json`**: `{"type": "inventory", "map": "<map name>", "modules": [...]}`. Each module is `{id: "MOD-01", title: "Module A1 · request intake", software (a software name of that map), steps (step ids of that map, never decisions), likelihood: likely|possible, cite}`, with at least one **inferred** citation: a module is always our suggestion.
+- **`inventory/<name>.json`**: `{"type": "inventory", "map": "<map name>", "modules": [...]}`. Each module is `{id: "MOD-01", title: "Module A1 · request intake", software (a software name of that map), steps (step ids of that map, never decisions), likelihood: likely|possible, cite}`, with at least one **inferred** citation: a module in default/suggested mode is our suggestion; observed mode follows the current-state contract below.
 
 ## Commands
 
@@ -60,3 +60,17 @@ write the map's `systems[]` fields and `inventory/<name>.json` → `python3 bs.p
 ## Example
 
 `examples/process-map/end-to-end.json` (six systems, five with software, three named in `examples/inputs/notes/systems-notes.md`, record D2) and `examples/inventory/end-to-end.json` give `examples/out/data-received.html` and `examples/out/systems-inventory.html`. README: `design-system/data-received/README.md`.
+
+### Current-state inventory mode
+
+When the brief excludes suggestions, use `"mode": "observed"` in an inventory file. Its required modules/capabilities entry is fulfilled by documented use instead of the default suggested-module analysis; the required section is not skipped. Each entry keeps `id`, `title`, `software`, `steps` and `cite`, omits `likelihood`, and has grounded citations only. Its software must be named in grounded map evidence, and each linked step must name a system using that software. Use a capability name when the source does not identify a formal product module; never invent a module name.
+
+The page says **Documented modules and capabilities** and **Observed in supplied sources**. Its summary explicitly scopes the inventory to systems and capabilities linked to mapped steps, not an exhaustive company inventory. These mean source-reported use at the source's date, not a live verification of implementation. A semantic checker must inspect the cited material to verify the capability and its association with the step; structural checks cannot prove that claim. Missing facts remain clarifications or evidence gaps.
+
+Without `mode`, or with `"mode": "suggested"`, the original contract is unchanged: each entry needs `likelihood: "likely" | "possible"` and at least one inferred citation. Mixed inventories label observed and suggested entries separately. No AI layer is required for a current-state brief.
+
+```json
+{"type":"inventory","map":"end-to-end","mode":"observed","modules":[
+  {"id":"MOD-01","title":"Budget holding","software":"Software C","steps":["RSV-01"],
+   "cite":[{"source":"D2","locator":"¶3"}]}]}
+```

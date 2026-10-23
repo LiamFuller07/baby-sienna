@@ -34,6 +34,7 @@ out/
 
 # Python and OS noise
 __pycache__/
+.venv/
 *.pyc
 .DS_Store
 

@@ -5,7 +5,7 @@
 - [ ] **Folders of data** (data-received): computed from `inputs/`: at least one file (ws-1).
 - [ ] **Systems identified** (both pages): `process-map/<name>.json › systems[]` (with `role`), and `nodes[].systems` (map-8).
 - [ ] **Software used** (both pages): `process-map/<name>.json › systems[].software {name, category, cite}` (inv-1).
-- [ ] **Modules likely to be used** (both pages): `inventory/<name>.json › modules[]` (inv-2).
+- [ ] **Modules and capabilities** (both pages): `inventory/<name>.json › modules[]` (inv-2).
 - [ ] **Folder view** (data-received): computed from `inputs/` and `records/`: one row per file (ws-1).
 - [ ] **Citation points section** (both pages): computed: every cited row carries a numbered marker, and `section#citation-points` lists exactly the points the page uses, in the markup of every template (build-7).
 
@@ -137,3 +137,17 @@ A4 portrait: the header, the visible view, then Citation points, whose heading a
 ## 5. Look
 
 The map tokens: `--bg #faf9f6`, `--paper #fff`, `--panel #f3efe7`, `--ink #111`, `--muted #626260`, `--line #dedbd6`, `--line-strong #c8c8c4`, `--flow #454542`, `--accent #ff5600` (the only accent), `--accent-ink #b84000` for small orange text, and 2px corners. `--peach #fbd9c4`, a quiet tint of the accent, marks Unchecked. Hairlines rather than boxes, one grid for every Overview table, nothing selected at load, short legend labels. The orange marks only what needs attention (Not converted, To do) and our suggestions (the module square).
+
+### Current-state inventory mode
+
+When the brief excludes suggestions, use `"mode": "observed"` in an inventory file. Its required modules/capabilities entry is fulfilled by documented use instead of the default suggested-module analysis; the required section is not skipped. Each entry keeps `id`, `title`, `software`, `steps` and `cite`, omits `likelihood`, and has grounded citations only. Its software must be named in grounded map evidence, and each linked step must name a system using that software. Use a capability name when the source does not identify a formal product module; never invent a module name.
+
+The page says **Documented modules and capabilities** and **Observed in supplied sources**. Its summary explicitly scopes the inventory to systems and capabilities linked to mapped steps, not an exhaustive company inventory. These mean source-reported use at the source's date, not a live verification of implementation. A semantic checker must inspect the cited material to verify the capability and its association with the step; structural checks cannot prove that claim. Missing facts remain clarifications or evidence gaps.
+
+Without `mode`, or with `"mode": "suggested"`, the original contract is unchanged: each entry needs `likelihood: "likely" | "possible"` and at least one inferred citation. Mixed inventories label observed and suggested entries separately. No AI layer is required for a current-state brief.
+
+```json
+{"type":"inventory","map":"end-to-end","mode":"observed","modules":[
+  {"id":"MOD-01","title":"Budget holding","software":"Software C","steps":["RSV-01"],
+   "cite":[{"source":"D2","locator":"¶3"}]}]}
+```

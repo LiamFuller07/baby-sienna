@@ -1,0 +1,2 @@
+# Optional local reader. The core toolkit remains standard-library only.
+PyMuPDF==1.26.5

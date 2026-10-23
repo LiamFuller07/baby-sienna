@@ -16,6 +16,7 @@
 <aside class="pm-legend" aria-label="Legend">
     <div class="pm-legend-grid">
       <span class="pm-legend-item pm-lg-flow"><span class="pm-sw pm-sw-flow" aria-hidden="true"></span>Process flow</span>
+      <span class="pm-legend-item pm-lg-edge-inferred"><span class="pm-sw pm-sw-edge-inferred" aria-hidden="true"></span>Inferred connection</span>
       <span class="pm-legend-item pm-lg-feed"><span class="pm-sw pm-sw-feed" aria-hidden="true"></span>Feedback</span>
       <span class="pm-legend-item pm-lg-decision"><span class="pm-sw pm-sw-decision" aria-hidden="true"></span>Decision</span>
       <span class="pm-legend-item pm-lg-grounded"><span class="pm-sw pm-sw-grounded" aria-hidden="true"></span>Grounded</span>
@@ -53,6 +54,13 @@ a{color:inherit}
 /* ---------------------------------------------------------------- page */
 .pm-page{padding:28px 28px 32px}
 .pm-wrap{max-width:1384px;margin:0 auto}
+.pm-review{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+.pm-review>.pm-citation-panel{display:flex;flex-direction:column;max-height:calc(100vh - 36px);overflow:auto;position:sticky;top:18px;margin-top:24px}
+.pm-review .cp-row{grid-template-columns:20px minmax(0,1fr);gap:6px}.pm-review .cp-text,.pm-review .cp-used{grid-column:2}.pm-review .cp-all{grid-column:1;grid-row:2}.pm-review .cp-addr{overflow-wrap:anywhere}.pm-review .cp{margin-top:0}
+.pm-main{min-width:0}.pm-review .cp-used{text-align:left}
+.pm-review .cp-text{overflow-wrap:anywhere}
+@media(max-width:1000px){.pm-review{display:block}.pm-review>.pm-citation-panel{position:static;max-height:none}}
+@media print{.pm-review{display:block}.pm-review>.pm-citation-panel{position:static;max-height:none;overflow:visible}}
 
 /* header */
 .pm-head{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:18px 40px;align-items:start}
@@ -73,8 +81,9 @@ a{color:inherit}
 .pm-legend-item{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:11px;line-height:1.25;white-space:nowrap}
 .pm-lg-flow{grid-area:1/1}.pm-lg-feed{grid-area:2/1}.pm-lg-decision{grid-area:3/1}
 .pm-lg-grounded{grid-area:1/2}.pm-lg-inferred{grid-area:2/2}.pm-lg-cp{grid-area:3/2}
-.pm-lg-gap{grid-area:1/3}.pm-lg-clar{grid-area:2/3}
+.pm-lg-gap{grid-area:1/3}.pm-lg-clar{grid-area:2/3}.pm-lg-edge-inferred{grid-area:4/1/4/3}
 .pm-sw{position:relative;flex:0 0 auto;width:16px;height:12px}
+.pm-sw-edge-inferred{background:linear-gradient(90deg,var(--flow) 0 2px,transparent 0) left center/5px 1.5px repeat-x}
 .pm-sw-flow{background:linear-gradient(var(--flow),var(--flow)) center/16px 1.5px no-repeat}
 .pm-sw-feed{background:linear-gradient(90deg,var(--flow) 0 5px,transparent 0) left center/8px 1.5px repeat-x}
 .pm-sw-decision::after{content:"";position:absolute;left:3px;top:1.5px;width:8px;height:8px;rotate:45deg;border:1.5px solid var(--ink);background:var(--paper)}
@@ -121,6 +130,7 @@ a{color:inherit}
 /* edges */
 .pm-flow{fill:none;stroke:var(--flow);stroke-width:1.5;stroke-linejoin:round}
 .pm-feed{fill:none;stroke:var(--flow);stroke-width:1.5;stroke-dasharray:5 3;stroke-linejoin:round}
+.pm-flow.is-inferred,.pm-feed.is-inferred{stroke-dasharray:2 3}
 .pm-arrow{fill:var(--flow)}
 .pm-hit{fill:none;stroke:transparent;stroke-width:10;pointer-events:stroke}
 .pm-edge:hover .pm-flow,.pm-edge:hover .pm-feed,.pm-edge.is-hover .pm-flow,.pm-edge.is-hover .pm-feed{stroke:var(--ink);stroke-width:2.2}
@@ -276,6 +286,8 @@ a.cp-addr:hover,a.cp-addr:focus-visible{text-decoration:underline;text-decoratio
   {{aside}}
 </header>
 <!--slot:views-->
+<div class="pm-review">
+<div class="pm-main">
 <!--bs:shell-->
 <section class="pm-board-sec" id="{{pre}}board" data-pm-board aria-label="{{label}}"{{panel}}>
   <!--slot:board-head-->
@@ -288,7 +300,9 @@ a.cp-addr:hover,a.cp-addr:focus-visible{text-decoration:underline;text-decoratio
 </section>
 <!--/bs:shell-->
 <section class="pm-evidence" id="{{pre}}evidence" aria-label="Gaps and clarifications">{{evidence}}</section>
-{{citations}}
+</div>
+<aside class="pm-citation-panel" aria-label="Citation points">{{citations}}</aside>
+</div>
 {{footer}}
 </div></main>
 <script id="pm-script">

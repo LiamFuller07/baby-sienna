@@ -39,7 +39,7 @@ Arrays are in display order: lanes top to bottom, groups left to right, nodes gr
 | `lanes[]` | req | `{id, label, cite?}`: a role, never a person. A lane that holds no step cites its role (map-3) |
 | `groups[]` | opt | `{id, label}`: views. With two or more groups the board draws a band of group cells; with groups, every node names one (map-2) |
 | `nodes[]` | req | a step or a decision (below) |
-| `edges[]` | opt | `{from, to, kind?, label?}`. An edge carries no citation: its end nodes hold the evidence |
+| `edges[]` | opt | `{from, to, kind?, label?}`. Optional `cite` holds evidence for the connection independently of its endpoint nodes |
 | `gaps[]` | opt | `{id, title, text, none?, nodes, cite}`: what the sources do not say, proven by an absent search; or one None found card, `none: true` and `nodes: []`, the only card of its kind, citing the records that show nothing is missing (map-6) |
 | `clarifications[]` | opt | `{id, title (the question), shows (what the sources show), ask (what to confirm, with whom), order?, none?, nodes, cite}`. `order: true` asks where its steps come: it lists only steps no edge joins, and excuses them from Flows (map-5). Or one None found card (map-6) |
 
@@ -55,7 +55,7 @@ Arrays are in display order: lanes top to bottom, groups left to right, nodes gr
 - An edge may cross groups and lanes; a line that crosses lanes is the hand-over.
 
 **Citations on a map** (rules in `formats/FORMATS.md` section 2.3):
-- Nodes, systems, lanes, gaps and clarifications cite; groups and edges do not.
+- Nodes, systems, lanes, gaps and clarifications cite; groups do not. Edges may carry their own `cite` list, checked and printed in the Connection evidence card. Endpoint citations alone do not establish a connection.
 - Gap and clarification prose may hold `[SRC locator]` markers, which count as the card's grounded citations.
 - A `quote` on a map citation is a check aid (cite-2); the board does not print it.
 - Where it prints: every cited element carries one numbered marker in place (a card after its title, a decision after its id, a system in the key, a lane in the gutter, each `[SRC locator]` bracket in card prose, each clause of a card's provenance line). The full address and the verbatim text print only in the Citation points section, whose row for each point names every element it supports (build-1, build-4).
@@ -102,6 +102,17 @@ The formats fix the layout, so one map always gives the same board (build-3).
 **build-6.** The build fails and names the edge when a line crosses a card or a mark (badge, system icon, chip, a decision's id label, the AI room under a step), when two lines from different sources to different targets share a stretch (the board would show a path the sources never describe), when a gap needs more than three tracks, or when a pill has no stretch of its width plus 16. Each error names the blocking node and a fix: move a node to another lane, set `col`, or list a decision's branches in another order.
 
 **Large maps.** Columns come from the longest chain of forward edges inside each view, not from the number of steps: steps in other lanes that do not follow one another share a column. A board holds 14 columns; map-10 lists each view's columns and its longest chain (`G03 Review: 3 (QUE-01 → REV-01 → PCK-01)`). To fit, keep edges to what the sources say follows what (steps side by side need no edge between them), move a step that runs alongside another into its own lane, or split the process into several maps by view.
+
+Before failing, the router now searches deterministic detours through column
+gaps and row channels. A detour must pass the same card-collision and free-label
+checks as the normal route. Graph endpoints and direction never change.
+Two differently labelled branches may share a destination; identical edges
+remain invalid. A decision with unavailable branches may set
+`branchesIncomplete: true` only with a cited clarification attached to it.
+Map-level source notes can be clarifications with an empty `nodes` list.
+Sources are shown first in a right-hand evidence panel on wide screens, and
+below the map on small screens and in print. Large source spans expand to show
+all records instead of dropping everything after the first ten.
 
 **Room the AI layer relies on.**
 - 20 units of lane padding below each card row.
@@ -166,3 +177,12 @@ The reference is another client's swimlane board, and only its design is used. T
 | no zoom; the shell hides overflow | Fit and 100% | a 14-column board needs Fit to be seen whole. Size is capped at 40 nodes, 8 lanes and 14 columns; at the caps Fit draws a board at about half size on a 1440px screen, so such a page opens at 100% (the reading view) and Fit shows the whole |
 | no focus ring | 2px ink ring 8 units out | keyboard use, and never confused with the AI halo |
 | — | flags chips, lane notes, the group band (with two or more groups), the tooltip, the citation markers and the Citation points section | these show the formats' metadata and evidence |
+
+### Evidence-preserving map extensions
+
+- Optional `edges[].cite` preserves evidence for the connection itself. Each cited connection has a numbered marker and a Connection evidence entry; the global registry links back to it. Grounded and inferred connection evidence remain distinct. Inferred connections have a dotted line and a labelled legend; clicking a cited connection opens its evidence entry. Endpoint evidence alone never proves sequence.
+- A source-drawn conditional connection with no stated label uses `kind: "conditional"`, `labelUnstated: true`, grounded `cite`, and no `label`. Its decision must have `branchesIncomplete: true` and an attached clarification. The Connection evidence card says **Condition not stated**; the builder never invents a branch label.
+- `branchesIncomplete: true` is permitted only on a decision with a cited clarification attached to that decision. It preserves the source's incomplete branch set; it never invents the missing route.
+- An ordinary clarification with `scope: "map"` and `nodes: []` is a map-wide note or question. It is neither a None found card nor an order clarification, cannot combine with `none` or `order`, and does not excuse disconnected steps. Other ordinary clarifications still need nodes.
+- Optional top-level `routing: "detour"` enables deterministic orthogonal route repair for source diagrams. Column spacing derives from the longest branch label, rows have extra routing space, and additional distinct tracks are used only when they fit. Every final route is checked for cards, marks and ambiguous shared lines; labels are checked for free space. The default routing and its refusal cases remain unchanged. If no safe route exists, build fails: change layout hints or split the map without changing its evidence.
+- Maps retain a right-hand Citation points panel on wide screens, moving below the map on small screens and in print. Full citation spans remain available through an expandable section.

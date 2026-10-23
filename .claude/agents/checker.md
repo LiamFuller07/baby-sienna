@@ -21,3 +21,7 @@ Also flag:
 - a document sentence whose citation does not support it.
 
 Report each finding with its file and JSON pointer or line, the duty it falls under, what is wrong, and the smallest fix. Report nothing you have not read in the records. No finding means none.
+
+## Evidence extensions
+
+Inspect edge citations independently of node citations, check incomplete decision branches against their attached clarification, and verify that map-wide annotations describe the whole map without asserting None found. For `inventory` files with `mode: "observed"`, inspect whether each cited source actually names the documented capability and links it to the named software and process step. A grounded locator alone is not proof of that interpretation; observed means source-reported, not verified live use.

@@ -770,10 +770,10 @@ class Node:
         self.x = self.y = self.cx = self.cy = 0.0
         self.bottom_used = False  # a line leaves a decision's bottom vertex (set by route)
 
-    def place(self, col, row, lane_top):
+    def place(self, col, row, lane_top, pitch=PITCH, row_height=ROW):
         self.col, self.row = col, row
-        self.x = X0 + PITCH * col
-        self.y = lane_top + 20 + ROW * row
+        self.x = X0 + pitch * col
+        self.y = lane_top + (row_height - CH) / 2 + row_height * row
         self.cx, self.cy = self.x + CW / 2, self.y + CH / 2
 
     def port(self, p):
@@ -908,6 +908,12 @@ class MapModel:
     # -- columns, rows, coordinates
     def layout(self):
         nodes, ix = self.nodes, {n.id: n.i for n in self.nodes}
+        label_width = max(
+            (tw(e.get("label", ""), 11, True) + 14 for e in self.edges if e.get("label")), default=0
+        )
+        self.pitch = max(PITCH, CW + label_width + 96) if self.m.get("routing") == "detour" else PITCH
+        self.row_height = ROW + 40 if self.m.get("routing") == "detour" else ROW
+        self.mid = (self.pitch - CW) / 2
         preds = {n.id: [] for n in nodes}
         for e in self.edges:
             a, b = self.N[e["from"]], self.N[e["to"]]
@@ -948,19 +954,19 @@ class MapModel:
         self.lanes_top = y
         self.lane_geo = {}
         for lane in self.lanes:
-            h = ROW * self.lane_rows[lane["id"]] or EMPTY
+            h = self.row_height * self.lane_rows[lane["id"]] or EMPTY
             self.lane_geo[lane["id"]] = (y, h)
             y += h
         self.lanes_bottom = y
         self.H = y + 16
-        self.W = X0 + PITCH * (self.ncols - 1) + CW + 28
+        self.W = X0 + self.pitch * (self.ncols - 1) + CW + 28
         for n in nodes:
-            n.place(col[n.id], rows[n.id], self.lane_geo[n.d["lane"]][0])
+            n.place(col[n.id], rows[n.id], self.lane_geo[n.d["lane"]][0], self.pitch, self.row_height)
         self.cells = {}
         for gi, g in enumerate(self.groups):
             c0, c1 = self.gcols[g["id"]]
-            x0 = GUT + PITCH * c0
-            x1 = self.W if gi == len(self.groups) - 1 else GUT + PITCH * (c1 + 1)
+            x0 = GUT + self.pitch * c0
+            x1 = self.W if gi == len(self.groups) - 1 else GUT + self.pitch * (c1 + 1)
             self.cells[g["id"]] = (x0 + 4, x1 - x0 - 8, x0)
 
     # -- badges: list positions of gap and clarification cards
@@ -1026,6 +1032,104 @@ class MapModel:
         return out
 
     # -- routing (README section 2, the case table) and build-6
+    def clear_route(self, points):
+        return not any(n.crosses(a, b) for a, b in itertools.pairwise(points) for n in self.nodes)
+
+    def free_pill(self, points, width, placed, other=()):
+        """Longest horizontal stretch clear of cards, badges, detail text and earlier labels."""
+        best = None
+        for a, b in itertools.pairwise(points):
+            if a[1] != b[1]:
+                continue
+            y, lo, hi = a[1], min(a[0], b[0]), max(a[0], b[0])
+            blocked = []
+            for n in self.nodes:
+                if n.dec and abs(y - n.cy) < HALF + 9:
+                    blocked.append((n.cx - HALF, n.cx + HALF))
+                elif not n.dec and n.y - 18 < y < n.y + CH + 18:
+                    blocked.append((n.x - 5, n.x + CW + 5))
+            for bx0, by0, bx1, by1 in [m[0] for m in self.marks()] + placed:
+                if by0 - 9 < y < by1 + 9:
+                    blocked.append((bx0, bx1))
+            for (x1, y1), (x2, y2) in other:
+                if x1 == x2 and min(y1, y2) < y + 9 and max(y1, y2) > y - 9:
+                    blocked.append((x1 - 4, x1 + 4))
+                elif y1 == y2 and abs(y1 - y) < 11:
+                    blocked.append((min(x1, x2), max(x1, x2)))
+            free = [(lo, hi)]
+            for c0, c1 in sorted(blocked):
+                free = [
+                    (x, z)
+                    for f0, f1 in free
+                    for x, z in (
+                        [(f0, f1)]
+                        if c1 <= f0 or c0 >= f1
+                        else ([(f0, c0)] if c0 > f0 else []) + ([(c1, f1)] if c1 < f1 else [])
+                    )
+                ]
+            for f0, f1 in free:
+                if f1 - f0 >= width + 16 and (best is None or f1 - f0 > best[2] - best[1]):
+                    best = (y, f0, f1)
+        return best
+
+    def detour(self, source, target, width=0, placed=None, current=None):
+        """Deterministic orthogonal fallback through column gaps and row channels.
+
+        Endpoints keep their identity and direction. Never change graph edges or
+        relax collision checks just to get a page to build.
+        """
+        placed = placed or []
+        marks = [m[0] for m in self.marks()] + placed
+        others = [r for r in self.routes if r is not current]
+        other_segments = [seg for r in others for seg in itertools.pairwise(r["pts"])]
+        channels = sorted(
+            {
+                max(self.lanes_top + 4, min(self.H - 12, y))
+                for n in self.nodes
+                for y in (
+                    n.y - 48,
+                    n.y - 36,
+                    n.y - 24,
+                    n.y - 12,
+                    n.y + CH + 12,
+                    n.y + CH + 24,
+                    n.y + CH + 36,
+                    n.y + CH + 48,
+                )
+            }
+        )
+        choices = []
+        for sp in ("R", "L"):
+            a = source.port(sp)
+            sx = source.x + CW + 16 if sp == "R" else source.x - 12
+            for tp in ("L", "R"):
+                end = target.port(tp)
+                tx = target.x - 12 if tp == "L" else target.x + CW + 16
+                for y in channels:
+                    pts = simplify([a, (sx, a[1]), (sx, y), (tx, y), (tx, end[1]), end])
+                    if not self.clear_route(pts):
+                        continue
+                    if any(seg_box(a, b, box) for a, b in itertools.pairwise(pts) for box in marks):
+                        continue
+                    if any(
+                        seg_overlap(a, b, c, d)
+                        for a, b in itertools.pairwise(pts)
+                        for r in others
+                        if r["e"]["from"] != source.id and r["e"]["to"] != target.id
+                        for c, d in itertools.pairwise(r["pts"])
+                    ):
+                        continue
+                    pill = self.free_pill(pts, width, placed, other_segments) if width else None
+                    if width and pill is None:
+                        continue
+                    cost = sum(abs(b[0] - a[0]) + abs(b[1] - a[1]) for a, b in itertools.pairwise(pts))
+                    cost += (16 if sp == "L" else 0) + (16 if tp == "R" else 0)
+                    choices.append((cost, sp, tp, y, pts, pill))
+        if not choices:
+            return None
+        best = min(choices, key=lambda c: c[:4])
+        return best[4], best[5]
+
     def fwd(self, s, t, p, gx):
         """A forward line from port p of s to t's left edge; gx is its track in the gap left of t's column."""
         tl = t.port("L")
@@ -1074,9 +1178,17 @@ class MapModel:
                 end = t.port("T") if t.cy >= s.cy else t.port("B")
                 pts = [s.port("T"), (s.cx, ch), (t.cx, ch), end]
             else:
-                pts = self.fwd(s, t, p, t.x - MID)
+                pts = self.fwd(s, t, p, t.x - self.mid)
                 gap = t.col if len(pts) >= 4 else None  # its vertical runs in the gap left of t's column
             pts = simplify(pts)
+            if self.m.get("routing") == "detour" and (
+                not self.clear_route(pts)
+                or any(seg_box(a, b, box) for a, b in itertools.pairwise(pts) for box, _, _ in self.marks())
+            ):
+                alternative = self.detour(s, t)
+                if alternative:
+                    pts = alternative[0]
+                    gap = None  # custom channel path must not be rewritten by spread()
             self.routes.append(
                 {"e": e, "k": k, "pts": pts, "feedback": feedback, "pill": None, "port": p, "gap": gap}
             )
@@ -1086,8 +1198,27 @@ class MapModel:
                 t.bottom_used = True  # a line into the bottom vertex: the id label moves right of it too
         marks = self.marks()
         self.spread(marks)
-        errors = self.lines_clear(marks)
-        errors += self.pills(marks)
+        if self.m.get("routing") == "detour":
+            # Spreading tracks can introduce a new obstruction; repair only the geometry.
+            for r in self.routes:
+                e = r["e"]
+                blocked = (
+                    not self.clear_route(r["pts"])
+                    or any(seg_box(a, b, box) for a, b in itertools.pairwise(r["pts"]) for box, _, _ in marks)
+                    or any(
+                        seg_overlap(a, b, c, d)
+                        for other in self.routes
+                        if other is not r and other["e"]["from"] != e["from"] and other["e"]["to"] != e["to"]
+                        for a, b in itertools.pairwise(r["pts"])
+                        for c, d in itertools.pairwise(other["pts"])
+                    )
+                )
+                if blocked:
+                    alternative = self.detour(self.N[e["from"]], self.N[e["to"]], current=r)
+                    if alternative:
+                        r["pts"], r["gap"] = alternative[0], None
+        errors = self.pills(marks)
+        errors += self.lines_clear(self.marks())
         if errors:
             raise DataError("\n".join(errors))
 
@@ -1104,7 +1235,7 @@ class MapModel:
             if r["gap"] is not None:
                 by_col.setdefault(r["gap"], []).append(r)
         for col, rs in sorted(by_col.items()):
-            x0, ext = self.N[rs[0]["e"]["to"]].x - MID, {}
+            x0, ext = self.N[rs[0]["e"]["to"]].x - self.mid, {}
             for r in rs:
                 ys = [y for (x, y) in r["pts"] if abs(x - x0) < 0.01]
                 lo, hi = ext.get(r["e"]["from"], (min(ys), max(ys)))
@@ -1120,7 +1251,10 @@ class MapModel:
                 track[sid] = k
             if len(ends) == 1:
                 continue
-            if len(ends) > len(TRACKS):
+            tracks = TRACKS
+            if self.m.get("routing") == "detour" and 3 < len(ends) <= 5:
+                tracks = tuple(6 * i - 3 * (len(ends) - 1) for i in range(len(ends)))
+            if len(ends) > len(tracks):
                 raise DataError(
                     f"build-6 {self.where}: {len(ends)} lines from different sources ({', '.join(sorted(ext))}) "
                     f"meet in the gap left of column {col + 1}, which has room for {len(TRACKS)} -> move one of "
@@ -1128,7 +1262,7 @@ class MapModel:
                 )
             others = [o for o in self.routes if o["gap"] != col]
             best = None
-            for perm in itertools.permutations(TRACKS, len(ends)):
+            for perm in itertools.permutations(tracks, len(ends)):
                 paths = [
                     simplify(
                         self.fwd(
@@ -1269,6 +1403,10 @@ class MapModel:
                 for f0, f1 in free:
                     if best is None or f1 - f0 > best[2] - best[1]:
                         best = (y, f0, f1)
+            if self.m.get("routing") == "detour" and (best is None or best[2] - best[1] < w + 16):
+                alternative = self.detour(self.N[e["from"]], self.N[e["to"]], w, placed, current=r)
+                if alternative:
+                    r["pts"], best = alternative
             if best is None or best[2] - best[1] < w + 16:
                 have = 0 if best is None else best[2] - best[1]
                 errors.append(
@@ -1325,6 +1463,15 @@ class MapModel:
         self.npairs = {}
         for n in self.nodes:
             self.npairs[n.id] = reg.cites(n.d["cite"], (n.id, pre + n.id))
+        self.edge_pairs = []
+        for i, edge in enumerate(self.edges, 1):
+            label = f"{edge['from']} → {edge['to']}" + (
+                " · Condition not stated" if edge.get("labelUnstated") else ""
+            )
+            used = (label, pre + f"connection-{i}")
+            pairs = reg.cites(edge.get("cite"), used)
+            if pairs:
+                self.edge_pairs.append((i, label, pairs))
         self.gap_html = []
         for i, g in enumerate(self.gaps):
             u = (card_name("gaps", g, i), pre + g["id"])  # Used by names an element as its page shows it
@@ -1534,14 +1681,26 @@ def edges_svg(mm, ui=None):
     for r in mm.routes:
         e, d = r["e"], path_d(r["pts"])
         cls = "pm-feed" if r["feedback"] else "pm-flow"
+        inferred = any(ctype(c) == "inferred" for c in e.get("cite", []))
+        if inferred:
+            cls += " is-inferred"
+        edge_label = (
+            f"{e['from']} → {e['to']}"
+            + (" · Inferred connection" if inferred else "")
+            + (" · Condition not stated" if e.get("labelUnstated") else "")
+        )
+        if e.get("cite"):
+            s += f'<a href="#{mm.pre}connection-{r["k"] + 1}" aria-label="{esc(edge_label)} · connection evidence">'
         kind = ("is-feedback " if r["feedback"] else "") + (
             "is-branch" if e.get("kind") == "conditional" else "is-flow"
         )
         extra = " is-hover" if ui and (e["from"], e["to"]) in ui else ""
         s += (
             f'<g class="pm-edge {kind.strip()}{extra}" data-from="{e["from"]}" data-to="{e["to"]}">'
-            f'<path class="pm-hit" d="{d}"/><path class="{cls}" d="{d}"/>{arrow(r["pts"][-2], r["pts"][-1])}</g>'
+            f'<title>{esc(edge_label)}</title><path class="pm-hit" d="{d}"/><path class="{cls}" d="{d}"/>{arrow(r["pts"][-2], r["pts"][-1])}</g>'
         )
+        if e.get("cite"):
+            s += "</a>"
     return s
 
 
@@ -1777,7 +1936,11 @@ def cp_html(reg, links, target=None, only=None):
             recs = e["recs"]
             text = " · ".join(f"<q>{esc(r['text'])}</q>" for r in recs[:10])
             if len(recs) > 10:
-                text += f" · and {len(recs) - 10} more"
+                text += (
+                    f"<details><summary>{len(recs) - 10} more records</summary>"
+                    + " · ".join(quote(r) for r in recs[10:])
+                    + "</details>"
+                )
             text = f'<span class="cp-recs">{text}</span>'
         for reading, (name, href) in e.get("notes", []):
             text += f'<span class="cp-note"><b>Inferred</b> · {esc(reading)} · {link(name, href)}</span>'
@@ -1819,6 +1982,18 @@ def cp_tip(e):
         t = t[:70].rsplit(" ", 1)[0] + " …"
     addr = e["address"] if e["loc"] else f"{e['source']} · whole source"
     return f"<b>{esc(addr)}</b> · {esc(t)}"
+
+
+def connections_html(mm):
+    rows = "".join(
+        f'<li id="{mm.pre}connection-{i}"><strong>{esc(label)}</strong>{prov_html(pairs)}</li>'
+        for i, label, pairs in mm.edge_pairs
+    )
+    return (
+        f'<article class="pm-ev-card"><h2>Connection evidence</h2><ol class="pm-ev-list">{rows}</ol></article>'
+        if rows
+        else ""
+    )
 
 
 def footer_html(meta, date):
@@ -3632,7 +3807,7 @@ def render_page(mm, am, ui=None, ai_ui=None, off=False, pinned=None):
         title=esc(title),
         pre=mm.pre,
         aside=aside,
-        evidence=gaps_html(mm) + clar_html(mm),
+        evidence=gaps_html(mm) + clar_html(mm) + connections_html(mm),
         citations=cp_html(mm.reg, mm.links),
         footer=footer_html(mm.meta, date),
         header=header,

@@ -448,6 +448,9 @@ def collect(ws, rules, records, bd):
         for ln in objs(d.get("lanes")):
             if is_str(ln.get("id")):
                 pts.cites(ln.get("cite"), (pg, ln.get("label") or ln["id"], f"{pg['file']}#lane-{ln['id']}"))
+        for i, edge in enumerate(objs(d.get("edges")), 1):
+            label = f"{edge.get('from', '')} → {edge.get('to', '')}"
+            pts.cites(edge.get("cite"), (pg, label, f"{pg['file']}#connection-{i}"))
         for key, prose in (
             ("nodes", ()),
             ("gaps", ("title", "text")),

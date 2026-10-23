@@ -53,7 +53,7 @@ A record holds `locator` (unique in the file, in its kind's grammar), `text` (ve
 | Kind | Inputs (examples) | One record per | Locator | Spans a citation may use | Context | Printed as |
 |---|---|---|---|---|---|---|
 | `sheet` | .csv, .xlsx (.xls is unchecked) | non-empty cell | `Steps!C3` | `Steps!C2:D4` · `Steps row 5` · `Steps rows 2-4` | row 1 of the column | Workbook |
-| `document` | .md, .txt, .docx (.pdf, email and images are unchecked) | paragraph, heading, list item or table row; in an email export, one message | `¶4`, or `p2 ¶3` when the file has pages | `¶2-4` · `p2` · `p2 ¶1-3` | the nearest heading; for a message, its author | Document |
+| `document` | .md, .txt, .docx, .eml; .pdf with the optional reader; images remain unchecked | text block, paragraph, heading, list item or table row; email headers and selected body | `¶4`, or `p2 ¶3` when the file has pages | `¶2-4` · `p2` · `p2 ¶1-3` | the nearest heading when available | Document |
 | `transcript` | timed .txt, .vtt, .srt (audio is unchecked) | turn | `00:00:31`, or `00:00:31.400` | `00:00:05-00:00:47` | the speaker | Meeting notes |
 | `web` | a saved .html page (.mhtml is unchecked) | paragraph, heading, list item or table row | `¶3` | `¶2-3` | the nearest heading | Website |
 
@@ -113,7 +113,7 @@ A record holds `locator` (unique in the file, in its kind's grammar), `text` (ve
 
 | Section | Element citations | Inline |
 |---|---|---|
-| process-map | `cite` on systems, lanes, nodes, gaps and clarifications. Groups and edges carry none. A system's `software.cite` is printed by Original data received and the systems inventory, not by the board | `[SRC locator]` markers in gap and clarification prose: a grounded citation of the card, printed in place |
+| process-map | `cite` on systems, lanes, nodes, gaps and clarifications; optional `cite` on edges. Groups carry none | `[SRC locator]` markers in gap and clarification prose: a grounded citation of the card, printed in place |
 | process-map-ai-opportunity | `cite` on each `ai[]` item | none: `does` and `agentic` are our design |
 | document | — | `[SRC locator]` brackets in a sentence, and Grounded, Inferred and Gap lines straight after a block (section 4) |
 | inventory | `cite` on each module | none |
@@ -132,7 +132,7 @@ A record holds `locator` (unique in the file, in its kind's grammar), `text` (ve
 | process-map · node.inferred | inferred | inferred | map-7: the reading printed on the card is at most cardReadingMax characters |
 | process-map · node.gap | grounded, inferred | grounded | the step exists in the sources; its gap card proves what is missing (map-6) |
 | process-map · group | none | nothing | no citation: a view is our framing of the board |
-| process-map · edge | none | nothing | no citation: the nodes at its ends hold the evidence. A branch label's numbers come from a record its decision cites |
+| process-map · edge | grounded, inferred | nothing | Optional connection evidence is checked and printed separately from the endpoints. Existing maps remain compatible. |
 | process-map · gap | grounded, inferred, absent | absent **and** grounded | a cited weakness is not a gap: a gap proves with an absent search what the sources do not say; a weakness the sources state is a clarification |
 | process-map · clarification | grounded, inferred, absent | grounded | the grounded citations are what the sources show |
 | process-map · gap.none | grounded, inferred, absent | grounded or inferred | None found (map-6): the only gap card, listing no step, when no step is in gap state and every step's owner and outcome is in a record it cites (a step whose order no record states is asked by an order clarification instead). It cites those records (grounded, or inferred from them); an absent search may add to it, never alone |
@@ -141,6 +141,7 @@ A record holds `locator` (unique in the file, in its kind's grammar), `text` (ve
 | process-map-ai-opportunity · ai.suggested | grounded, inferred | inferred | our idea, read from the records |
 | document · sentence | grounded, inferred, absent | grounded or inferred or absent | through a bracket in the sentence, or a provenance line straight after its block. A Gap line must be PROVEN |
 | inventory · module | grounded, inferred | inferred | our suggestion, read from the records, like ai.suggested. inv-2 checks its software and steps against the map |
+| inventory · module.observed | grounded | grounded | Source-observed module/capability, never a suggestion; inv-2 checks its software and steps. A checker must verify the source actually describes this use. |
 <!-- end generated -->
 
 ### 2.4 Web sources and AI terms
@@ -237,7 +238,7 @@ The page computes its status: **Named in the sources** when a grounded citation 
 | `software` | a `systems[].software.name` of the map (inv-2) |
 | `steps` | 1–12 step ids of the map, never a decision: the steps the module would serve (inv-2). A step need not use that software today; that is the suggestion |
 | `likelihood` | `likely` or `possible` |
-| `cite` | at least one **inferred** citation: a module is always our suggestion (cite-4). Grounded ones may be added; web sources never alone (cite-5) |
+| `cite` | at least one **inferred** citation: a module in default/suggested mode is our suggestion; observed mode follows the current-state contract below (cite-4). Grounded ones may be added; web sources never alone (cite-5) |
 
 **Example:** `examples/inventory/end-to-end.json`, with `systems[].software` in `examples/process-map/end-to-end.json` (three products named in `inputs/notes/systems-notes.md`, two inferred); and `examples/inventory/request-handling.json` over `current-state.json`.
 
@@ -386,3 +387,28 @@ The build computes all of these, and typing one is a schema error or a prose fai
 - **AI layer:** square digits; the summary strip; scope labels; the agentic meta line.
 - **Document:** its `--sources` map.
 - **Computed pages:** `out/data-received.html`, `out/systems-inventory.html` and `out/citation-points.html`, every value (section 5): a software's status, the citation point numbers and markers, every count.
+
+## 8. Current-state compatibility
+
+### Current-state inventory mode
+
+When the brief excludes suggestions, use `"mode": "observed"` in an inventory file. Its required modules/capabilities entry is fulfilled by documented use instead of the default suggested-module analysis; the required section is not skipped. Each entry keeps `id`, `title`, `software`, `steps` and `cite`, omits `likelihood`, and has grounded citations only. Its software must be named in grounded map evidence, and each linked step must name a system using that software. Use a capability name when the source does not identify a formal product module; never invent a module name.
+
+The page says **Documented modules and capabilities** and **Observed in supplied sources**. Its summary explicitly scopes the inventory to systems and capabilities linked to mapped steps, not an exhaustive company inventory. These mean source-reported use at the source's date, not a live verification of implementation. A semantic checker must inspect the cited material to verify the capability and its association with the step; structural checks cannot prove that claim. Missing facts remain clarifications or evidence gaps.
+
+Without `mode`, or with `"mode": "suggested"`, the original contract is unchanged: each entry needs `likelihood: "likely" | "possible"` and at least one inferred citation. Mixed inventories label observed and suggested entries separately. No AI layer is required for a current-state brief.
+
+```json
+{"type":"inventory","map":"end-to-end","mode":"observed","modules":[
+  {"id":"MOD-01","title":"Budget holding","software":"Software C","steps":["RSV-01"],
+   "cite":[{"source":"D2","locator":"¶3"}]}]}
+```
+
+### Evidence-preserving map extensions
+
+- Optional `edges[].cite` preserves evidence for the connection itself. Each cited connection has a numbered marker and a Connection evidence entry; the global registry links back to it. Grounded and inferred connection evidence remain distinct. Inferred connections have a dotted line and a labelled legend; clicking a cited connection opens its evidence entry. Endpoint evidence alone never proves sequence.
+- A source-drawn conditional connection with no stated label uses `kind: "conditional"`, `labelUnstated: true`, grounded `cite`, and no `label`. Its decision must have `branchesIncomplete: true` and an attached clarification. The Connection evidence card says **Condition not stated**; the builder never invents a branch label.
+- `branchesIncomplete: true` is permitted only on a decision with a cited clarification attached to that decision. It preserves the source's incomplete branch set; it never invents the missing route.
+- An ordinary clarification with `scope: "map"` and `nodes: []` is a map-wide note or question. It is neither a None found card nor an order clarification, cannot combine with `none` or `order`, and does not excuse disconnected steps. Other ordinary clarifications still need nodes.
+- Optional top-level `routing: "detour"` enables deterministic orthogonal route repair for source diagrams. Column spacing derives from the longest branch label, rows have extra routing space, and additional distinct tracks are used only when they fit. Every final route is checked for cards, marks and ambiguous shared lines; labels are checked for free space. The default routing and its refusal cases remain unchanged. If no safe route exists, build fails: change layout hints or split the map without changing its evidence.
+- Maps retain a right-hand Citation points panel on wide screens, moving below the map on small screens and in print. Full citation spans remain available through an expandable section.

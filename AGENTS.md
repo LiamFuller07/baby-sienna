@@ -105,7 +105,7 @@ Each template's required elements are in `design-system/<template>/template.json
 - [ ] **Folders of data**: computed from `inputs/`: at least one file (ws-1).
 - [ ] ★ **Systems identified**: `process-map/<name>.json › systems[]` (id, label, icon, cite, role), with `nodes[].systems` (map-8).
 - [ ] ★ **Software used**: `process-map/<name>.json › systems[].software` (name, category, cite) (inv-1).
-- [ ] ★ **Modules likely to be used**: `inventory/<name>.json › modules[]` (id, title, software, steps, likelihood, cite) (inv-2).
+- [ ] ★ **Modules and capabilities**: `inventory/<name>.json › modules[]` (id, title, software, steps, likelihood, cite) (inv-2).
 - [ ] **Folder view**: computed from `inputs/` and `records/`: one row per file (ws-1).
 - [ ] ★ **Citation points section**: a map with cited `systems[]`; every cited row then carries a numbered marker (cite-1).
 
@@ -218,14 +218,15 @@ Every claim cites a record. Nothing is uncited except computed counts. A missing
 | map system software | grounded (Named in the sources) or inferred |
 | map lane | nothing, unless it holds no step: then a grounded citation for its role (map-3) |
 | map node | grounded (state grounded or gap) or inferred (state inferred; reading ≤ 48 characters) |
-| map group, edge | none: they carry no citation |
+| map group | none: it carries no citation |
+| map edge | optional grounded or inferred connection evidence |
 | map gap | an absent search **and** a grounded citation |
 | map clarification | grounded |
 | map gap or clarification, None found (`none: true`) | grounded or inferred: the records that show nothing is missing; an absent search may add to it, never alone. The only card of its kind (map-6) |
 | map clarification, order (`order: true`) | grounded; it lists only steps no edge joins (map-5) |
 | AI item, named | a grounded quote holding an AI term, from a source that is not web (ai-3) |
 | AI item, suggested | inferred; web pages may add to it, never alone (cite-5) |
-| inventory module | inferred |
+| inventory module | inferred in suggested/default mode; grounded only in observed mode |
 | document sentence | any of the three, through a bracket or a provenance line; a Gap line must be PROVEN |
 
 The generated table is `uv run python bs.py check --rules`. Prose rules (section 2.5): no straight `"` (quote with `“…”`); every quoted phrase and every number occurs in a record the element cites; brackets only in claim prose; `{count:…}` tokens only in a map's subtitle.
@@ -277,3 +278,32 @@ The supporting skills: `.claude/skills/convert/SKILL.md` (inputs → records) an
 - [ ] `uv run python bs.py status <ws>` shows every required element fulfilled on every page (`--strict` exits 0, State: DONE).
 - [ ] `uv run python bs.py build <ws>` exits 0, and you have looked at the pages in `<ws>/out/`.
 - [ ] The checker agent's findings are fixed or answered.
+
+## 8. Evidence-run compatibility
+
+### Current-state inventory mode
+
+When the brief excludes suggestions, use `"mode": "observed"` in an inventory file. Its required modules/capabilities entry is fulfilled by documented use instead of the default suggested-module analysis; the required section is not skipped. Each entry keeps `id`, `title`, `software`, `steps` and `cite`, omits `likelihood`, and has grounded citations only. Its software must be named in grounded map evidence, and each linked step must name a system using that software. Use a capability name when the source does not identify a formal product module; never invent a module name.
+
+The page says **Documented modules and capabilities** and **Observed in supplied sources**. Its summary explicitly scopes the inventory to systems and capabilities linked to mapped steps, not an exhaustive company inventory. These mean source-reported use at the source's date, not a live verification of implementation. A semantic checker must inspect the cited material to verify the capability and its association with the step; structural checks cannot prove that claim. Missing facts remain clarifications or evidence gaps.
+
+Without `mode`, or with `"mode": "suggested"`, the original contract is unchanged: each entry needs `likelihood: "likely" | "possible"` and at least one inferred citation. Mixed inventories label observed and suggested entries separately. No AI layer is required for a current-state brief.
+
+```json
+{"type":"inventory","map":"end-to-end","mode":"observed","modules":[
+  {"id":"MOD-01","title":"Budget holding","software":"Software C","steps":["RSV-01"],
+   "cite":[{"source":"D2","locator":"¶3"}]}]}
+```
+
+### Evidence-preserving map extensions
+
+- Optional `edges[].cite` preserves evidence for the connection itself. Each cited connection has a numbered marker and a Connection evidence entry; the global registry links back to it. Grounded and inferred connection evidence remain distinct. Inferred connections have a dotted line and a labelled legend; clicking a cited connection opens its evidence entry. Endpoint evidence alone never proves sequence.
+- A source-drawn conditional connection with no stated label uses `kind: "conditional"`, `labelUnstated: true`, grounded `cite`, and no `label`. Its decision must have `branchesIncomplete: true` and an attached clarification. The Connection evidence card says **Condition not stated**; the builder never invents a branch label.
+- `branchesIncomplete: true` is permitted only on a decision with a cited clarification attached to that decision. It preserves the source's incomplete branch set; it never invents the missing route.
+- An ordinary clarification with `scope: "map"` and `nodes: []` is a map-wide note or question. It is neither a None found card nor an order clarification, cannot combine with `none` or `order`, and does not excuse disconnected steps. Other ordinary clarifications still need nodes.
+- Optional top-level `routing: "detour"` enables deterministic orthogonal route repair for source diagrams. Column spacing derives from the longest branch label, rows have extra routing space, and additional distinct tracks are used only when they fit. Every final route is checked for cards, marks and ambiguous shared lines; labels are checked for free space. The default routing and its refusal cases remain unchanged. If no safe route exists, build fails: change layout hints or split the map without changing its evidence.
+- Maps retain a right-hand Citation points panel on wide screens, moving below the map on small screens and in print. Full citation spans remain available through an expandable section.
+
+PDF and email readers require `--partial`: embedded PDF text excludes visual semantics, and email text excludes attachment binaries. Install the optional pinned reader from `requirements-pdf.txt`. Client files still stay in ignored workspaces.
+
+After a successful full build, `python3 scripts/build_workspace_menu.py <ws>` adds the material selector with process maps, documents, Original data received, systems inventory and global citation points. Its local Source application chrome uses the bundled Fused tokens and Geist font; embedded templates retain their own designs. Validate tokens with the command in README.md. Browser interaction testing requires explicit user authorization; a local build is not a deployment.

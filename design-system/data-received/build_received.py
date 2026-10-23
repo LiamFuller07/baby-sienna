@@ -765,6 +765,7 @@ def load_inventories(ws):
                     p.stem,
                     {
                         "map": d.get("map") if is_str(d.get("map")) else None,
+                        "mode": d.get("mode", "suggested"),
                         "modules": [
                             m
                             for m in objs(d.get("modules"))
@@ -987,8 +988,11 @@ def overview(ws, rules, recs, folders, files, client):
                     "title": text(mo["title"]),
                     "anchor": a,
                     "software": text(mo.get("software")) if is_str(mo.get("software")) else "",
-                    "likelihood": mo.get("likelihood")
-                    if mo.get("likelihood") in ("likely", "possible")
+                    "mode": inv["mode"],
+                    "likelihood": "observed"
+                    if inv["mode"] == "observed"
+                    else mo.get("likelihood")
+                    if inv["mode"] == "observed" or mo.get("likelihood") in ("likely", "possible")
                     else "possible",
                     "steps": steps,
                     "cites": cites_of(mo.get("cite")),
@@ -1112,7 +1116,23 @@ def overview(ws, rules, recs, folders, files, client):
         )
         + body
     )
-    # ---- Modules likely to be used
+    # Current-state entries never acquire a suggested likelihood.
+    observed = sum(m["mode"] == "observed" for m in modules)
+    suggested = len(modules) - observed
+    modules_title = (
+        "Documented modules and capabilities"
+        if observed and not suggested
+        else "Modules and capabilities: observed and suggested"
+        if observed
+        else "Modules likely to be used"
+    )
+    modules_note = (
+        "Modules and capabilities described in the cited sources. Observed means source-reported use, not a live system verification."
+        if observed and not suggested
+        else "Observed entries describe source-reported use; likely or possible entries are our suggestions."
+        if observed
+        else "Modules of that software the process would likely rely on. Each is our suggestion, read from the records it cites."
+    )
     rows = []
     for mo in modules:
         short = mo["title"].split(" · ")[0]
@@ -1120,21 +1140,29 @@ def overview(ws, rules, recs, folders, files, client):
         sw = sw_by.get(mo["software"])
         swh = f'<a href="#{sw["anchor"]}">{h(mo["software"])}</a>' if sw else h(mo["software"]) or "—"
         rows.append(
-            f'<tr id="{mo["anchor"]}"><td class="main"><span class="nm"><i class="sq" aria-hidden="true"></i><span class="nm-t">{h(mo["title"])}</span></span></td>'
+            f'<tr id="{mo["anchor"]}"><td class="main"><span class="nm"><i class="sq{" is-observed" if mo["mode"] == "observed" else ""}" aria-hidden="true"></i><span class="nm-t">{h(mo["title"])}</span></span></td>'
             f'<td data-label="Software">{swh}</td>'
-            f'<td data-label="Reading"><p class="lead{" strong" if mo["likelihood"] == "likely" else ""}">{mo["likelihood"].capitalize()}</p>{evidence(mo["cites"], pts, user)}</td>'
+            f'<td data-label="Reading"><p class="lead{" strong" if mo["likelihood"] == "likely" else ""}">{"Observed in supplied sources" if mo["mode"] == "observed" else mo["likelihood"].capitalize()}</p>{evidence(mo["cites"], pts, user)}</td>'
             f'<td data-label="Steps">{chips(mo["steps"])}</td></tr>'
         )
     lk = Counter(m["likelihood"] for m in modules)
     body = (
-        table(["Module", "Software", "Likelihood and reading", "Steps it would serve"], rows)
+        table(
+            [
+                "Module",
+                "Software",
+                "Evidence status" if observed else "Likelihood and reading",
+                "Related steps" if observed else "Steps it would serve",
+            ],
+            rows,
+        )
         if rows
         else empty(
             "No modules yet. Write <code>inventory/&lt;name&gt;.json</code>: the modules of the software that the steps would use."
         )
     )
     aside = (
-        f'<span class="lg"><i class="sq" aria-hidden="true"></i>{" · ".join(f"{lk[k]} {k}" for k in ("likely", "possible") if lk[k])}</span>'
+        f'<span class="lg"><i class="sq{" is-observed" if observed and not suggested else ""}" aria-hidden="true"></i>{" · ".join(f"{lk[k]} {k}" for k in ("observed", "likely", "possible") if lk[k])}</span>'
         if rows
         else ""
     )
@@ -1142,8 +1170,8 @@ def overview(ws, rules, recs, folders, files, client):
         head(
             "04" if not client else "03",
             "modules",
-            "Modules likely to be used",
-            "Modules of that software the process would likely rely on. Each is our suggestion, read from the records it cites.",
+            modules_title,
+            modules_note,
             aside,
         )
         + body
@@ -1156,6 +1184,8 @@ def overview(ws, rules, recs, folders, files, client):
         "software": len(software),
         "named": n_named,
         "modules": len(modules),
+        "observed": observed,
+        "suggested": suggested,
     }
     fulfilled = {
         "folders-of-data": counts["files"] > 0,
@@ -1168,6 +1198,7 @@ def overview(ws, rules, recs, folders, files, client):
     }
     return {
         "sec": sec,
+        "modules_title": modules_title,
         "counts": counts,
         "points": points_html(pts, rd, rules["kinds"]),
         "npoints": len(pts.order),
@@ -1404,12 +1435,31 @@ KEY = (
 )
 
 
+def inventory_key(o):
+    suggestion = '<span class="lg"><i class="sq" aria-hidden="true"></i>our suggestion</span>'
+    observed = '<span class="lg"><i class="sq is-observed" aria-hidden="true"></i>observed in supplied sources</span>'
+    return KEY.replace(
+        suggestion,
+        (observed if o["counts"]["observed"] else "") + (suggestion if o["counts"]["suggested"] else ""),
+    )
+
+
 def fill(tpl, slots):
     """One pass over the template, so text inserted into one slot is never read as another slot."""
     for k in slots:
         if "{{" + k + "}}" not in tpl:
             cannot_run(f"a template of design-system/data-received/ has no {{{{{k}}}}} slot")
     return re.sub(r"\{\{([a-z]+)\}\}", lambda m: slots.get(m.group(1), m.group(0)), tpl)
+
+
+def module_summary(counts, inventory=False):
+    parts = []
+    if counts["observed"]:
+        parts.append(f"{counts['observed']} observed modules/capabilities")
+    if counts["suggested"]:
+        ending = "likely to be used" if inventory else "we suggest"
+        parts.append(f"{plural(counts['suggested'], 'module')} {ending}")
+    return parts
 
 
 def lede(o, files):
@@ -1421,7 +1471,9 @@ def lede(o, files):
     if c["software"]:
         parts.append(plural(c["software"], "software product"))
     if c["modules"]:
-        parts.append(f"{plural(c['modules'], 'module')} we suggest")
+        parts.extend(module_summary(c))
+    if c["observed"] and not c["suggested"]:
+        parts.insert(0, "Systems and capabilities linked to mapped steps")
     return " · ".join(parts)
 
 
@@ -1487,11 +1539,11 @@ def received_page(ws, rules, recs, folders, files, o):
                 ("01", "folders", "Folders of data", c["folders"]),
                 ("02", "systems", "Systems identified", c["systems"]),
                 ("03", "software", "Software used", c["software"]),
-                ("04", "modules", "Modules likely to be used", c["modules"]),
+                ("04", "modules", o["modules_title"], c["modules"]),
                 ("", "citation-points", "Citation points", o["npoints"]),
             ]
         )
-        + KEY
+        + inventory_key(o)
         + "".join(
             f'<section class="sec" id="{k}" aria-labelledby="{k}-h" data-element="{e}">{o["sec"][k]}</section>'
             for k, e in (
@@ -1521,7 +1573,9 @@ def received_page(ws, rules, recs, folders, files, o):
 def inventory_page(ws, o):
     label = o["label"]
     c = o["counts"]
-    parts = []
+    parts = (
+        ["Systems and capabilities linked to mapped steps"] if c["observed"] and not c["suggested"] else []
+    )
     if c["systems"]:
         parts.append(f"{plural(c['systems'], 'system')} used by {plural(c['steps'], 'step')}")
     if c["software"]:
@@ -1529,17 +1583,17 @@ def inventory_page(ws, o):
             f"{plural(c['software'], 'software product')}, {c['named'] or 'none'} named in the sources"
         )
     if c["modules"]:
-        parts.append(f"{plural(c['modules'], 'module')} likely to be used")
+        parts.extend(module_summary(c, inventory=True))
     body = (
         nav(
             [
                 ("01", "systems", "Systems identified", c["systems"]),
                 ("02", "software", "Software used", c["software"]),
-                ("03", "modules", "Modules likely to be used", c["modules"]),
+                ("03", "modules", o["modules_title"], c["modules"]),
                 ("", "citation-points", "Citation points", o["npoints"]),
             ]
         )
-        + KEY
+        + inventory_key(o)
         + "".join(
             f'<section class="sec" id="{k}" aria-labelledby="{k}-h" data-element="{e}">{o["sec"][k]}</section>'
             for k, e in (
