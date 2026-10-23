@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "inventory.schema.json",
+  "title": "Inventory (inventory/<name>.json)",
+  "description": "Inventory entries are either source-observed modules/capabilities or suggested modules. Defaults to suggested; observed mode is current-state evidence only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type",
+    "map",
+    "modules"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "type": {
+      "const": "inventory"
+    },
+    "map": {
+      "description": "The name of a valid map in process-map/ of the same workspace: the steps and software the modules name are that map's.",
+      "$ref": "process-map.schema.json#/$defs/sectionFile"
+    },
+    "modules": {
+      "description": "In display order; ids unique (inv-2).",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/$defs/module"
+      }
+    },
+    "mode": {
+      "enum": [
+        "observed",
+        "suggested"
+      ],
+      "description": "Default suggested retains likelihood and inferred evidence. Observed requires only grounded citations and forbids likelihood."
+    }
+  },
+  "$defs": {
+    "moduleId": {
+      "description": "MOD- and two digits, unique in the file.",
+      "type": "string",
+      "pattern": "^MOD-[0-9]{2}$"
+    },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "software",
+        "steps",
+        "cite"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/moduleId"
+        },
+        "title": {
+          "description": "A source-observed module or capability in observed mode; a suggested product module otherwise.",
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 60
+        },
+        "software": {
+          "description": "A systems[].software.name of the map (inv-2).",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "steps": {
+          "description": "The steps of the map the module would serve: steps, not decisions (inv-2).",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "$ref": "process-map.schema.json#/$defs/nodeId"
+          }
+        },
+        "likelihood": {
+          "enum": [
+            "likely",
+            "possible"
+          ]
+        },
+        "cite": {
+          "description": "Observed mode requires all citations grounded. Suggested mode requires at least one inferred citation.",
+          "$ref": "citation.schema.json#/$defs/cites"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "mode"
+        ],
+        "properties": {
+          "mode": {
+            "const": "observed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "modules": {
+            "items": {
+              "properties": {
+                "likelihood": false
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "modules": {
+            "items": {
+              "required": [
+                "likelihood"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

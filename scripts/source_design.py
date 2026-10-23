@@ -4,9 +4,9 @@
 import argparse
 import ipaddress
 import json
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
 from urllib.parse import urlsplit
 
 BASE = Path(__file__).resolve().parent.parent
@@ -35,20 +35,33 @@ def local(host):
 
 def classify(sites, local_source_app, policy):
     hosts = list(dict.fromkeys(hostname(site) for site in sites))
-    protected = [host for host in hosts if any(
-        host == excluded or host.endswith("." + excluded)
-        for excluded in policy["excludedHosts"]
-    )]
+    protected = [
+        host
+        for host in hosts
+        if any(host == excluded or host.endswith("." + excluded) for excluded in policy["excludedHosts"])
+    ]
     if protected:
-        return {"status": "exempt", "hosts": hosts, "theme": "preserve-existing",
-                "reason": "Protected sales-site identity, including local and preview copies."}
+        return {
+            "status": "exempt",
+            "hosts": hosts,
+            "theme": "preserve-existing",
+            "reason": "Protected sales-site identity, including local and preview copies.",
+        }
     domain = policy["domain"]
     eligible = any(host == domain or host.endswith("." + domain) for host in hosts)
     if eligible or (local_source_app and all(local(host) for host in hosts)):
-        return {"status": "default", "hosts": hosts, "theme": policy["id"],
-                "reason": "Use the shared Source application design."}
-    return {"status": "unresolved", "hosts": hosts, "theme": None,
-            "reason": "Supply the canonical Source hostname; localhost or preview URL alone does not identify an app."}
+        return {
+            "status": "default",
+            "hosts": hosts,
+            "theme": policy["id"],
+            "reason": "Use the shared Source application design.",
+        }
+    return {
+        "status": "unresolved",
+        "hosts": hosts,
+        "theme": None,
+        "reason": "Supply the canonical Source hostname; localhost or preview URL alone does not identify an app.",
+    }
 
 
 def declared_tokens(css):
@@ -66,8 +79,9 @@ def declared_tokens(css):
 def resolve(name, values, seen=()):
     if name in seen or name not in values:
         raise ValueError("Missing or circular token: " + name)
-    return re.sub(r"var\(\s*(--[\w-]+)\s*\)",
-                  lambda match: resolve(match[1], values, (*seen, name)), values[name]).strip()
+    return re.sub(
+        r"var\(\s*(--[\w-]+)\s*\)", lambda match: resolve(match[1], values, (*seen, name)), values[name]
+    ).strip()
 
 
 def normalized(value):
@@ -77,8 +91,14 @@ def normalized(value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("scope", "tokens", "check"))
-    parser.add_argument("--site", action="append", default=[], help="Actual and/or canonical site; repeat for preview copies.")
-    parser.add_argument("--local-source-app", action="store_true", help="Only for a confirmed local Source app with no hosted identity.")
+    parser.add_argument(
+        "--site", action="append", default=[], help="Actual and/or canonical site; repeat for preview copies."
+    )
+    parser.add_argument(
+        "--local-source-app",
+        action="store_true",
+        help="Only for a confirmed local Source app with no hosted identity.",
+    )
     parser.add_argument("--output", type=Path, help="tokens: destination for the portable CSS.")
     parser.add_argument("--css", type=Path, help="check: the app's shared root stylesheet.")
     parser.add_argument("--adapter", choices=("sourcecore", "discovery"), default="sourcecore")

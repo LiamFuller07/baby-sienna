@@ -10,7 +10,14 @@
   {"id": "AI-01", "title": "Draft the review summary", "origin": "named",
    "does": "Drafts a summary of each request for Team B to check during review.",
    "nodes": ["REV-01"],
-   "cite": [{"source": "T1", "locator": "00:01:15", "quote": "We would like AI to draft the review summary"}]},
+   "cite": [{"source": "T1", "locator": "00:01:15", "quote": "We would like AI to draft the review summary"}],
+   "agentic": {
+    "trigger": "Team B opens a logged request for review.",
+    "steps": ["Read the request and its tracker entry.", "Draft a short summary of the request.", "Attach the draft summary to the tracker entry."],
+    "decides": [{"after": 3, "who": "Team B", "what": "reads the summary and edits it before the review"}],
+    "systems": ["email", "tracker"],
+    "logging": "Each run records the request, the draft summary and the edits Team B made."
+   }},
   {"id": "AI-02", "title": "Read each request into the tracker", "origin": "suggested",
    "does": "Reads the request email and fills in the tracker, so Team B no longer logs it by hand.",
    "nodes": ["LOG-01"],
@@ -28,12 +35,26 @@
    "does": "Checks each request for missing details before review, so fewer requests go back to Team A.",
    "groups": ["G02"],
    "cite": [{"type": "inferred", "reading": "Incomplete requests cause rework for Team A",
-             "from": [{"source": "T1", "locator": "00:00:31"}, {"source": "WB1", "locator": "Steps!D4"}]}]},
+             "from": [{"source": "T1", "locator": "00:00:31"}, {"source": "WB1", "locator": "Steps!D4"}]}],
+   "agentic": {
+    "trigger": "A logged request reaches review.",
+    "steps": ["Read the request and its tracker entry.", "Compare the request with the details a review needs.", "List any detail that is missing."],
+    "decides": [{"after": 3, "who": "Team B", "what": "decides whether the request goes back to Team A"}],
+    "systems": ["tracker"],
+    "logging": "Each run records the request, the details it found missing and what Team B decided."
+   }},
   {"id": "AI-04", "title": "Keep each request’s history in one place", "origin": "suggested",
    "does": "Records every change to a request in the tracker, so each team can see where a request is.",
    "groups": "all",
    "cite": [{"type": "inferred", "reading": "Only the outcome is logged in the tracker today",
              "from": [{"source": "WB1", "locator": "Steps!D7"}, {"source": "WB1", "locator": "Steps!C3"}]},
-            {"source": "WEB1", "locator": "¶3"}]}
+            {"source": "WEB1", "locator": "¶3"}],
+   "agentic": {
+    "trigger": "A request changes at any step.",
+    "steps": ["Read the change from the email or the tracker.", "Add the change to the request’s history in the tracker.", "Show the history to each team that opens the request."],
+    "decides": [{"after": 2, "who": "Team B", "what": "checks the history entry and corrects it when it is wrong"}],
+    "systems": ["email", "tracker"],
+    "logging": "Each run records the change, where it came from and who corrected it."
+   }}
  ]
 }

@@ -1,0 +1,34 @@
+Step,Owner,System,Note
+Submit a purchase request,Requester,Request form,Sent by email with the request form attached
+Log the request,Team A,Tracker,Each request gets a reference number
+Save the attachments,Records team,Shared drive,Saved in the request folder
+Request complete?,Team A,,Incomplete requests go back to the requester
+Check for a duplicate request,,Tracker,Duplicates are closed
+Assign a category,Team A,Tracker,Goods or services
+Urgent request?,Team A,,Urgent requests skip the queue
+Reserve the budget,Finance,Finance system,Budget held until approval
+Receive the reference number,Requester,Email,Sent by Team A once the category is set
+Add to the review queue,Team A,Tracker,Requests are reviewed in turn
+Ask suppliers for quotes,Team C,Supplier portal,Quotes requested through the supplier portal
+Review the request,Team B,Tracker,Checks the request against the category rules
+Compare the quotes,Team C,,Cheapest suitable quote is chosen
+Confirm the budget code,Finance,Finance system,Budget code checked against the cost centre
+Prepare the approval pack,Team B,Shared drive,Request and quotes and budget code in one pack
+File the quotes,,Shared drive,Quotes are kept
+Approve the request?,Approver,,Approver signs the pack
+Rework the approval pack,Team B,,Pack goes back to Team B with comments
+Add the finance sign-off,Finance,Finance system,Needed above the limit
+Raise the purchase order,Team C,Finance system,Order raised in the finance system
+Supplier confirmed?,Team C,Supplier portal,Confirmation expected in the supplier portal
+Update the tracker,Team A,Tracker,Status set to ordered
+Receive the order number,Requester,Email,Order number sent by email
+Receive the goods,Requester,,Requester confirms delivery
+Match the invoice,Finance,Finance system,Invoice matched to the order and the delivery
+Pay the supplier,Finance,Finance system,Paid on the next payment run
+Record the outcome,,Tracker,Outcome logged
+Close the request,Team A,Tracker,Request closed in the tracker
+Check the supplier is approved,Team C,Supplier portal,Only approved suppliers are asked for quotes
+Mark the request as reviewed,Team A,Tracker,Status set to reviewed
+File the purchase order,Records team,Shared drive,Order saved beside the request
+Query the invoice with the supplier,Team C,Email,Mismatched invoices go back to the supplier
+Rate the supplier,Requester,Request form,Rating added once the goods arrive

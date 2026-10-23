@@ -1,0 +1,78 @@
+---
+name: process-map
+description: Use when writing or fixing process-map/<name>.json, the current-state swimlane board, from a workspace's records.
+---
+
+# process-map: the current-state swimlane board
+
+## Required elements (`design-system/process-map/template.json`)
+
+- [ ] **Header**: `meta`: kicker, title, client and date (schema-1).
+- [ ] **Lanes**: `lanes[] {id, label}`: at least one, each a role (map-3).
+- [ ] **Steps with owners**: `nodes[]`: at least one step, each in the lane of the role that owns it, with its `owner`, state and cite; only a gap-state step may leave `owner` out, its gap card saying so (build-7).
+- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow, and at least one edge when the map has two or more nodes; a step whose order no source states is listed instead by an order clarification (`order: true`) that asks where it comes, and has no edge (map-5).
+- [ ] **Gaps card**: `gaps[] {id, title, text, nodes, cite}`: at least one, proven by an absent search (cite-4); or, when no step is in gap state and every step's owner and outcome is in a record it cites (a step whose order no record states is asked by an order clarification instead), one None found card (`none: true`, `nodes: []`) that cites those records, grounded or inferred (map-6). Never invent a gap.
+- [ ] **Clarifications card**: `clarifications[] {id, title, shows, ask, nodes, cite}`: at least one (cite-4); or one None found card (`none: true`, `nodes: []`) that cites why nothing is left to confirm, grounded or inferred (map-6). An order clarification (`order: true`) asks where its steps come.
+- [ ] **Citation points section, with in-place markers**: computed from every `cite`: one numbered marker on each cited element, and one row per point the page uses (build-7).
+
+Optional: the system key (`systems[]`) and the views band (`groups[]`, two or more). Fulfil every required element. The work is done only when `python3 bs.py status <ws>` shows them all fulfilled: `7 of 7`.
+
+## What the template shows
+
+The process as the sources describe it today, and nothing else: a header, the system key and legend, the board (lanes, step cards, decision diamonds, flows, gap and clarification badges), the Gaps and Clarifications needed cards, the Citation points section and a footer. A card shows its title, its owner, its step id and one small numbered marker. **No AI at all**: AI ideas go in an AI layer (map-9, build-5).
+
+## Read
+
+- `records/*.json`: every fact on the map comes from a record.
+- `design-system/process-map/README.md`: section 1 (the file), section 2 (the derived layout) and section 3 (every element).
+- `design-system/process-map/process-map.schema.json`: fields, limits, id patterns.
+- The cite skill: which citation each element needs.
+
+## Write
+
+`<ws>/process-map/<name>.json` (`<name>` like `end-to-end`). Arrays are in display order.
+
+- `type: "process-map"`; `meta {kicker, title, client, date, subtitle?, flags?, footer?}`. The subtitle takes numbers only from `{count:steps}`-style tokens.
+- `lanes[] {id, label, cite?}`: roles, never people. A lane with no step cites its role.
+- `groups[] {id: "G01", label}`: views, left to right. With groups, every node names one, and nodes are listed group by group.
+- `nodes[] {id: "SUB-01", title, kind?, lane, group?, state, owner, systems?, col?, cite}`. `owner` is the role that owns a step; a decision has none, and a gap-state step may leave it out when the missing owner is its gap. `state` is `grounded`, `inferred` (dashed; reading ≤ 48 characters) or `gap` (listed by exactly one gap card). A `decision` asks a question and has at least two conditional branches with different labels; the first-listed branch takes its right vertex.
+- `edges[] {from, to, kind?, label?}`: an edge to an earlier-listed node is feedback (dashed). Optional `cite` holds grounded or inferred evidence for the connection itself.
+- `gaps[]`: an **absent** search proves what the sources do not say, plus a grounded citation of what they do. Both cards are required. First search for what a reader of the map would expect and not find (an owner, an outcome, a limit): each such absence is a gap. When no step is in gap state and every step's owner and outcome is in a record it cites (a step whose order no record states is asked by an order clarification instead), write one None found card instead, `{id, title, text, none: true, nodes: [], cite}`, citing those records (grounded or inferred). Never manufacture an absent search to fill the card. `clarifications[]`: `title` is the question, `shows` what the sources show, `ask` what to confirm and with whom. When the records give a step but not where it comes, leave it without an edge and list it in a clarification with `order: true` that asks which step it follows; never invent the edge. A map needs at least one order a record states; when the records state none, do not draw the map yet: ask the client for the order first, or write a document instead. When nothing is left to confirm, one None found card says so.
+- `systems[] {id, label, icon, cite, role?, software?}`: the label occurs in a record it cites. `role` and `software` feed the data-received template.
+
+Limits: 40 nodes, 8 lanes, 14 board columns, 48-character titles, 12-character branch labels.
+
+## Commands
+
+```sh
+python3 bs.py check <ws> process-map/<name>.json     # this file's findings
+python3 bs.py check <ws>                             # must exit 0
+python3 bs.py build <ws> process-map/<name>          # -> <ws>/out/process-map/<name>.html
+python3 bs.py status <ws>                            # 7 of 7
+python3 design-system/process-map/build_map.py --specimen examples   # every element in every state
+```
+
+## The loop
+
+write the JSON → `python3 bs.py check <ws>` until it exits 0, fixing what each `-> fix` names → `python3 bs.py build <ws>` → open `<ws>/out/process-map/<name>.html` at Fit and at 100% and look: no line crosses a card, no two sources share a line, no label overlaps, nothing selected by default.
+
+## Watch for
+
+- **build-6** names the edge and the blocking node: a line crossing a card or a mark (badge, system icon, a decision's id label), two lines from different sources sharing a stretch, or a branch pill with no free stretch. Fix it as the hint says: move the blocking node to another lane, set a `col` hint, or list the decision's branches in another order. Never move a card by hand: the layout is derived.
+- **Large maps.** A board holds 14 columns, and columns come from the longest chain of forward edges in each view, not from the number of steps: steps in other lanes that do not follow one another share a column. When map-10 says the board needs too many columns, it lists each view's columns and its longest chain. Shorten those chains: keep only the edges the sources describe (steps side by side need no edge between them), put a step that runs alongside another in its own lane, or split the process into several maps by view. The showcase fits 35 nodes into 14 columns because many of its steps run side by side.
+- **prose-3, prose-4**: a quoted phrase or a number must occur in a record the element cites. **prose-2**: quote with `“…”`, never `"`.
+- **map-9**: an AI term may appear only where a record the element cites uses it.
+- Never type computed values: badge numbers, citation markers, step counts, coordinates.
+
+## Example
+
+`examples/process-map/end-to-end.json`, the showcase: 35 nodes (31 steps, 4 decisions) in 7 lanes and 6 views, four loops, 3 gaps and 5 clarifications, from `WB3` (`inputs/Process.csv`) and `T3` (`inputs/walkthrough-call.txt`) → `examples/out/process-map/end-to-end.html`. The small one is `examples/process-map/current-state.json`. README: `design-system/process-map/README.md`.
+
+### Evidence-preserving map extensions
+
+- Optional `edges[].cite` preserves evidence for the connection itself. Each cited connection has a numbered marker and a Connection evidence entry; the global registry links back to it. Grounded and inferred connection evidence remain distinct. Inferred connections have a dotted line and a labelled legend; clicking a cited connection opens its evidence entry. Endpoint evidence alone never proves sequence.
+- A source-drawn conditional connection with no stated label uses `kind: "conditional"`, `labelUnstated: true`, grounded `cite`, and no `label`. Its decision must have `branchesIncomplete: true` and an attached clarification. The Connection evidence card says **Condition not stated**; the builder never invents a branch label.
+- `branchesIncomplete: true` is permitted only on a decision with a cited clarification attached to that decision. It preserves the source's incomplete branch set; it never invents the missing route.
+- An ordinary clarification with `scope: "map"` and `nodes: []` is a map-wide note or question. It is neither a None found card nor an order clarification, cannot combine with `none` or `order`, and does not excuse disconnected steps. Other ordinary clarifications still need nodes.
+- Optional top-level `routing: "detour"` enables deterministic orthogonal route repair for source diagrams. Column spacing derives from the longest branch label, rows have extra routing space, and additional distinct tracks are used only when they fit. Every final route is checked for cards, marks and ambiguous shared lines; labels are checked for free space. The default routing and its refusal cases remain unchanged. If no safe route exists, build fails: change layout hints or split the map without changing its evidence.
+- Maps retain a right-hand Citation points panel on wide screens, moving below the map on small screens and in print. Full citation spans remain available through an expandable section.

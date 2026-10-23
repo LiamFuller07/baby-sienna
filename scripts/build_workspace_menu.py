@@ -4,51 +4,82 @@
 Usage: python3 scripts/build_workspace_menu.py WORKSPACE
 No network, no client names or content stored in this script.
 """
+
 import base64
 import hashlib
-import html
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-import bs
+import bs  # noqa: E402
 
 
 def render(ws):
     bs.load()
     bs.guard(ws)
-    sources = {p.stem:json.loads(p.read_text()) for p in (ws/'records').glob('*.json')}
+    sources = {p.stem: json.loads(p.read_text()) for p in (ws / "records").glob("*.json")}
     pages = []
     for section, name, path in bs.section_files(ws):
-        out = ws/'out'/section/(name+'.html')
+        out = ws / "out" / section / (name + ".html")
         if not out.is_file():
-            raise SystemExit(f'Build the workspace first: {out.name} is missing')
-        title, kinds = name.replace('-', ' ').title(), set()
-        if path.suffix=='.json':
-            data=json.loads(path.read_text())
-            title=data.get('meta',{}).get('title',title)
-            def refs(value):
-                if isinstance(value,dict):
-                    if value.get('source') in sources:
-                        kinds.add(sources[value['source']]['kind'])
-                    for v in value.values(): refs(v)
-                elif isinstance(value,list):
-                    for v in value: refs(v)
+            raise SystemExit(f"Build the workspace first: {out.name} is missing")
+        title, kinds = name.replace("-", " ").title(), set()
+        if path.suffix == ".json":
+            data = json.loads(path.read_text())
+            title = data.get("meta", {}).get("title", title)
+
+            def refs(value, kinds=kinds):
+                if isinstance(value, dict):
+                    if value.get("source") in sources:
+                        kinds.add(sources[value["source"]]["kind"])
+                    for v in value.values():
+                        refs(v)
+                elif isinstance(value, list):
+                    for v in value:
+                        refs(v)
+
             refs(data)
-        pages.append({'section':section,'title':title,'path':f'{section}/{name}.html','kinds':sorted(kinds)})
-    pages.append({'section':'data-received','title':'Original data received','path':'data-received.html','kinds':[]})
-    css=(ROOT/'design-system/workspace/source-tokens.css').read_text()
-    font=base64.b64encode((ROOT/'design-system/workspace/fonts/geist.woff2').read_bytes()).decode()
-    catalog=json.dumps(pages,ensure_ascii=False).replace('<','\\u003c')
-    labels={'process-map':'Process maps','data-received':'Original data received','document':'Reference documents','process-map-ai-opportunity':'AI opportunities','proposal':'Proposals'}
-    options=''.join(f'<option value="{key}">{label}</option>' for key,label in labels.items() if any(p['section']==key for p in pages))
-    stamp=hashlib.sha256((catalog+css+font+Path(__file__).read_text()).encode()).hexdigest()
-    return TEMPLATE.replace('@@THEME@@',css).replace('@@FONT@@',font).replace('@@CATALOG@@',catalog).replace('@@STAMP@@',stamp).replace('@@MATERIALS@@',options)
+        pages.append(
+            {"section": section, "title": title, "path": f"{section}/{name}.html", "kinds": sorted(kinds)}
+        )
+    for section, title in (
+        ("data-received", "Original data received"),
+        ("systems-inventory", "Systems inventory"),
+        ("citation-points", "Citation points"),
+    ):
+        if not (ws / "out" / (section + ".html")).is_file():
+            raise SystemExit(f"Build the workspace first: {section}.html is missing")
+        pages.append({"section": section, "title": title, "path": section + ".html", "kinds": []})
+    pages.sort(key=lambda p: 0 if p["path"].startswith("process-map/lifecycle") else 1)
+    css = (ROOT / "design-system/workspace/source-tokens.css").read_text()
+    font = base64.b64encode((ROOT / "design-system/workspace/fonts/geist.woff2").read_bytes()).decode()
+    catalog = json.dumps(pages, ensure_ascii=False).replace("<", "\\u003c")
+    labels = {
+        "process-map": "Process maps",
+        "data-received": "Original data received",
+        "document": "Reference documents",
+        "process-map-ai-opportunity": "AI opportunities",
+        "systems-inventory": "Systems inventory",
+        "citation-points": "Citation points",
+    }
+    options = "".join(
+        f'<option value="{key}">{label}</option>'
+        for key, label in labels.items()
+        if any(p["section"] == key for p in pages)
+    )
+    stamp = hashlib.sha256((catalog + css + font + Path(__file__).read_text()).encode()).hexdigest()
+    return (
+        TEMPLATE.replace("@@THEME@@", css)
+        .replace("@@FONT@@", font)
+        .replace("@@CATALOG@@", catalog)
+        .replace("@@STAMP@@", stamp)
+        .replace("@@MATERIALS@@", options)
+    )
 
 
-TEMPLATE='''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+TEMPLATE = """<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="workspace-menu-build" content="@@STAMP@@"><title>Source materials</title>
 <style>@@THEME@@
 @font-face{font-family:Geist;src:url(data:font/woff2;base64,@@FONT@@) format('woff2');font-display:swap}
@@ -73,15 +104,17 @@ function show(){const page=pages.find(p=>p.path===select.value);if(!page){frame.
 function filter(preferred){const old=preferred||select.value;const available=pages.filter(p=>p.section===material.value&&(kind.value==='all'||material.value!=='process-map'||p.kinds.includes(kind.value))&&p.title.toLowerCase().includes(search.value.toLowerCase()));select.replaceChildren(...available.map(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.title;return o;}));select.disabled=!available.length;if(available.some(p=>p.path===old))select.value=old;document.getElementById('source-filter').hidden=material.value!=='process-map';show();}
 material.addEventListener('change',()=>{search.value='';kind.value='all';filter();});kind.addEventListener('change',()=>filter());search.addEventListener('input',()=>filter());select.addEventListener('change',show);
 const params=new URLSearchParams(location.hash.slice(1));if(Array.from(material.options).some(o=>o.value===params.get('material')))material.value=params.get('material');if(['all','document','sheet'].includes(params.get('kind')))kind.value=params.get('kind');search.value=params.get('q')||'';filter(params.get('page'));
-</script></body></html>'''
+</script></body></html>"""
 
 
-if __name__=='__main__':
-    if len(sys.argv)!=2: raise SystemExit(__doc__)
-    ws=Path(sys.argv[1]).resolve()
-    out=ws/'out/index.html'
-    if not (ws/'out/data-received.html').is_file(): raise SystemExit('Run bs.py build first')
-    first=render(ws)
-    assert first==render(ws), 'menu build is not deterministic'
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        raise SystemExit(__doc__)
+    ws = Path(sys.argv[1]).resolve()
+    out = ws / "out/index.html"
+    if not (ws / "out/data-received.html").is_file():
+        raise SystemExit("Run bs.py build first")
+    first = render(ws)
+    assert first == render(ws), "menu build is not deterministic"
     out.write_text(first)
-    print('Built local material menu:',out)
+    print("Built local material menu:", out)

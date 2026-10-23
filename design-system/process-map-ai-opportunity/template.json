@@ -1,0 +1,26 @@
+{
+ "template": "process-map-ai-opportunity",
+ "title": "AI opportunities",
+ "elements": [
+  {"id": "base", "title": "Base map", "required": true,
+   "fulfilled_by": "process-map-ai-opportunity/<name>.json › base: a map in process-map/ that passes check", "rule": "ai-1"},
+  {"id": "items", "title": "At least one AI item", "required": true,
+   "fulfilled_by": "process-map-ai-opportunity/<name>.json › ai[] {id, title, origin, does, nodes or groups, cite, agentic}", "rule": "ai-2"},
+  {"id": "origin", "title": "Origin, named or suggested", "required": true,
+   "fulfilled_by": "process-map-ai-opportunity/<name>.json › ai[].origin: named (a grounded quote) or suggested (an inferred reading)", "rule": "ai-3"},
+  {"id": "does", "title": "What it would do", "required": true,
+   "fulfilled_by": "process-map-ai-opportunity/<name>.json › ai[].does: one to three sentences", "rule": "prose-4"},
+  {"id": "agentic", "title": "The agentic version of every item", "required": true,
+   "fulfilled_by": "process-map-ai-opportunity/<name>.json › ai[].agentic {trigger, steps, decides, systems, logging}; systems is [] only when the steps the item touches use no system (the page prints None named)", "rule": "ai-4"},
+  {"id": "list", "title": "List view, the default", "required": true,
+   "fulfilled_by": "computed by build_map.py: the first tab, data-view=list and selected, and one li.pm-ai-item row per item in #ai-list", "rule": "build-7"},
+  {"id": "flow", "title": "Flow view", "required": true,
+   "fulfilled_by": "computed by build_map.py from the base map: the second tab, data-view=flow, and every base node in #ai-flow", "rule": "build-6"},
+  {"id": "map", "title": "On-the-map view", "required": true,
+   "fulfilled_by": "computed by build_map.py: the third tab, data-view=map, and the base board (svg.pm-board) in #board", "rule": "build-5"},
+  {"id": "citation-points", "title": "Citation points section, with numbered markers", "required": true,
+   "fulfilled_by": "computed by build_map.py from every cite in the file and its base: one numbered marker (a.cp-mk) on each cited element, and section#citation-points with one li.cp-row per point the page uses", "rule": "build-7"},
+  {"id": "toggle", "title": "Layer toggle", "required": false,
+   "fulfilled_by": "computed: On the map, the AI layer's on and off switch", "rule": "build-5"}
+ ]
+}

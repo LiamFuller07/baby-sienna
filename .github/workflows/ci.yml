@@ -1,0 +1,90 @@
+# The toolkit checks itself: lint, then check, selftest, build and status on its own examples/.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  self-check:
+    name: The toolkit checks itself
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: uv sync (ruff and jsonschema, as uv.lock pins them)
+        run: uv sync --locked
+
+      - name: ruff check
+        run: uv run ruff check
+
+      - name: ruff format --check
+        run: uv run ruff format --check
+
+      - name: bs.py check examples
+        run: uv run python bs.py check examples
+
+      - name: bs.py check --selftest (jsonschema, then the built-in checker)
+        run: |
+          uv run python bs.py check --selftest
+          uv run python bs.py check --selftest --builtin
+
+      # A builder warning about the document format (build_doc: warning) fails the build too.
+      - name: bs.py build examples, twice, byte for byte
+        run: |
+          hashes() { find examples/out -type f -print0 | sort -z | xargs -0 sha256sum; }
+          uv run python bs.py build examples | tee "$RUNNER_TEMP/build.log"
+          if grep -q "build_doc: warning" "$RUNNER_TEMP/build.log"; then echo "a builder warned about the document format"; exit 1; fi
+          hashes > "$RUNNER_TEMP/build-1.sha256"
+          uv run python bs.py build examples
+          hashes > "$RUNNER_TEMP/build-2.sha256"
+          cat "$RUNNER_TEMP/build-1.sha256"
+          diff "$RUNNER_TEMP/build-1.sha256" "$RUNNER_TEMP/build-2.sha256"
+          echo "the second build is byte-identical to the first"
+
+      # The data-received template's named deliverable.
+      - name: the systems inventory is built, with its Citation points section
+        run: |
+          test -s examples/out/systems-inventory.html
+          grep -q 'id="citation-points"' examples/out/systems-inventory.html
+
+      - name: the specimens and the document type's own examples
+        run: |
+          uv run python design-system/process-map/build_map.py --specimen examples
+          cd design-system/document
+          uv run python build_doc.py example.md example-a4.html --a4 --sources example-sources.json --strict
+          uv run python build_doc.py example.md example-screen.html --screen --sources example-sources.json --strict
+
+      # After the build: --strict exits 1 unless every page is built, current and fulfils its required elements.
+      - name: bs.py status examples --strict
+        run: uv run python bs.py status examples --strict
+
+      # node --check skips a file that has an export in it, so each workflow is checked as the body of an async
+      # function, which is how the workflow runner reads it (top-level await and return).
+      - name: node --check .claude/workflows (wrapped copies)
+        run: |
+          shopt -s nullglob
+          scripts=(.claude/workflows/*.js)
+          if [ ${#scripts[@]} -eq 0 ]; then echo "no .claude/workflows/*.js to check"; exit 1; fi
+          for f in "${scripts[@]}"; do
+            copy="$RUNNER_TEMP/$(basename "$f")"
+            { echo "async function workflow() {"; sed 's/^export //' "$f"; echo "}"; } > "$copy"
+            node --check "$copy"
+            echo "ok  $f"
+          done
+
+      - name: Upload examples/out
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: examples-out
+          path: examples/out/
+          if-no-files-found: error

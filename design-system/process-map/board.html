@@ -9,8 +9,25 @@
 
   Markers: {{name}} is filled by build_map.py; <!--slot:name--> is filled by the AI layer, and left empty
   on a process-map page. The board shell between <!--bs:shell--> and <!--/bs:shell--> is reused for every
-  board on a specimen page.
+  board on a specimen page; the legend between <!--bs:legend--> and <!--/bs:legend--> sits in the header of
+  a process-map page and in the board-head slot of an AI page.
 -->
+<!--bs:legend-->
+<aside class="pm-legend" aria-label="Legend">
+    <div class="pm-legend-grid">
+      <span class="pm-legend-item pm-lg-flow"><span class="pm-sw pm-sw-flow" aria-hidden="true"></span>Process flow</span>
+      <span class="pm-legend-item pm-lg-edge-inferred"><span class="pm-sw pm-sw-edge-inferred" aria-hidden="true"></span>Inferred connection</span>
+      <span class="pm-legend-item pm-lg-feed"><span class="pm-sw pm-sw-feed" aria-hidden="true"></span>Feedback</span>
+      <span class="pm-legend-item pm-lg-decision"><span class="pm-sw pm-sw-decision" aria-hidden="true"></span>Decision</span>
+      <span class="pm-legend-item pm-lg-grounded"><span class="pm-sw pm-sw-grounded" aria-hidden="true"></span>Grounded</span>
+      <span class="pm-legend-item pm-lg-inferred"><span class="pm-sw pm-sw-inferred" aria-hidden="true"></span>Inferred</span>
+      <span class="pm-legend-item pm-lg-cp"><span class="pm-sw pm-sw-cp" aria-hidden="true">3</span>Citation point</span>
+      <span class="pm-legend-item pm-lg-gap"><span class="pm-sw pm-sw-gap" aria-hidden="true"></span>Gap</span>
+      <span class="pm-legend-item pm-lg-clar"><span class="pm-sw pm-sw-clar" aria-hidden="true"></span>Clarification</span>
+    </div>
+    <!--slot:legend-end-->
+</aside>
+<!--/bs:legend-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -24,6 +41,7 @@
   --line:#dedbd6;--line-strong:#c8c8c4;--flow:#454542;
   --accent:#ff5600;--accent-ink:#b84000;--inferred-fill:#fbfaf8;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
   --r:2px;
   color-scheme:light;
 }
@@ -37,17 +55,17 @@ a{color:inherit}
 .pm-page{padding:28px 28px 32px}
 .pm-wrap{max-width:1384px;margin:0 auto}
 .pm-review{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
-.pm-review>.pm-evidence{display:flex;flex-direction:column;max-height:calc(100vh - 36px);overflow:auto;position:sticky;top:18px;margin-top:24px}
-.pm-review .pm-src-list>li{grid-template-columns:1fr}
-.pm-review .pm-src-used{text-align:left}
-.pm-review .pm-src-body{overflow-wrap:anywhere}
-@media(max-width:1000px){.pm-review{display:block}.pm-review>.pm-evidence{position:static;max-height:none}}
-@media print{.pm-review{display:block}.pm-review>.pm-evidence{position:static;max-height:none;overflow:visible}}
+.pm-review>.pm-citation-panel{display:flex;flex-direction:column;max-height:calc(100vh - 36px);overflow:auto;position:sticky;top:18px;margin-top:24px}
+.pm-review .cp-row{grid-template-columns:20px minmax(0,1fr);gap:6px}.pm-review .cp-text,.pm-review .cp-used{grid-column:2}.pm-review .cp-all{grid-column:1;grid-row:2}.pm-review .cp-addr{overflow-wrap:anywhere}.pm-review .cp{margin-top:0}
+.pm-main{min-width:0}.pm-review .cp-used{text-align:left}
+.pm-review .cp-text{overflow-wrap:anywhere}
+@media(max-width:1000px){.pm-review{display:block}.pm-review>.pm-citation-panel{position:static;max-height:none}}
+@media print{.pm-review{display:block}.pm-review>.pm-citation-panel{position:static;max-height:none;overflow:visible}}
 
 /* header */
 .pm-head{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:18px 40px;align-items:start}
 .pm-kicker-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 8px}
-.pm-kicker{margin:0;color:var(--accent);font-size:22px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;line-height:1}
+.pm-kicker{margin:0;color:var(--accent-ink);font-size:22px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;line-height:1}
 .pm-flags{display:flex;flex-wrap:wrap;gap:6px}
 .pm-flag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);color:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
 .pm-flag.is-confidential{border-color:var(--accent);color:var(--accent-ink)}
@@ -62,9 +80,10 @@ a{color:inherit}
 .pm-legend-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,auto);gap:9px 14px}
 .pm-legend-item{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:11px;line-height:1.25;white-space:nowrap}
 .pm-lg-flow{grid-area:1/1}.pm-lg-feed{grid-area:2/1}.pm-lg-decision{grid-area:3/1}
-.pm-lg-grounded{grid-area:1/2}.pm-lg-inferred{grid-area:2/2}
-.pm-lg-gap{grid-area:1/3}.pm-lg-clar{grid-area:2/3}
+.pm-lg-grounded{grid-area:1/2}.pm-lg-inferred{grid-area:2/2}.pm-lg-cp{grid-area:3/2}
+.pm-lg-gap{grid-area:1/3}.pm-lg-clar{grid-area:2/3}.pm-lg-edge-inferred{grid-area:4/1/4/3}
 .pm-sw{position:relative;flex:0 0 auto;width:16px;height:12px}
+.pm-sw-edge-inferred{background:linear-gradient(90deg,var(--flow) 0 2px,transparent 0) left center/5px 1.5px repeat-x}
 .pm-sw-flow{background:linear-gradient(var(--flow),var(--flow)) center/16px 1.5px no-repeat}
 .pm-sw-feed{background:linear-gradient(90deg,var(--flow) 0 5px,transparent 0) left center/8px 1.5px repeat-x}
 .pm-sw-decision::after{content:"";position:absolute;left:3px;top:1.5px;width:8px;height:8px;rotate:45deg;border:1.5px solid var(--ink);background:var(--paper)}
@@ -72,6 +91,7 @@ a{color:inherit}
 .pm-sw-inferred{width:14px;border:1.5px dashed var(--soft);border-radius:var(--r);background:var(--inferred-fill)}
 .pm-sw-gap{width:12px;height:12px;border-radius:50%;background:var(--accent);margin:0 1px}
 .pm-sw-clar{width:12px;height:12px;border-radius:50%;border:1.5px dashed var(--accent);background:var(--paper);margin:0 1px}
+.pm-sw-cp{display:grid;place-items:start center;color:var(--muted);font-size:9.5px;font-weight:700;line-height:1}
 
 /* ---------------------------------------------------------------- board shell */
 .pm-board-sec{margin-top:24px}
@@ -110,6 +130,7 @@ a{color:inherit}
 /* edges */
 .pm-flow{fill:none;stroke:var(--flow);stroke-width:1.5;stroke-linejoin:round}
 .pm-feed{fill:none;stroke:var(--flow);stroke-width:1.5;stroke-dasharray:5 3;stroke-linejoin:round}
+.pm-flow.is-inferred,.pm-feed.is-inferred{stroke-dasharray:2 3}
 .pm-arrow{fill:var(--flow)}
 .pm-hit{fill:none;stroke:transparent;stroke-width:10;pointer-events:stroke}
 .pm-edge:hover .pm-flow,.pm-edge:hover .pm-feed,.pm-edge.is-hover .pm-flow,.pm-edge.is-hover .pm-feed{stroke:var(--ink);stroke-width:2.2}
@@ -127,16 +148,14 @@ a{color:inherit}
 .pm-node:focus-visible .pm-focus-ring,.pm-node.is-focus .pm-focus-ring,.pm-decision-group:focus-visible .pm-focus-ring,.pm-decision-group.is-focus .pm-focus-ring{display:inline}
 .pm-node-title{fill:var(--ink);font-size:12px;font-weight:700}
 .pm-node-owner{fill:var(--ink);font-size:9.5px;font-weight:600}
-.pm-node-detail{fill:var(--muted);font-size:9.5px}
-.pm-node-cite{fill:var(--muted)}
-.pm-node-link:hover .pm-node-cite,.pm-node-link:focus-visible .pm-node-cite{fill:var(--accent-ink);text-decoration:underline}
+.pm-node-id{fill:var(--muted);font-size:9px;letter-spacing:.02em}
 .pm-node-tag{fill:var(--accent-ink);font-size:9.5px;font-weight:700}
 .pm-decision{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
 .pm-decision.is-inferred{stroke:var(--soft);stroke-dasharray:4 3}
 .pm-decision.is-gap{stroke:var(--accent);stroke-dasharray:4 3}
 .pm-decision-group:hover .pm-decision.is-grounded,.pm-decision-group.is-hover .pm-decision.is-grounded{stroke-width:2}
 .pm-decision-group.is-target .pm-decision,.pm-decision-group:target .pm-decision{stroke:var(--ink);stroke-width:2.5}
-.pm-decision-label{fill:var(--ink);font-size:11px;font-weight:700}
+.pm-decision-label{fill:var(--ink);font-size:10px;font-weight:700;paint-order:stroke;stroke:var(--paper);stroke-width:3px;stroke-linejoin:round}
 /* corner marks */
 .pm-sys-bg{fill:var(--paper);stroke:var(--line-strong);stroke-width:1}
 .pm-ic{fill:none;stroke:var(--muted);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -153,7 +172,7 @@ a{color:inherit}
 /* ---------------------------------------------------------------- evidence */
 .pm-evidence{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:24px;align-items:start}
 .pm-ev-card{border:1px solid var(--line);border-radius:var(--r);background:var(--paper);padding:18px 20px 18px;min-width:0}
-.pm-ev-card h2{margin:0 0 14px;padding-left:10px;border-left:3px solid var(--accent);font-size:16px;font-weight:600;line-height:1.2}
+.pm-ev-card h2{margin:0 0 14px;padding-left:10px;border-left:3px solid var(--ink);font-size:16px;font-weight:600;line-height:1.2}
 .pm-ev-wide{grid-column:1/-1}
 .pm-ev-list{display:grid;gap:14px;margin:0;padding:0;list-style:none}
 .pm-ev-list > li{position:relative;padding:0 0 0 30px;color:var(--muted);font-size:12.5px;line-height:1.45}
@@ -161,12 +180,13 @@ a{color:inherit}
 .pm-ev-list > li::before{position:absolute;top:0;left:0;display:grid;width:20px;height:20px;place-items:center;border-radius:50%;content:attr(data-n);font-size:10px;font-weight:800;line-height:1}
 .pm-ev-gaps > li::before{background:var(--accent);color:var(--ink)}
 .pm-ev-clar > li::before{border:1.5px dashed var(--accent);color:var(--accent-ink)}
+.pm-ev-list > li.is-none::before{border:1.5px solid var(--line-strong);background:none;content:""}
 .pm-ev-list > li.is-target,.pm-ev-list > li:target{background:var(--lane-0);box-shadow:0 0 0 8px var(--lane-0)}
 .pm-ev-row{display:block;margin-top:3px}
 .pm-ev-row b{color:var(--flow);font-weight:700}
 .pm-ev-steps{display:block;margin-top:4px;font-size:11.5px}
-.pm-ev-steps a,.pm-src-used a{color:var(--flow);font-weight:700;text-decoration:none;border-bottom:1px solid var(--line-strong)}
-.pm-ev-steps a:hover,.pm-src-used a:hover{border-color:var(--accent)}
+.pm-ev-steps a{color:var(--flow);font-weight:700;text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.pm-ev-steps a:hover{border-color:var(--accent)}
 .pm-prov{display:block;margin-top:5px;font-size:11px;line-height:1.4}
 .pm-prov > span{display:block}
 .pm-prov b{font-weight:700}
@@ -175,27 +195,42 @@ a{color:inherit}
 .pm-prov-gap{color:var(--accent-ink)}
 .pm-prov a{color:inherit;text-decoration:underline dotted var(--line-strong);text-underline-offset:2px}
 .pm-tag{display:inline-block;margin-left:6px;padding:0 5px;border:1px solid var(--accent);border-radius:var(--r);color:var(--accent-ink);font-size:9.5px;font-weight:700;letter-spacing:.04em;line-height:15px;text-transform:uppercase}
-.pm-ev-empty{display:flex;gap:10px;align-items:flex-start;margin:0;color:var(--muted);font-size:12.5px;line-height:1.45}
-.pm-ev-empty strong{display:block;color:var(--ink)}
-.pm-ev-empty-mk{flex:0 0 auto;display:grid;width:20px;height:20px;place-items:center;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);font-size:10px;font-weight:800}
-/* inline citation markers */
-.pm-cite{font-style:normal;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
-.pm-cite a{color:inherit;text-decoration:underline dotted var(--line-strong);text-underline-offset:2px}
-.pm-cite a:hover,.pm-cite a:focus-visible{color:var(--accent-ink)}
-/* sources */
-.pm-src + .pm-src{margin-top:18px}
-.pm-src-head{margin:0 0 6px;color:var(--muted);font-size:12px;line-height:1.45}
-.pm-src-head b{color:var(--ink);font-weight:700}
-.pm-src-list{margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}
-.pm-src-list > li{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(120px,auto);gap:2px 16px;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.45}
-.pm-src-list > li.is-target,.pm-src-list > li:target{background:var(--lane-0);box-shadow:inset 3px 0 0 var(--accent)}
-.pm-src-loc{color:var(--flow);font-weight:700;overflow-wrap:anywhere}
-.pm-src-body q{quotes:"“" "”";color:var(--ink)}
-.pm-src-recs{margin:4px 0 0;padding:0;list-style:none}
-.pm-src-recs li{padding:1px 0}
-.pm-src-recs b{color:var(--flow);font-weight:600}
-.pm-src-absent{color:var(--accent-ink)}
-.pm-src-used{text-align:right;font-size:11.5px}
+/* citation markers: one quiet numeral per cited element, linked to its row in Citation points */
+.cp-mks{margin-left:1px;color:var(--muted);font-size:9.5px;font-style:normal;font-weight:700;line-height:0;vertical-align:super;white-space:nowrap}
+a.cp-mk{color:var(--muted);text-decoration:none;border-radius:var(--r)}
+a.cp-mk:hover,a.cp-mk:focus-visible{color:var(--accent-ink);text-decoration:underline}
+a.cp-mk:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.cp-mk-t{fill:var(--muted);font-size:9px;font-weight:700}
+.cp-mk-hit{fill:transparent}
+a.cp-mk:hover .cp-mk-t,a.cp-mk:focus .cp-mk-t,a.cp-mk.is-hover .cp-mk-t{fill:var(--accent-ink);text-decoration:underline}
+a.cp-mk:focus{outline:none}
+a.cp-mk:focus-visible .cp-mk-hit,a.cp-mk.is-focus .cp-mk-hit{stroke:var(--ink);stroke-width:1.5}
+
+/* ---------------------------------------------------------------- citation points: the page's numbered evidence */
+.cp{margin-top:24px;padding:18px 20px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper)}
+.cp-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0 0 6px}
+.cp-head h2{margin:0;padding-left:10px;border-left:3px solid var(--ink);font-size:16px;font-weight:600;line-height:1.2}
+.cp-count{color:var(--muted);font-size:12px;font-weight:600}
+.cp-srcs{display:grid;gap:3px;margin:10px 0 12px;padding:0;list-style:none;color:var(--muted);font-size:12px;line-height:1.45}
+.cp-srcs a{color:var(--ink);font-family:var(--mono);font-size:11px;font-weight:700;text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.cp-srcs a:hover{border-color:var(--accent)}
+.cp-list{margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.cp-row{display:grid;grid-template-columns:24px minmax(130px,170px) minmax(0,1fr) minmax(120px,auto) 14px;gap:2px 14px;align-items:baseline;padding:7px 6px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.45}
+.cp-row:target,.cp-row.is-target{background:var(--lane-0);box-shadow:inset 3px 0 0 var(--accent)}
+.cp-n{color:var(--muted);font-size:10.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.cp-addr{color:var(--ink);font-family:var(--mono);font-size:11px;font-weight:400;text-decoration:none;overflow-wrap:anywhere}
+a.cp-addr:hover,a.cp-addr:focus-visible{text-decoration:underline;text-decoration-color:var(--accent)}
+.cp-text q{quotes:"“" "”";color:var(--ink)}
+.cp-recs{display:block}
+.cp-absent{color:var(--accent-ink)}
+.cp-note{display:block;margin-top:2px}
+.cp-note b,.cp-used b{color:var(--flow);font-weight:700}
+.cp-used{text-align:right;font-size:11.5px}
+.cp-used a,.cp-note a{color:var(--flow);font-weight:700;text-decoration:none;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+.cp-used a:hover,.cp-note a:hover{border-color:var(--accent)}
+.cp-use{display:block}
+.cp-all{color:var(--muted);font-size:12px;text-decoration:none;text-align:right}
+.cp-all:hover,.cp-all:focus-visible{color:var(--accent-ink)}
 /* footer */
 .pm-footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;margin-top:24px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 
@@ -211,7 +246,9 @@ a{color:inherit}
 .pm-tip-mk{flex:0 0 auto;display:inline-grid;width:16px;height:16px;place-items:center;border-radius:50%;font-size:9px;font-weight:800}
 .pm-tip-mk.is-gap{background:var(--accent);color:var(--ink)}
 .pm-tip-mk.is-clar{border:1.5px dashed var(--accent);color:var(--accent-ink)}
-.pm-tip .pm-prov{margin-top:7px;padding-top:6px;border-top:1px solid var(--line)}
+.pm-tip-cp{display:block;margin-top:7px;padding-top:6px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+.pm-tip.is-cp{max-width:440px;padding:6px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px}
+.pm-tip.is-cp b{font-family:var(--mono);font-size:11px;font-weight:700}
 
 /* ---------------------------------------------------------------- responsive and print */
 @media (max-width:1100px){.pm-head{grid-template-columns:1fr}.pm-legend{max-width:520px}}
@@ -221,19 +258,22 @@ a{color:inherit}
   .pm-kicker{font-size:18px}
   .pm-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none}
   .pm-legend-grid > .pm-legend-item{grid-area:auto;white-space:normal}
-  .pm-src-list > li{grid-template-columns:1fr}
-  .pm-src-used{text-align:left}
+  .cp-row{grid-template-columns:24px minmax(0,1fr) 14px;padding:8px 2px}
+  .cp-text,.cp-used{grid-column:2/4}
+  .cp-used{text-align:left}
+  .cp-all{grid-row:1;grid-column:3}
   .pm-footer{flex-direction:column}
 }
 .pm-legend.is-2col .pm-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none}
 .pm-legend.is-2col .pm-legend-grid > .pm-legend-item{grid-area:auto}
-@page{size:landscape;margin:12mm}
+@page{size:A4 landscape;margin:12mm}
 @media print{
   html,body{background:#fff}
   .pm-page{padding:0}
   .pm-seg{display:none}
   .pm-shell{break-inside:avoid}
-  .pm-ev-card,.pm-ev-list > li,.pm-src-list > li{break-inside:avoid}
+  .pm-ev-card,.pm-ev-list > li,.cp-row{break-inside:avoid}
+  .cp-head,.cp-srcs{break-inside:avoid;break-after:avoid}
   .pm-tip{display:none}
 }
 </style>
@@ -243,22 +283,14 @@ a{color:inherit}
 <main class="pm-page"><div class="pm-wrap" data-pm-page>
 <header class="pm-head" id="{{pre}}header">
   <div class="pm-head-main">{{header}}</div>
-  <aside class="pm-legend" aria-label="Legend">
-    <div class="pm-legend-grid">
-      <span class="pm-legend-item pm-lg-flow"><span class="pm-sw pm-sw-flow" aria-hidden="true"></span>Process flow</span>
-      <span class="pm-legend-item pm-lg-feed"><span class="pm-sw pm-sw-feed" aria-hidden="true"></span>Feedback</span>
-      <span class="pm-legend-item pm-lg-decision"><span class="pm-sw pm-sw-decision" aria-hidden="true"></span>Decision</span>
-      <span class="pm-legend-item pm-lg-grounded"><span class="pm-sw pm-sw-grounded" aria-hidden="true"></span>Grounded</span>
-      <span class="pm-legend-item pm-lg-inferred"><span class="pm-sw pm-sw-inferred" aria-hidden="true"></span>Inferred</span>
-      <span class="pm-legend-item pm-lg-gap"><span class="pm-sw pm-sw-gap" aria-hidden="true"></span>Gap</span>
-      <span class="pm-legend-item pm-lg-clar"><span class="pm-sw pm-sw-clar" aria-hidden="true"></span>Clarification</span>
-    </div>
-    <!--slot:legend-end-->
-  </aside>
+  {{aside}}
 </header>
+<!--slot:views-->
 <div class="pm-review">
+<div class="pm-main">
 <!--bs:shell-->
-<section class="pm-board-sec" id="{{pre}}board" data-pm-board aria-label="{{label}}">
+<section class="pm-board-sec" id="{{pre}}board" data-pm-board aria-label="{{label}}"{{panel}}>
+  <!--slot:board-head-->
   <div class="pm-bar"><!--slot:toolbar--><div class="pm-seg" role="group" aria-label="Zoom"><button type="button" data-zoom="fit" aria-pressed="{{fit}}">Fit</button><button type="button" data-zoom="100" aria-pressed="{{full}}">100%</button></div></div>
   <div class="pm-shell"><div class="pm-scroll" data-zoom="{{zoom}}">
     <svg class="pm-board pm-gutter" viewBox="0 0 150 {{h}}" width="150" height="{{h}}" aria-hidden="true">{{gutter}}<!--slot:board-over:gutter--></svg>
@@ -267,7 +299,9 @@ a{color:inherit}
   <script type="application/json" class="pm-data">{{data}}</script>
 </section>
 <!--/bs:shell-->
-<section class="pm-evidence" aria-label="Evidence"><!--slot:evidence-start-->{{evidence}}</section>
+<section class="pm-evidence" id="{{pre}}evidence" aria-label="Gaps and clarifications">{{evidence}}</section>
+</div>
+<aside class="pm-citation-panel" aria-label="Citation points">{{citations}}</aside>
 </div>
 {{footer}}
 </div></main>
@@ -297,6 +331,42 @@ function tipEl(){
 }
 var printing = false;
 
+/* citation markers: a one-line tooltip with the point's address and the first words of its verbatim text,
+   read from its row in Citation points; on hover and on keyboard focus, on every marker of the page */
+function markerText(a){
+  var id = decodeURIComponent((a.getAttribute('href') || '').slice(1)), row = id && document.getElementById(id);
+  if (!row) return '';
+  var ad = row.querySelector('.cp-addr'), tx = row.querySelector('.cp-text');
+  var t = (tx ? tx.textContent : '').replace(/\s+/g, ' ').trim();
+  if (t.length > 72) t = t.slice(0, 70).replace(/\s+\S*$/, '') + ' …';
+  return '<b>' + esc(ad ? ad.textContent : '') + '</b> · ' + esc(t);
+}
+function showMarker(a){ var h = markerText(a); if (!h) return false; var t = tipEl(); t.className = 'pm-tip is-cp'; t.innerHTML = h; t.hidden = false; return true; }
+function markerAt(e){   /* a marker under the pointer, also beneath a transparent hit target laid over a card */
+  var m = e.target.closest && e.target.closest('a.cp-mk'); if (m) return m;
+  var els = document.elementsFromPoint ? document.elementsFromPoint(e.clientX, e.clientY) : [];
+  for (var i = 0; i < els.length && i < 6; i++){ m = els[i].closest && els[i].closest('a.cp-mk'); if (m) return m; }
+  return null;
+}
+function placeAt(x, y){
+  var t = tipEl(), r = t.getBoundingClientRect(), left = x + 12, top = y + 14;
+  if (left + r.width > innerWidth - 8) left = Math.max(8, innerWidth - r.width - 8);
+  if (top + r.height > innerHeight - 8) top = Math.max(8, y - r.height - 10);
+  t.style.left = left + 'px'; t.style.top = top + 'px';
+}
+document.addEventListener('pointerover', function(e){
+  if (e.target.closest && e.target.closest('.pm-scroll')) return;   /* a board handles its own */
+  var m = e.target.closest && e.target.closest('a.cp-mk');
+  if (m){ if (showMarker(m)) placeAt(e.clientX, e.clientY); }
+  else if (tip && tip.classList.contains('is-cp')) tip.hidden = true;
+});
+document.addEventListener('focusin', function(e){
+  var m = e.target.closest && e.target.closest('a.cp-mk'); if (!m) return;
+  var b = m.getBoundingClientRect();
+  if (showMarker(m)) placeAt(b.left, b.bottom - 6);
+});
+document.addEventListener('focusout', function(e){ if (tip && e.target.closest && e.target.closest('a.cp-mk')) tip.hidden = true; });
+
 function Board(root){
   var sc = root.querySelector('.pm-scroll'), gut = sc.querySelector('.pm-gutter'), can = sc.querySelector('.pm-canvas');
   var data = JSON.parse(root.querySelector('.pm-data').textContent);
@@ -310,6 +380,10 @@ function Board(root){
       var block = (ls.length - 1) * 13 + (note ? 13 : 0), ty = y + h / 2 - block / 2 + 4;
       s += '<rect class="pm-lane-' + (i % 2) + '" y="' + r2(y) + '" width="' + GW + '" height="' + r2(h) + '"/>';
       s += '<text class="pm-lane-label" style="font-size:11px" x="8" y="' + r2(ty) + '">' + ls.map(function(t, j){ return '<tspan x="8" dy="' + (j ? 13 : 0) + '">' + esc(t) + '</tspan>'; }).join('') + '</text>';
+      if (l[4]){   /* the lane's citation marker after its last line */
+        var mx = r2(8 + tw(ls[ls.length - 1], font) + 2), my = r2(ty + (ls.length - 1) * 13 - 4);
+        s += '<a class="cp-mk" href="#' + esc(l[5]) + '" aria-label="' + esc(l[6]) + '"><rect class="cp-mk-hit" x="' + r2(mx - 3) + '" y="' + r2(my - 9) + '" width="14" height="12"/><text class="cp-mk-t" style="font-size:8px" x="' + mx + '" y="' + my + '">' + l[4] + '</text></a>';
+      }
       if (note) s += '<text class="pm-lane-note" style="font-size:10px" x="8" y="' + r2(ty + (ls.length - 1) * 13 + 13) + '">' + esc(note) + '</text>';
     });
     var over = FULL.match(/<g class="pm-slot-over[\s\S]*<\/g>\s*$/);   /* a layer's gutter marks, scaled with the board */
@@ -320,6 +394,10 @@ function Board(root){
   function layout(){
     var cw = root.clientWidth - 2;   /* the shell's border */
     if (cw < 120) return;
+    if (!printing && sc.dataset.zoom === 'auto'){   /* a page opens at Fit, or at 100% when Fit would draw its titles under about 7px (and always on a phone) */
+      sc.dataset.zoom = cw < NARROW || cw / W < 0.6 ? '100' : 'fit';
+      root.querySelectorAll('button[data-zoom]').forEach(function(x){ x.setAttribute('aria-pressed', String(x.dataset.zoom === sc.dataset.zoom)); });
+    }
     var fit = printing || sc.dataset.zoom !== '100', narrow = !printing && cw < NARROW, f, gw;
     if (narrow){
       gw = GW;
@@ -372,14 +450,18 @@ function Board(root){
     else { left = Math.min(Math.max(8, b.left), innerWidth - r.width - 8); top = b.bottom + 8 + r.height <= innerHeight - 8 ? b.bottom + 8 : Math.max(8, b.top - r.height - 8); }
     t.style.left = left + 'px'; t.style.top = top + 'px';
   }
-  function show(el){ var h = content(el.getAttribute('data-tip')); if (!h){ hide(); return false; } var t = tipEl(); t.innerHTML = h; t.hidden = false; return true; }
+  function show(el){ var h = content(el.getAttribute('data-tip')); if (!h){ hide(); return false; } var t = tipEl(); t.className = 'pm-tip'; t.innerHTML = h; t.hidden = false; return true; }
   function hide(){ if (tip) tip.hidden = true; }
   sc.addEventListener('pointermove', function(e){
+    if (drag){ hide(); return; }
+    var m = markerAt(e);
+    if (m){ if (showMarker(m)) place(e.clientX, e.clientY); return; }
     var el = e.target.closest('[data-tip]');
-    if (el && !drag){ if (show(el)) place(e.clientX, e.clientY); } else hide();
+    if (el){ if (show(el)) place(e.clientX, e.clientY); } else hide();
   });
   sc.addEventListener('pointerleave', hide);
   sc.addEventListener('focusin', function(e){
+    if (e.target.closest('a.cp-mk')) return;
     var el = e.target.closest('[data-tip]'); if (!el) return;
     if (sc.classList.contains('is-pan')){
       var sb = sc.getBoundingClientRect(), gw = gut.getBoundingClientRect().width, nb = el.getBoundingClientRect();
@@ -402,7 +484,10 @@ function jump(id, smooth){
   if (sc){
     var sec = sc.closest('[data-pm-board]');
     if (sc.classList.contains('is-pan')){ var nb = el.getBoundingClientRect(), sb = sc.getBoundingClientRect(); sc.scrollLeft += nb.left - sb.left - sc.clientWidth / 2 + nb.width / 2; }
-    sec.scrollIntoView({block: 'start', behavior: smooth ? 'smooth' : 'auto'});
+    if (sec.getBoundingClientRect().height > innerHeight){   /* a tall board: centre the element, not the board's top */
+      var eb = el.getBoundingClientRect();
+      window.scrollBy({top: eb.top - innerHeight / 2 + eb.height / 2, behavior: smooth ? 'smooth' : 'auto'});
+    } else sec.scrollIntoView({block: 'start', behavior: smooth ? 'smooth' : 'auto'});
   } else el.scrollIntoView({block: 'center', behavior: smooth ? 'smooth' : 'auto'});
   flash(el);
   return true;

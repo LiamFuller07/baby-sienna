@@ -1,0 +1,16 @@
+{
+ "template": "document",
+ "title": "Document",
+ "elements": [
+  {"id": "title-lead", "title": "Title and lead", "required": true,
+   "fulfilled_by": "document/<name>.md › the # title, then a > lead block right under it", "rule": "doc-1"},
+  {"id": "claims", "title": "At least one claim section", "required": true,
+   "fulfilled_by": "document/<name>.md › a ## heading with at least one cited claim under it", "rule": "doc-3"},
+  {"id": "cited", "title": "Every claim cited, with an in-place marker", "required": true,
+   "fulfilled_by": "document/<name>.md › a [ID locator] bracket, or a Grounded, Inferred or Gap line, on every claim; the page links each point from its marker", "rule": "doc-3"},
+  {"id": "citation-points", "title": "Citation points section", "required": true,
+   "fulfilled_by": "computed by build_doc.py --data-links: section#citation-points in place of the type's Sources block, one li.cp-row per point the page uses, with its record id and locator, the verbatim text, the element it supports, and links to data-received.html#<ID> and citation-points.html#<anchor>", "rule": "build-7"},
+  {"id": "next-step", "title": "Next step callout", "required": false,
+   "fulfilled_by": "document/<name>.md › :::callout Next step", "rule": "doc-1"}
+ ]
+}

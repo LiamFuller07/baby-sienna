@@ -1,0 +1,1226 @@
+{
+ "type": "process-map",
+ "meta": {
+  "kicker": "Purchasing",
+  "title": "Purchase requests end to end: current state",
+  "subtitle": "{count:steps} steps and {count:decisions} decisions across {count:groups} views, from the step list and the walkthrough call.",
+  "flags": [
+   "confidential",
+   "draft"
+  ],
+  "client": "Client A",
+  "date": "2026-10-22",
+  "footer": "Source · end-to-end process map"
+ },
+ "systems": [
+  {
+   "id": "form",
+   "label": "Request form",
+   "icon": "document",
+   "role": "Where requesters submit requests and rate suppliers",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!C2"
+    }
+   ]
+  },
+  {
+   "id": "email",
+   "label": "Email",
+   "icon": "email",
+   "role": "How reference numbers, order numbers and queries are sent",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!C10"
+    }
+   ],
+   "software": {
+    "name": "Software B",
+    "category": "email client",
+    "cite": [
+     {
+      "type": "inferred",
+      "reading": "Requesters send the request form by email, which we read as the mail tool Software B",
+      "from": [
+       {
+        "source": "T3",
+        "locator": "00:00:04"
+       },
+       {
+        "source": "WB3",
+        "locator": "Process!C10"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "tracker",
+   "label": "Tracker",
+   "icon": "spreadsheet",
+   "role": "Where each request is logged, reviewed and closed",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!C3"
+    }
+   ],
+   "software": {
+    "name": "Software A",
+    "category": "ticketing tool",
+    "cite": [
+     {
+      "source": "D2",
+      "locator": "¶2"
+     }
+    ]
+   }
+  },
+  {
+   "id": "drive",
+   "label": "Shared drive",
+   "icon": "shared-drive",
+   "role": "Where attachments, quotes and orders are filed",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!C4"
+    }
+   ],
+   "software": {
+    "name": "Software D",
+    "category": "document store",
+    "cite": [
+     {
+      "type": "inferred",
+      "reading": "Attachments and quotes are saved in the request folder, which we read as the document store Software D",
+      "from": [
+       {
+        "source": "WB3",
+        "locator": "Process!D4"
+       },
+       {
+        "source": "WB3",
+        "locator": "Process!D17"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ledger",
+   "label": "Finance system",
+   "icon": "database",
+   "role": "Where Finance reserves the budget and pays",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!C9"
+    }
+   ],
+   "software": {
+    "name": "Software C",
+    "category": "ERP suite",
+    "cite": [
+     {
+      "source": "D2",
+      "locator": "¶3"
+     }
+    ]
+   }
+  },
+  {
+   "id": "portal",
+   "label": "Supplier portal",
+   "icon": "web-app",
+   "role": "Where suppliers are checked and asked for quotes",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!C12"
+    }
+   ],
+   "software": {
+    "name": "Software E",
+    "category": "web app",
+    "cite": [
+     {
+      "source": "D2",
+      "locator": "¶4"
+     }
+    ]
+   }
+  }
+ ],
+ "lanes": [
+  {
+   "id": "requester",
+   "label": "Requester"
+  },
+  {
+   "id": "team-a",
+   "label": "Team A"
+  },
+  {
+   "id": "team-b",
+   "label": "Team B"
+  },
+  {
+   "id": "team-c",
+   "label": "Team C"
+  },
+  {
+   "id": "finance",
+   "label": "Finance"
+  },
+  {
+   "id": "approver",
+   "label": "Approver"
+  },
+  {
+   "id": "records",
+   "label": "Records team"
+  }
+ ],
+ "groups": [
+  {
+   "id": "G01",
+   "label": "Intake"
+  },
+  {
+   "id": "G02",
+   "label": "Triage"
+  },
+  {
+   "id": "G03",
+   "label": "Review"
+  },
+  {
+   "id": "G04",
+   "label": "Approval"
+  },
+  {
+   "id": "G05",
+   "label": "Ordering"
+  },
+  {
+   "id": "G06",
+   "label": "Close"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "SUB-01",
+   "title": "Submit a purchase request",
+   "lane": "requester",
+   "group": "G01",
+   "state": "grounded",
+   "owner": "Requester",
+   "systems": [
+    "form"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 2"
+    },
+    {
+     "source": "T3",
+     "locator": "00:00:04"
+    }
+   ]
+  },
+  {
+   "id": "LOG-01",
+   "title": "Log the request",
+   "lane": "team-a",
+   "group": "G01",
+   "state": "grounded",
+   "owner": "Team A",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 3"
+    },
+    {
+     "source": "T3",
+     "locator": "00:00:19"
+    }
+   ]
+  },
+  {
+   "id": "SAV-01",
+   "title": "Save the attachments",
+   "lane": "records",
+   "group": "G01",
+   "state": "grounded",
+   "owner": "Records team",
+   "systems": [
+    "drive"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 4"
+    }
+   ]
+  },
+  {
+   "id": "CHK-01",
+   "title": "Request complete?",
+   "kind": "decision",
+   "lane": "team-a",
+   "group": "G01",
+   "state": "grounded",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 5"
+    },
+    {
+     "source": "T3",
+     "locator": "00:00:33"
+    }
+   ]
+  },
+  {
+   "id": "DUP-01",
+   "title": "Check for a duplicate request",
+   "lane": "records",
+   "group": "G01",
+   "state": "gap",
+   "systems": [
+    "tracker"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 6"
+    }
+   ]
+  },
+  {
+   "id": "CAT-01",
+   "title": "Assign a category",
+   "lane": "team-a",
+   "group": "G02",
+   "state": "grounded",
+   "owner": "Team A",
+   "systems": [
+    "tracker"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 7"
+    }
+   ]
+  },
+  {
+   "id": "URG-01",
+   "title": "Urgent request?",
+   "kind": "decision",
+   "lane": "team-a",
+   "group": "G02",
+   "state": "grounded",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 8"
+    }
+   ]
+  },
+  {
+   "id": "RSV-01",
+   "title": "Reserve the budget",
+   "lane": "finance",
+   "group": "G02",
+   "state": "grounded",
+   "owner": "Finance",
+   "systems": [
+    "ledger"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 9"
+    },
+    {
+     "source": "T3",
+     "locator": "00:01:05"
+    }
+   ]
+  },
+  {
+   "id": "REF-01",
+   "title": "Receive the reference number",
+   "lane": "requester",
+   "group": "G02",
+   "state": "grounded",
+   "owner": "Requester",
+   "systems": [
+    "email"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 10"
+    }
+   ]
+  },
+  {
+   "id": "SUP-01",
+   "title": "Check the supplier is approved",
+   "lane": "team-c",
+   "group": "G02",
+   "state": "grounded",
+   "owner": "Team C",
+   "systems": [
+    "portal"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 30"
+    },
+    {
+     "source": "T3",
+     "locator": "00:05:24"
+    }
+   ]
+  },
+  {
+   "id": "QUE-01",
+   "title": "Add to the review queue",
+   "lane": "team-a",
+   "group": "G03",
+   "state": "grounded",
+   "owner": "Team A",
+   "systems": [
+    "tracker"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 11"
+    }
+   ]
+  },
+  {
+   "id": "FST-01",
+   "title": "Review the same day",
+   "lane": "team-b",
+   "group": "G03",
+   "state": "inferred",
+   "owner": "Team B",
+   "cite": [
+    {
+     "type": "inferred",
+     "reading": "Team B looks at urgent requests the same day",
+     "from": [
+      {
+       "source": "T3",
+       "locator": "00:00:48"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "QUO-01",
+   "title": "Ask suppliers for quotes",
+   "lane": "team-c",
+   "group": "G03",
+   "state": "grounded",
+   "owner": "Team C",
+   "systems": [
+    "portal"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 12"
+    },
+    {
+     "source": "T3",
+     "locator": "00:01:21"
+    }
+   ]
+  },
+  {
+   "id": "REV-01",
+   "title": "Review the request",
+   "lane": "team-b",
+   "group": "G03",
+   "state": "grounded",
+   "owner": "Team B",
+   "systems": [
+    "tracker"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 13"
+    }
+   ]
+  },
+  {
+   "id": "CMP-01",
+   "title": "Compare the quotes",
+   "lane": "team-c",
+   "group": "G03",
+   "state": "grounded",
+   "owner": "Team C",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 14"
+    },
+    {
+     "source": "T3",
+     "locator": "00:01:37"
+    }
+   ]
+  },
+  {
+   "id": "BCD-01",
+   "title": "Confirm the budget code",
+   "lane": "finance",
+   "group": "G03",
+   "state": "grounded",
+   "owner": "Finance",
+   "systems": [
+    "ledger"
+   ],
+   "col": 2,
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 15"
+    }
+   ]
+  },
+  {
+   "id": "PCK-01",
+   "title": "Prepare the approval pack",
+   "lane": "team-b",
+   "group": "G03",
+   "state": "grounded",
+   "owner": "Team B",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 16"
+    },
+    {
+     "source": "T3",
+     "locator": "00:01:52"
+    }
+   ]
+  },
+  {
+   "id": "FIL-01",
+   "title": "File the quotes",
+   "lane": "records",
+   "group": "G03",
+   "state": "gap",
+   "systems": [
+    "drive"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 17"
+    }
+   ]
+  },
+  {
+   "id": "MRK-01",
+   "title": "Mark the request as reviewed",
+   "lane": "team-a",
+   "group": "G03",
+   "state": "grounded",
+   "owner": "Team A",
+   "systems": [
+    "tracker"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 31"
+    },
+    {
+     "source": "T3",
+     "locator": "00:05:40"
+    }
+   ]
+  },
+  {
+   "id": "APR-01",
+   "title": "Approve the request?",
+   "kind": "decision",
+   "lane": "approver",
+   "group": "G04",
+   "state": "grounded",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 18"
+    }
+   ]
+  },
+  {
+   "id": "RWK-01",
+   "title": "Rework the approval pack",
+   "lane": "team-b",
+   "group": "G04",
+   "state": "grounded",
+   "owner": "Team B",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 19"
+    },
+    {
+     "source": "T3",
+     "locator": "00:02:26"
+    }
+   ]
+  },
+  {
+   "id": "SGN-01",
+   "title": "Add the finance sign-off",
+   "lane": "finance",
+   "group": "G04",
+   "state": "grounded",
+   "owner": "Finance",
+   "systems": [
+    "ledger"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 20"
+    },
+    {
+     "source": "T3",
+     "locator": "00:02:10"
+    }
+   ]
+  },
+  {
+   "id": "ORD-01",
+   "title": "Raise the purchase order",
+   "lane": "team-c",
+   "group": "G05",
+   "state": "grounded",
+   "owner": "Team C",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 21"
+    }
+   ]
+  },
+  {
+   "id": "COM-01",
+   "title": "Commit the budget",
+   "lane": "finance",
+   "group": "G05",
+   "state": "inferred",
+   "owner": "Finance",
+   "cite": [
+    {
+     "type": "inferred",
+     "reading": "Finance commits the budget after the order",
+     "from": [
+      {
+       "source": "T3",
+       "locator": "00:02:41"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "CNF-01",
+   "title": "Supplier confirmed?",
+   "kind": "decision",
+   "lane": "team-c",
+   "group": "G05",
+   "state": "grounded",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 22"
+    },
+    {
+     "source": "T3",
+     "locator": "00:02:58"
+    }
+   ]
+  },
+  {
+   "id": "UPD-01",
+   "title": "Update the tracker",
+   "lane": "team-a",
+   "group": "G05",
+   "state": "grounded",
+   "owner": "Team A",
+   "systems": [
+    "tracker"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 23"
+    }
+   ]
+  },
+  {
+   "id": "NTO-01",
+   "title": "Receive the order number",
+   "lane": "requester",
+   "group": "G05",
+   "state": "grounded",
+   "owner": "Requester",
+   "systems": [
+    "email"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 24"
+    }
+   ]
+  },
+  {
+   "id": "FPO-01",
+   "title": "File the purchase order",
+   "lane": "records",
+   "group": "G05",
+   "state": "grounded",
+   "owner": "Records team",
+   "systems": [
+    "drive"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 32"
+    },
+    {
+     "source": "T3",
+     "locator": "00:05:57"
+    }
+   ]
+  },
+  {
+   "id": "RCV-01",
+   "title": "Receive the goods",
+   "lane": "requester",
+   "group": "G06",
+   "state": "grounded",
+   "owner": "Requester",
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 25"
+    }
+   ]
+  },
+  {
+   "id": "INV-01",
+   "title": "Match the invoice",
+   "lane": "finance",
+   "group": "G06",
+   "state": "grounded",
+   "owner": "Finance",
+   "systems": [
+    "ledger"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 26"
+    },
+    {
+     "source": "T3",
+     "locator": "00:03:30"
+    }
+   ]
+  },
+  {
+   "id": "QRY-01",
+   "title": "Query the invoice with the supplier",
+   "lane": "team-c",
+   "group": "G06",
+   "state": "grounded",
+   "owner": "Team C",
+   "systems": [
+    "email"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 33"
+    },
+    {
+     "source": "T3",
+     "locator": "00:06:13"
+    }
+   ]
+  },
+  {
+   "id": "PAY-01",
+   "title": "Pay the supplier",
+   "lane": "finance",
+   "group": "G06",
+   "state": "grounded",
+   "owner": "Finance",
+   "systems": [
+    "ledger"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 27"
+    },
+    {
+     "source": "T3",
+     "locator": "00:05:08"
+    }
+   ]
+  },
+  {
+   "id": "REC-01",
+   "title": "Record the outcome",
+   "lane": "records",
+   "group": "G06",
+   "state": "gap",
+   "systems": [
+    "tracker"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 28"
+    }
+   ]
+  },
+  {
+   "id": "RAT-01",
+   "title": "Rate the supplier",
+   "lane": "requester",
+   "group": "G06",
+   "state": "grounded",
+   "owner": "Requester",
+   "systems": [
+    "form"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 34"
+    },
+    {
+     "source": "T3",
+     "locator": "00:06:30"
+    }
+   ]
+  },
+  {
+   "id": "CLS-01",
+   "title": "Close the request",
+   "lane": "team-a",
+   "group": "G06",
+   "state": "grounded",
+   "owner": "Team A",
+   "systems": [
+    "tracker"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 29"
+    },
+    {
+     "source": "T3",
+     "locator": "00:03:45"
+    }
+   ]
+  }
+ ],
+ "edges": [
+  {
+   "from": "SUB-01",
+   "to": "LOG-01"
+  },
+  {
+   "from": "SUB-01",
+   "to": "SAV-01"
+  },
+  {
+   "from": "LOG-01",
+   "to": "CHK-01"
+  },
+  {
+   "from": "SAV-01",
+   "to": "DUP-01"
+  },
+  {
+   "from": "CHK-01",
+   "to": "CAT-01",
+   "kind": "conditional",
+   "label": "Yes"
+  },
+  {
+   "from": "CHK-01",
+   "to": "SUB-01",
+   "kind": "conditional",
+   "label": "No"
+  },
+  {
+   "from": "CAT-01",
+   "to": "URG-01"
+  },
+  {
+   "from": "CAT-01",
+   "to": "RSV-01"
+  },
+  {
+   "from": "CAT-01",
+   "to": "REF-01"
+  },
+  {
+   "from": "CAT-01",
+   "to": "SUP-01"
+  },
+  {
+   "from": "SUP-01",
+   "to": "QUO-01"
+  },
+  {
+   "from": "URG-01",
+   "to": "QUE-01",
+   "kind": "conditional",
+   "label": "No"
+  },
+  {
+   "from": "URG-01",
+   "to": "FST-01",
+   "kind": "conditional",
+   "label": "Yes"
+  },
+  {
+   "from": "RSV-01",
+   "to": "QUO-01"
+  },
+  {
+   "from": "RSV-01",
+   "to": "BCD-01"
+  },
+  {
+   "from": "QUE-01",
+   "to": "REV-01"
+  },
+  {
+   "from": "FST-01",
+   "to": "REV-01"
+  },
+  {
+   "from": "QUO-01",
+   "to": "CMP-01"
+  },
+  {
+   "from": "REV-01",
+   "to": "PCK-01"
+  },
+  {
+   "from": "REV-01",
+   "to": "MRK-01"
+  },
+  {
+   "from": "CMP-01",
+   "to": "PCK-01"
+  },
+  {
+   "from": "BCD-01",
+   "to": "PCK-01"
+  },
+  {
+   "from": "CMP-01",
+   "to": "FIL-01"
+  },
+  {
+   "from": "PCK-01",
+   "to": "APR-01"
+  },
+  {
+   "from": "APR-01",
+   "to": "RWK-01",
+   "kind": "conditional",
+   "label": "No"
+  },
+  {
+   "from": "APR-01",
+   "to": "SGN-01",
+   "kind": "conditional",
+   "label": "Yes"
+  },
+  {
+   "from": "RWK-01",
+   "to": "PCK-01"
+  },
+  {
+   "from": "SGN-01",
+   "to": "ORD-01"
+  },
+  {
+   "from": "SGN-01",
+   "to": "COM-01"
+  },
+  {
+   "from": "ORD-01",
+   "to": "CNF-01"
+  },
+  {
+   "from": "ORD-01",
+   "to": "UPD-01"
+  },
+  {
+   "from": "ORD-01",
+   "to": "NTO-01"
+  },
+  {
+   "from": "CNF-01",
+   "to": "RCV-01",
+   "kind": "conditional",
+   "label": "Yes"
+  },
+  {
+   "from": "CNF-01",
+   "to": "ORD-01",
+   "kind": "conditional",
+   "label": "No"
+  },
+  {
+   "from": "ORD-01",
+   "to": "FPO-01"
+  },
+  {
+   "from": "COM-01",
+   "to": "INV-01"
+  },
+  {
+   "from": "RCV-01",
+   "to": "PAY-01"
+  },
+  {
+   "from": "INV-01",
+   "to": "PAY-01"
+  },
+  {
+   "from": "INV-01",
+   "to": "QRY-01"
+  },
+  {
+   "from": "QRY-01",
+   "to": "INV-01"
+  },
+  {
+   "from": "RCV-01",
+   "to": "REC-01"
+  },
+  {
+   "from": "RCV-01",
+   "to": "CLS-01"
+  },
+  {
+   "from": "RCV-01",
+   "to": "RAT-01"
+  }
+ ],
+ "gaps": [
+  {
+   "id": "GAP-01",
+   "title": "No owner is named for the duplicate check",
+   "text": "The step list names the check [WB3 Process!A6] but leaves its owner blank, and the call never mentions duplicates.",
+   "nodes": [
+    "DUP-01"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 6"
+    },
+    {
+     "type": "absent",
+     "needle": "Team",
+     "in": [
+      {
+       "source": "WB3",
+       "locator": "Process row 6"
+      }
+     ]
+    },
+    {
+     "type": "absent",
+     "needle": "duplicate",
+     "in": [
+      {
+       "source": "T3"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "GAP-02",
+   "title": "No owner or place is named for filing the quotes",
+   "text": "The step list names the step [WB3 Process!A17] with no owner, and the call does not say where the quotes are filed.",
+   "nodes": [
+    "FIL-01"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 17"
+    },
+    {
+     "type": "absent",
+     "needle": "Team",
+     "in": [
+      {
+       "source": "WB3",
+       "locator": "Process row 17"
+      }
+     ]
+    },
+    {
+     "type": "absent",
+     "needle": "file",
+     "in": [
+      {
+       "source": "T3"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "GAP-03",
+   "title": "No owner is named for recording the outcome",
+   "text": "The step list names the step [WB3 Process!A28] but leaves its owner blank, and the call only says the request is closed [T3 00:03:45].",
+   "nodes": [
+    "REC-01"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process row 28"
+    },
+    {
+     "type": "absent",
+     "needle": "Team",
+     "in": [
+      {
+       "source": "WB3",
+       "locator": "Process row 28"
+      }
+     ]
+    },
+    {
+     "type": "absent",
+     "needle": "outcome",
+     "in": [
+      {
+       "source": "T3"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "clarifications": [
+  {
+   "id": "P01",
+   "title": "Who sets the finance sign-off limit?",
+   "shows": "The call says anything over 10,000 needs a finance sign-off [T3 00:02:10], and the step list says it is “Needed above the limit”.",
+   "ask": "Who sets the limit, and does it apply to every category? Confirm with Finance.",
+   "nodes": [
+    "SGN-01"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!D20"
+    }
+   ]
+  },
+  {
+   "id": "P02",
+   "title": "How is a request judged urgent?",
+   "shows": "Urgent requests skip the queue and Team B looks at them the same day [T3 00:00:48].",
+   "ask": "Who decides that a request is urgent, and on what grounds? Confirm with Team A.",
+   "nodes": [
+    "URG-01"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!D8"
+    }
+   ]
+  },
+  {
+   "id": "P03",
+   "title": "How many quotes are needed?",
+   "shows": "Team C asks suppliers for quotes, “usually three” [T3 00:01:21].",
+   "ask": "Is three a rule, and when can Team C ask for fewer? Confirm with Team C.",
+   "nodes": [
+    "QUO-01"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!D12"
+    }
+   ]
+  },
+  {
+   "id": "P04",
+   "title": "Who chases suppliers that do not confirm?",
+   "shows": "Some suppliers never confirm the order [T3 00:02:58], and chasing them takes most of a day each week [T3 00:03:14].",
+   "ask": "Who chases, how often, and when is an order cancelled? Confirm with Team C.",
+   "nodes": [
+    "CNF-01"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!D22"
+    }
+   ]
+  },
+  {
+   "id": "P05",
+   "title": "What happens to the reserved budget when a request is rejected?",
+   "shows": "Finance reserves the budget as soon as the category is set [T3 00:01:05], and is not sure what happens when a request is rejected [T3 00:04:52].",
+   "ask": "Is the reserved budget released, and by whom? Confirm with Finance.",
+   "nodes": [
+    "RSV-01"
+   ],
+   "cite": [
+    {
+     "source": "WB3",
+     "locator": "Process!D9"
+    }
+   ]
+  }
+ ]
+}

@@ -63,7 +63,7 @@
             }
           }
         },
-        "systems": {"description": "Base systems[] ids.", "type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "process-map.schema.json#/$defs/slug"}},
+        "systems": {"description": "Base systems[] ids. Empty only when the steps the item touches use no system (ai-4): the page prints None named.", "type": "array", "uniqueItems": true, "items": {"$ref": "process-map.schema.json#/$defs/slug"}},
         "logging": {"description": "What every run records, and where.", "type": "string", "minLength": 1, "maxLength": 240}
       }
     }

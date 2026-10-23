@@ -3,12 +3,21 @@
 
 Usage:
   python3 build_doc.py <input.md> <output.html> [--a4|--screen] [--sources sources.json] [--strict]
+                       [--data-links PREFIX]
 
   --a4       A4 sheets (default). Split sheets with a line "<!-- page -->".
   --screen   One long column for reading on screen. Prints onto numbered A4 pages.
   --sources  JSON object mapping each source id to its full name, either
              {"WB1": "Sample workbook, Sheet1"} or {"WB1": {"name": "...", "note": "..."}}.
+             bs.py adds "points": {"<locator>": [{"locator", "text", "context"?}, ...]}, the
+             verbatim records of each address the document cites, for --data-links.
   --strict   Treat every warning (such as a cited id with no name) as an error.
+  --data-links  In a workspace (bs.py build passes "../"): each citation, a bracket or an address
+             on a provenance line, prints as a small numbered marker linked to its row in
+             the page's Citation points section, which replaces the Sources block. Each row
+             prints the address, the verbatim records (the sources file's "points"), the
+             headings it supports, and links to PREFIX + data-received.html#<ID> and
+             PREFIX + citation-points.html#<anchor>. Without it the page is exactly as before.
 
 The output is one self-contained HTML file: doc.css, the Source fonts and the
 wordmark are inlined from this folder. Python 3 standard library only.
@@ -37,6 +46,7 @@ The Markdown subset (see README.md for examples):
                             it become two-column lists
   <!-- page -->             new A4 sheet (ignored with --screen); other HTML comments are dropped
 """
+
 import base64
 import html
 import json
@@ -44,6 +54,7 @@ import mimetypes
 import pathlib
 import re
 import sys
+import unicodedata
 import xml.etree.ElementTree as ET
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -84,23 +95,46 @@ IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)\)")
 SETEXT = re.compile(r"^=+\s*$")
 # svg art is checked against an allowlist and written back out from the parsed tree, so the page
 # gets only shapes, text and paint: nothing that runs, animates, styles the page or loads a file.
-SVG_NS, XLINK_NS, XML_NS = "http://www.w3.org/2000/svg", "http://www.w3.org/1999/xlink", "http://www.w3.org/XML/1998/namespace"
+SVG_NS, XLINK_NS, XML_NS = (
+    "http://www.w3.org/2000/svg",
+    "http://www.w3.org/1999/xlink",
+    "http://www.w3.org/XML/1998/namespace",
+)
 SVG_TAGS = {
-    "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon", "text", "tspan",
-    "defs", "linearGradient", "radialGradient", "stop", "clipPath", "mask", "marker", "use", "title", "desc",
+    "svg",
+    "g",
+    "path",
+    "rect",
+    "circle",
+    "ellipse",
+    "line",
+    "polyline",
+    "polygon",
+    "text",
+    "tspan",
+    "defs",
+    "linearGradient",
+    "radialGradient",
+    "stop",
+    "clipPath",
+    "mask",
+    "marker",
+    "use",
+    "title",
+    "desc",
 }
 LINK_SCHEMES = {"http", "https", "mailto", "tel"}
 
 
 def closes(fence, line):
     """A fence closes on a line of the same character, at least as long, and nothing else."""
-    return re.fullmatch(re.escape(fence[0]) + "{%d,}" % len(fence), line.strip()) is not None
+    return re.fullmatch(re.escape(fence[0]) + "{" + str(len(fence)) + ",}", line.strip()) is not None
 
 
 def dedent(line, k):
     """Remove up to k spaces of indentation (a fenced block's own indent) from a code line."""
     t = line.expandtabs(4)
-    return t[min(k, len(t) - len(t.lstrip(" "))):]
+    return t[min(k, len(t) - len(t.lstrip(" "))) :]
 
 
 def read_fence(lines, i, fence, indent, no):
@@ -127,7 +161,7 @@ def split_row(row):
             run = re.match(r"`+", s[k:]).group(0)
             if tick == run:
                 tick = None
-            elif tick is None and re.search(rf"(?<!`){run}(?!`)", s[k + len(run):]):
+            elif tick is None and re.search(rf"(?<!`){run}(?!`)", s[k + len(run) :]):
                 tick = run
             cur, k = cur + run, k + len(run)
         elif s[k] == "|" and tick is None:
@@ -141,8 +175,15 @@ def split_row(row):
 def starts_block(lines, i):
     s = lines[i][1]
     return bool(
-        FENCE.match(s) or DIRECTIVE.match(s) or HEADING.match(s) or RULE.match(s) or SEP.match(s)
-        or UL.match(s) or OL.match(s) or QUOTE.match(s) or s.startswith("<!--")
+        FENCE.match(s)
+        or DIRECTIVE.match(s)
+        or HEADING.match(s)
+        or RULE.match(s)
+        or SEP.match(s)
+        or UL.match(s)
+        or OL.match(s)
+        or QUOTE.match(s)
+        or s.startswith("<!--")
         or (s.startswith("|") and i + 1 < len(lines) and TABLE_SEP.match(lines[i + 1][1]))
     )
 
@@ -169,7 +210,9 @@ def parse_list(lines, i, kind):
         elif items and indent >= 2 and (UL.match(body) or OL.match(body)):
             # One level of nesting: an indented "- item" under a bullet or a step.
             if not UL.match(body):
-                raise BuildError(f"line {lno}: numbered lists cannot be nested; indent '- item' bullets instead, or use template.html")
+                raise BuildError(
+                    f"line {lno}: numbered lists cannot be nested; indent '- item' bullets instead, or use template.html"
+                )
             if sub_indent is None:
                 sub_indent = indent
             elif indent > sub_indent:
@@ -189,9 +232,13 @@ def parse_list(lines, i, kind):
             else:
                 items[-1][0] += " " + body
             blank, i = False, i + 1
-        elif not body and i + 1 < n and (
-            pat.match(lines[i + 1][1])
-            or (items and lines[i + 1][1].startswith((" ", "\t")) and lines[i + 1][1].strip())
+        elif (
+            not body
+            and i + 1 < n
+            and (
+                pat.match(lines[i + 1][1])
+                or (items and lines[i + 1][1].startswith((" ", "\t")) and lines[i + 1][1].strip())
+            )
         ):
             blank, i = True, i + 1
         else:
@@ -227,13 +274,17 @@ def parse_blocks(lines):
                 elif t.strip() == ":::":
                     break
                 elif DIRECTIVE.match(t):
-                    raise BuildError(f"line {lines[i][0]}: ::: blocks cannot be nested (inside :::{name} from line {no})")
+                    raise BuildError(
+                        f"line {lines[i][0]}: ::: blocks cannot be nested (inside :::{name} from line {no})"
+                    )
                 body.append(lines[i])
                 i += 1
             if i >= n:
                 raise BuildError(f"line {no}: :::{name} is never closed with a ::: line")
             if name not in ("callout", "aside", "examples", "columns"):
-                raise BuildError(f"line {no}: unknown block :::{name} (use callout, aside, examples or columns)")
+                raise BuildError(
+                    f"line {no}: unknown block :::{name} (use callout, aside, examples or columns)"
+                )
             out.append(("dir", name, arg, body, no))
             i += 1
             continue
@@ -242,7 +293,7 @@ def parse_blocks(lines):
         if s.startswith("<!--"):
             # Dropped, except <!-- page -->. Text after the closing --> on the same line is kept.
             j = i
-            while j < n and "-->" not in lines[j][1][4 if j == i else 0:]:
+            while j < n and "-->" not in lines[j][1][4 if j == i else 0 :]:
                 j += 1
             if j >= n:
                 raise BuildError(f"line {no}: HTML comment is never closed")
@@ -286,14 +337,22 @@ def parse_blocks(lines):
         if s.startswith("|") and i + 1 < n and TABLE_SEP.match(lines[i + 1][1]):
             head, aligns = split_row(s), []
             for c in split_row(lines[i + 1][1]):
-                aligns.append("right" if c.endswith(":") and not c.startswith(":") else "center" if c.startswith(":") and c.endswith(":") else "")
+                aligns.append(
+                    "right"
+                    if c.endswith(":") and not c.startswith(":")
+                    else "center"
+                    if c.startswith(":") and c.endswith(":")
+                    else ""
+                )
             rows, i = [], i + 2
             while i < n and lines[i][1].startswith("|"):
                 row = split_row(lines[i][1])
                 if len(row) > len(head):
-                    warn(f"line {lines[i][0]}: this table row has {len(row)} cells and the header {len(head)}; "
-                         f"the extra cells are dropped (write \\| for a | inside a cell)")
-                rows.append((row + [""] * len(head))[:len(head)])  # a short row gets empty cells
+                    warn(
+                        f"line {lines[i][0]}: this table row has {len(row)} cells and the header {len(head)}; "
+                        f"the extra cells are dropped (write \\| for a | inside a cell)"
+                    )
+                rows.append((row + [""] * len(head))[: len(head)])  # a short row gets empty cells
                 i += 1
             out.append(("table", head, aligns, rows))
             continue
@@ -301,27 +360,50 @@ def parse_blocks(lines):
         i += 1
         while i < n and lines[i][1].strip() and not starts_block(lines, i):
             if SETEXT.match(lines[i][1].strip()):
-                warn(f"line {lines[i][0]}: a line of = under text is a setext heading, which the builder does not "
-                     "read; write ## Heading instead (the = line is left out)")
+                warn(
+                    f"line {lines[i][0]}: a line of = under text is a setext heading, which the builder does not "
+                    "read; write ## Heading instead (the = line is left out)"
+                )
                 i += 1
                 break
             para.append(lines[i][1].strip())
             i += 1
         if i < n and RULE.match(lines[i][1]) and lines[i][1].strip().startswith("-"):
-            warn(f"line {lines[i][0]}: --- straight under text is a rule here, not a heading; "
-                 "leave a blank line before a rule, or write ## Heading")
+            warn(
+                f"line {lines[i][0]}: --- straight under text is a rule here, not a heading; "
+                "leave a blank line before a rule, or write ## Heading"
+            )
         out.append(("p", " ".join(para), para, no))  # the source lines are kept for :::examples
     return out
 
 
 # ---------------------------------------------------------------- inline
 
+
+def point_anchor(sid, loc, needle=None):
+    """--data-links: a citation point's anchor in citation-points.html (formats/FORMATS.md section 2.6):
+    src- plus the address in lower case, ¶ written para, other runs written -; an absent search
+    adds -not- and its needle."""
+    s = f"{sid} {loc}" if loc else sid
+    a = "src-" + re.sub(r"[^a-z0-9]+", "-", s.lower().replace("¶", "para")).strip("-")
+    if needle is None:
+        return a
+    return (
+        a
+        + "-not-"
+        + (re.sub(r"[^a-z0-9]+", "-", unicodedata.normalize("NFKD", needle).lower()).strip("-") or "x")
+    )
+
+
 class Doc:
-    def __init__(self, sources, base, sources_given=False):
+    def __init__(self, sources, base, sources_given=False, data=None):
         self.sources = sources  # id -> {"name", "note"}
         self.given = sources_given  # a --sources file was passed
-        self.base = base        # folder of the input file (for images)
-        self.used = []          # source ids in order of first use
+        self.base = base  # folder of the input file (for images)
+        self.data = data  # --data-links prefix, or None
+        self.used = []  # source ids in order of first use
+        self.points = {}  # --data-links: anchor -> citation point, numbered in order of first use
+        self.cur = ("Title and lead", "intro")  # --data-links: the element a citation supports, its heading
         self.known = set(sources)
         self.slugs = set()
 
@@ -354,23 +436,36 @@ class Doc:
                 for p in parts:
                     low = re.fullmatch(r"([a-z][a-z0-9]*(?:-[a-z0-9]+)*)(?:\s+.+)?", p)
                     if low and low.group(1).upper() in self.known:
-                        warn(f"[{inner}] looks like a citation of {low.group(1).upper()} in lower case; left as text")
+                        warn(
+                            f"[{inner}] looks like a citation of {low.group(1).upper()} in lower case; left as text"
+                        )
             return None
         pairs = [(f.group(1), f.group(2)) for f in found]
         if all(self.is_source(sid, loc) for sid, loc in pairs):
             return pairs
-        odd = list(dict.fromkeys(sid for sid, loc in pairs if not self.is_source(sid, loc) and self.looks_cited(sid, loc)))
+        odd = list(
+            dict.fromkeys(
+                sid for sid, loc in pairs if not self.is_source(sid, loc) and self.looks_cited(sid, loc)
+            )
+        )
         # With a sources file, a bracket that names at least one of its ids, and whose other parts
         # all look cited, is a citation: the unnamed ids are cited as missing (a Gap row in Sources)
         # rather than turning the whole bracket back into text.
-        if self.given and any(self.is_source(sid, loc) for sid, loc in pairs) \
-                and all(self.is_source(sid, loc) or self.looks_cited(sid, loc) for sid, loc in pairs):
+        if (
+            self.given
+            and any(self.is_source(sid, loc) for sid, loc in pairs)
+            and all(self.is_source(sid, loc) or self.looks_cited(sid, loc) for sid, loc in pairs)
+        ):
             if not quiet:
-                warn(f"[{inner}] cites unknown id {', '.join(odd)}; it is marked missing: add it to the sources file")
+                warn(
+                    f"[{inner}] cites unknown id {', '.join(odd)}; it is marked missing: add it to the sources file"
+                )
             return pairs
         if not quiet and self.given and odd:
-            warn(f"[{inner}] is left as text: possible citation of unknown id {', '.join(odd)}; "
-                 f"add it to the sources file, or write \\[{inner}] if it is not a citation")
+            warn(
+                f"[{inner}] is left as text: possible citation of unknown id {', '.join(odd)}; "
+                f"add it to the sources file, or write \\[{inner}] if it is not a citation"
+            )
         return None
 
     def cite(self, sid, loc):
@@ -383,6 +478,72 @@ class Doc:
         label = f'<span class="loc">{loc}</span>' if " " in loc or len(html.unescape(loc)) > 16 else loc
         return f'<cite class="{cls}" data-src="{sid}" data-loc="{loc}"><a href="#src-{sid}">{sid} {label}</a></cite>'
 
+    def point(self, sid, loc, kind="grounded", needle=None):
+        """--data-links: the citation point of an address (with its needle, for an absent search), numbered in
+        order of first use, and used by the heading the citation sits under."""
+        self.use(sid)
+        a = point_anchor(sid, loc, needle)
+        p = self.points.setdefault(
+            a, {"n": len(self.points) + 1, "anchor": a, "sid": sid, "loc": loc, "needle": needle, "uses": []}
+        )
+        if (kind, *self.cur) not in p["uses"]:
+            p["uses"].append((kind, *self.cur))
+        return p
+
+    def marks(self, pts):
+        """--data-links: one superscript of numbered markers, ³ or ³,⁷, each linked to its row in Citation
+        points; hover or focus shows the address and the first words of its verbatim text (doc.css)."""
+        out = []
+        for p in sorted({p["n"]: p for p in pts}.values(), key=lambda p: p["n"]):
+            cls = "cp-mk missing" if self.missing(p["sid"]) else "cp-mk"
+            out.append(
+                f'<a class="{cls}" href="#{p["anchor"]}" data-tip="{html.escape(self.tip(p), quote=True)}" '
+                f'aria-label="Citation {p["n"]}: {html.escape(address(p), quote=True)}">{p["n"]}</a>'
+            )
+        return f'<sup class="cp-mks">{",".join(out)}</sup>'
+
+    def records(self, p):
+        """The verbatim records of a point, from the sources file's points."""
+        return (self.sources.get(p["sid"]) or {}).get("points", {}).get(p["loc"] or "") or []
+
+    def tip(self, p):
+        if p["needle"] is not None:
+            return f"{address(p)} · searched for “{p['needle']}”: not found"
+        recs = self.records(p)
+        words = recs[0]["text"].split() if recs else []
+        if not words:
+            return f"{address(p)} · no verbatim text in the sources file"
+        return f"{address(p)} · “{' '.join(words[:8])}{'…' if len(words) > 8 else ''}”"
+
+    def prov_marks(self, word, rest):
+        """--data-links: a provenance line as a map prints one, its addresses as numbered markers: Grounded³,⁴,
+        Inferred · <reading>⁵, Gap · “needle” not found⁶. None when the line does not read as FORMATS.md
+        section 4 writes it (then it renders as before)."""
+        needle, head, kind = None, "", {"Grounded": "grounded", "Inferred": "inferred", "Gap": "absent"}[word]
+        if word == "Inferred":
+            m = re.fullmatch(r"(.+?) · from (.+)", rest, re.S)
+            if not m:
+                return None
+            head, refs = f" · {self.inline(m.group(1))}", m.group(2)
+        elif word == "Gap":
+            m = re.fullmatch(r"not in (.+?): “([^”]+)”", rest, re.S)
+            if not m:
+                return None
+            refs, needle = m.group(1), m.group(2)
+            head = f" · “{html.escape(needle)}” not found"
+        else:
+            refs = rest
+        pairs = []
+        for part in refs.split(";"):
+            part = part.strip()
+            if part.startswith("[") and part.endswith("]"):
+                part = part[1:-1].strip()
+            f = re.fullmatch(rf"({ID})(?:\s+(.+))?", part)
+            if not f or (not f.group(2) and word != "Gap"):
+                return None
+            pairs.append((f.group(1), f.group(2)))
+        return head + self.marks([self.point(sid, loc, kind, needle) for sid, loc in pairs])
+
     def inline(self, text):
         keep = []
 
@@ -390,13 +551,19 @@ class Doc:
             keep.append(fragment)
             return f"\x00{len(keep) - 1}\x00"
 
-        text = re.sub(r"(`+)(.+?)\1", lambda m: hold(f"<code>{html.escape(m.group(2).strip(), quote=False)}</code>"), text)
+        text = re.sub(
+            r"(`+)(.+?)\1",
+            lambda m: hold(f"<code>{html.escape(m.group(2).strip(), quote=False)}</code>"),
+            text,
+        )
         text = re.sub(r"<!--.*?-->", "", text)  # a comment inside a line is dropped too
         text = re.sub(r"\\([\\`*\[\]_#+.!|-])", lambda m: hold(html.escape(m.group(1))), text)
         im = IMAGE.search(text)
         if im:
-            raise BuildError(f"image {im.group(0)} is outside :::examples; images go in an :::examples item "
-                             "as the art, or use template.html")
+            raise BuildError(
+                f"image {im.group(0)} is outside :::examples; images go in an :::examples item "
+                "as the art, or use template.html"
+            )
         text = html.escape(text, quote=True)
 
         def link(m):
@@ -405,8 +572,10 @@ class Doc:
             url = re.sub(r"[\x00-\x1f\x7f]", "", html.unescape(m.group(2))).strip()
             scheme = re.match(r"([A-Za-z][A-Za-z0-9+.-]*):", url)
             if scheme and scheme.group(1).lower() not in LINK_SCHEMES:
-                raise BuildError(f"link target not allowed: {url!r} (use http:, https:, mailto:, tel:, "
-                                 "a #fragment or a relative path)")
+                raise BuildError(
+                    f"link target not allowed: {url!r} (use http:, https:, mailto:, tel:, "
+                    "a #fragment or a relative path)"
+                )
             return hold(f'<a href="{html.escape(url, quote=True)}">{self.bold(m.group(1))}</a>')
 
         text = re.sub(r"\[([^\[\]]+)\]\(([^)\s]+)\)", link, text)
@@ -414,13 +583,18 @@ class Doc:
         def cites(m):
             # The text is HTML-escaped by now, and an escape such as &quot; holds a ";", so the
             # bracket is parsed as written and each locator is escaped again for the page.
-            pairs = self.parse_bracket(html.unescape(m.group(1)), quiet=False)
+            # --data-links: the bracket prints as its numbered markers, on the word before it.
+            pairs = self.parse_bracket(html.unescape(m.group(2)), quiet=False)
             if not pairs:
                 return m.group(0)
+            if self.data is not None:
+                return hold(self.marks([self.point(sid, loc) for sid, loc in pairs]))
             marks = [self.cite(sid, html.escape(loc, quote=True) if loc else loc) for sid, loc in pairs]
-            return hold(marks[0] if len(marks) == 1 else f'<span class="cites">{"; ".join(marks)}</span>')
+            return m.group(1) + hold(
+                marks[0] if len(marks) == 1 else f'<span class="cites">{"; ".join(marks)}</span>'
+            )
 
-        text = re.sub(r"\[([^\[\]]+)\]", cites, text)
+        text = re.sub(r"(\s*)\[([^\[\]]+)\]", cites, text)
         text = self.bold(text)
         while "\x00" in text:
             text = re.sub(r"\x00(\d+)\x00", lambda m: keep[int(m.group(1))], text)
@@ -447,15 +621,20 @@ class Doc:
             elif depth:
                 out.append(piece)
             else:
+
                 def repl(m):
                     self.use(m.group(1))
                     cls = ' class="missing"' if self.missing(m.group(1)) else ""
                     return f'<a href="#src-{m.group(1)}"{cls}>{m.group(1)}</a>'
+
                 out.append(pat.sub(repl, piece))
         return "".join(out)
 
     def slug(self, text):
-        base = re.sub(r"[^a-z0-9]+", "-", re.sub(r"<[^>]+>|\[[^\]]*\]", "", text).lower()).strip("-") or "section"
+        base = (
+            re.sub(r"[^a-z0-9]+", "-", re.sub(r"<[^>]+>|\[[^\]]*\]", "", text).lower()).strip("-")
+            or "section"
+        )
         s, k = base, 2
         while s in self.slugs:
             s, k = f"{base}-{k}", k + 1
@@ -508,6 +687,7 @@ def collect_ids(blocks, doc):
 
 # ---------------------------------------------------------------- render
 
+
 def render(blocks, doc, two_col_lists=False):
     out, i = [], 0
     while i < len(blocks):
@@ -517,18 +697,24 @@ def render(blocks, doc, two_col_lists=False):
             level, text = b[1], b[2]
             if level == 1:
                 raise BuildError("only one # title is allowed, at the top of the document")
-            out.append(f'<h{level} id="{doc.slug(text)}">{doc.inline(text)}</h{level}>')
+            hid = doc.slug(text)
+            doc.cur = (re.sub(r"\*\*|`|\s*\[[^\]]*\]", "", text).strip() or "Heading", hid)
+            out.append(f'<h{level} id="{hid}">{doc.inline(text)}</h{level}>')
         elif kind == "p":
             m = PROV.match(b[1])
             if m:
                 word, rest = m.group(1), m.group(2)
                 ids, bad = prov_ids(word, rest)
                 if bad is not None:
-                    warn(f"line {b[3]}: a Grounded line reads 'ID locator; ID locator', but '{bad}' does not start with a source id")
+                    warn(
+                        f"line {b[3]}: a Grounded line reads 'ID locator; ID locator', but '{bad}' does not start with a source id"
+                    )
                 doc.known.update(ids)
                 for sid in ids:
                     doc.use(sid)
-                out.append(f'<p class="prov prov-{word.lower()}"><b>{word}</b> · {doc.link_ids(doc.inline(rest))}</p>')
+                marked = doc.prov_marks(word, rest) if doc.data is not None else None
+                tail = " · " + doc.link_ids(doc.inline(rest)) if marked is None else marked
+                out.append(f'<p class="prov prov-{word.lower()}"><b>{word}</b>{tail}</p>')
             else:
                 out.append(f"<p>{doc.inline(b[1])}</p>")
         elif kind == "quote":
@@ -537,7 +723,11 @@ def render(blocks, doc, two_col_lists=False):
             out.append("<hr>")
         elif kind == "ul":
             cls = ' class="two"' if two_col_lists else ""
-            out.append(f"<ul{cls}>" + "".join(f"<li>{doc.inline(t)}{kids_html(kids, doc)}</li>" for t, kids in b[1]) + "</ul>")
+            out.append(
+                f"<ul{cls}>"
+                + "".join(f"<li>{doc.inline(t)}{kids_html(kids, doc)}</li>" for t, kids in b[1])
+                + "</ul>"
+            )
         elif kind == "ol":
             # Numbered from the first item and counting up, so "1. 1. 1." reads 01 02 03.
             items = "".join(
@@ -552,13 +742,20 @@ def render(blocks, doc, two_col_lists=False):
             warn(f"line {b[1]}: <!-- page --> inside a ::: block is ignored; put it between blocks")
         elif kind == "table":
             head, aligns, rows = b[1], b[2], b[3]
-            st = lambda k: f' style="text-align:{aligns[k]}"' if k < len(aligns) and aligns[k] else ""
+
+            def st(k, aligns=aligns):
+                return f' style="text-align:{aligns[k]}"' if k < len(aligns) and aligns[k] else ""
+
             th = "".join(f"<th{st(k)}>{doc.inline(c)}</th>" for k, c in enumerate(head))
             body = "".join(
-                "<tr>" + "".join(f"<td{st(k)}>{doc.inline(c)}</td>" for k, c in enumerate(r)) + "</tr>" for r in rows
+                "<tr>" + "".join(f"<td{st(k)}>{doc.inline(c)}</td>" for k, c in enumerate(r)) + "</tr>"
+                for r in rows
             )
-            out.append(f'<div class="table"><table><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>')
+            out.append(
+                f'<div class="table"><table><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>'
+            )
         elif kind == "dir":
+            outer = doc.cur  # a heading inside the block holds only to the block's end
             name, arg, body, no = b[1], b[2], parse_blocks(b[3]), b[4]
             title = f"<h2>{doc.inline(arg)}</h2>" if arg else ""
             if name == "callout":
@@ -587,9 +784,14 @@ def render(blocks, doc, two_col_lists=False):
                 else:
                     if len(parts) != 2:
                         raise BuildError(f"line {no}: :::columns takes one +++ line (two columns)")
-                    out.append('<div class="columns">' + "".join(f"<section>{render(p, doc)}</section>" for p in parts) + "</div>")
+                    out.append(
+                        '<div class="columns">'
+                        + "".join(f"<section>{render(p, doc)}</section>" for p in parts)
+                        + "</div>"
+                    )
             elif name == "examples":
                 out.append(render_examples(body, doc, no))
+            doc.cur = outer
         elif kind == "sep":
             raise BuildError(f"line {b[2]}: +++ is only used inside :::columns or :::examples")
         i += 1
@@ -620,8 +822,10 @@ def render_examples(body, doc, no):
                     rows = x[2].split("\n")
                     cols = max(len(r) for r in rows)
                     if len(rows) > 8 or cols > 32:
-                        warn(f"line {no}: the code art in '{eyebrow}' is {len(rows)} lines, up to {cols} columns; "
-                             "a panel shows about 8 lines of 32 columns, so it wraps and fades out at the foot")
+                        warn(
+                            f"line {no}: the code art in '{eyebrow}' is {len(rows)} lines, up to {cols} columns; "
+                            "a panel shows about 8 lines of 32 columns, so it wraps and fades out at the foot"
+                        )
                     art = code_html(x[1], x[2])
             elif x[0] == "h" and x[1] == 3 and not title:
                 title = f"<h3>{doc.inline(x[2])}</h3>"
@@ -631,32 +835,41 @@ def render_examples(body, doc, no):
                 for ln in x[2]:
                     im = IMAGE.match(ln)
                     if im and (art or texts):
-                        raise BuildError(f"line {x[3]}: an example item has one art block, and an image art comes before the short line")
+                        raise BuildError(
+                            f"line {x[3]}: an example item has one art block, and an image art comes before the short line"
+                        )
                     if im:
                         art = image(im.group(0), doc)
-                        if ln[im.end():].strip():
-                            texts.append(ln[im.end():].strip())
+                        if ln[im.end() :].strip():
+                            texts.append(ln[im.end() :].strip())
                     else:
                         texts.append(ln)
             else:
-                raise BuildError(f"line {no}: an example item holds a ### title, one art block, a short line and a caption")
+                raise BuildError(
+                    f"line {no}: an example item holds a ### title, one art block, a short line and a caption"
+                )
         if len(texts) > 2:
             raise BuildError(
                 f"line {no}: the item '{eyebrow}' has {len(texts)} lines of text; it takes a short line and a caption, one line each"
             )
         if not art:
-            warn(f"line {no}: the item '{eyebrow}' has no art, so its panel is empty; "
-                 "add a ```svg block, a code block or an ![alt](image) line")
+            warn(
+                f"line {no}: the item '{eyebrow}' has no art, so its panel is empty; "
+                "add a ```svg block, a code block or an ![alt](image) line"
+            )
         line = f"<p>{doc.inline(texts[0])}</p>" if texts else ""
         cap = f'<p class="caption">{doc.inline(texts[1])}</p>' if len(texts) > 1 else ""
         eb = f'<p class="eyebrow">{doc.inline(eyebrow)}</p>' if eyebrow else ""
-        html_items.append(f'<article class="example"><div class="art">{art}</div>{eb}{title}{line}{cap}</article>')
+        html_items.append(
+            f'<article class="example"><div class="art">{art}</div>{eb}{title}{line}{cap}</article>'
+        )
     return '<div class="examples">' + "".join(html_items) + "</div>"
 
 
 def clean_svg(src, where):
     """Check svg art against the allowlist and return it re-serialised from the parsed tree, so the
     page holds exactly what was checked (no comments, no markup outside the one <svg> root)."""
+
     def refuse(why):
         raise BuildError(f"{where}: svg art draws only shapes, text and paint; {why}")
 
@@ -680,10 +893,15 @@ def clean_svg(src, where):
             plain = re.sub(r"[\x00-\x20\x7f]", "", value).lower()
             if name.lower().startswith("on"):
                 refuse(f"the event handler {name} is not allowed")
-            if "javascript:" in plain or "@import" in plain or "expression(" in plain or (name == "style" and "\\" in value):
-                refuse(f"{name}=\"{value}\" is not allowed")
+            if (
+                "javascript:" in plain
+                or "@import" in plain
+                or "expression(" in plain
+                or (name == "style" and "\\" in value)
+            ):
+                refuse(f'{name}="{value}" is not allowed')
             if name == "href" and not re.match(r"#|data:image/", plain):
-                refuse(f"{name}=\"{value}\" may point only at #id or a data:image")
+                refuse(f'{name}="{value}" may point only at #id or a data:image')
             for target in re.findall(r"url\(['\"]?([^'\")]*)", plain):
                 if not re.match(r"#|data:image/", target):
                     refuse(f"url({target}) may point only at #id or a data:image")
@@ -732,6 +950,7 @@ def image(md, doc):
 
 # ---------------------------------------------------------------- page
 
+
 def data_uri(path, mime):
     return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
 
@@ -739,7 +958,11 @@ def data_uri(path, mime):
 def inline_css():
     css = (HERE / "doc.css").read_text(encoding="utf-8")
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
-    css = re.sub(r"url\(fonts/([\w.-]+\.ttf)\)", lambda m: f"url({data_uri(HERE / 'fonts' / m.group(1), 'font/ttf')})", css)
+    css = re.sub(
+        r"url\(fonts/([\w.-]+\.ttf)\)",
+        lambda m: f"url({data_uri(HERE / 'fonts' / m.group(1), 'font/ttf')})",
+        css,
+    )
     return "\n".join(line.rstrip() for line in css.splitlines() if line.strip())
 
 
@@ -749,14 +972,16 @@ def front_matter(lines):
         for k in range(1, len(lines)):
             s = lines[k][1]
             if s.strip() == "---":
-                return meta, lines[k + 1:]
+                return meta, lines[k + 1 :]
             m = re.match(r"^([A-Za-z]+)\s*:\s*(.*?)\s*$", s)
             if not m:
                 raise BuildError(f"line {lines[k][0]}: front matter lines read 'key: value'")
             key = m.group(1).lower()
             key = "label" if key == "context" else key
             if key not in FRONT_KEYS:
-                warn(f"line {lines[k][0]}: unknown front matter key '{key}' (known: {', '.join(sorted(FRONT_KEYS))})")
+                warn(
+                    f"line {lines[k][0]}: unknown front matter key '{key}' (known: {', '.join(sorted(FRONT_KEYS))})"
+                )
             meta[key] = m.group(2).strip("\"'")
         raise BuildError("front matter starts with --- but is never closed")
     return meta, lines
@@ -772,7 +997,11 @@ def load_sources(path):
     for sid, v in raw.items():
         if not re.fullmatch(ID, sid):
             raise BuildError(f"source id '{sid}' must look like G1-S1 (capitals, digits, hyphens)")
-        out[sid] = {"name": v, "note": ""} if isinstance(v, str) else {"name": v.get("name", ""), "note": v.get("note", "")}
+        out[sid] = (
+            {"name": v, "note": ""}
+            if isinstance(v, str)
+            else {"name": v.get("name", ""), "note": v.get("note", ""), "points": v.get("points") or {}}
+        )
     return out
 
 
@@ -790,15 +1019,86 @@ def sources_block(doc):
             warn(f"source {sid} is cited but has no name (add it to the --sources file)")
             why = "no name in the sources file" if doc.given else "no name given (no sources file)"
             text = f'<span class="missing"><b>Gap</b> · {why}</span>'
-        rows.append(f'<li id="src-{sid}"><b>{sid}</b><span>{text}</span></li>')
+        sid_html = (
+            sid
+            if doc.data is None
+            else f'<a href="{html.escape(doc.data, quote=True)}data-received.html#{sid}">{sid}</a>'
+        )
+        rows.append(f'<li id="src-{sid}"><b>{sid_html}</b><span>{text}</span></li>')
+    if doc.data is not None:
+        return points_section(doc, rows)
     return f'<section class="sources" id="sources"><h2>Sources</h2><ol>{"".join(rows)}</ol></section>'
 
 
-def build(md_path, mode, sources_path):
+USE_WORD = {"grounded": "Grounded", "inferred": "Inferred from", "absent": "Absent search"}  # as on a map
+
+
+def address(p):
+    return f"{p['sid']} {p['loc']}" if p["loc"] else p["sid"]
+
+
+def plural(n, one):
+    return f"{n} {one if n == 1 else one + 's'}"
+
+
+def verbatim(doc, p):
+    """A point's verbatim text, as a map's Citation points prints it: an absent search, one record (with its
+    context), or a span's records."""
+    if p["needle"] is not None:
+        return f'<span class="cp-absent">Searched for “{html.escape(p["needle"])}”: not found</span>'
+    recs = doc.records(p)
+    if not recs:
+        warn(f"{address(p)} has no verbatim records in the sources file (its points)")
+        return '<span class="cp-absent">No verbatim text in the sources file</span>'
+    if len(recs) == 1 and recs[0].get("locator") == p["loc"]:
+        r = recs[0]
+        ctx = f"{html.escape(r['context'])} · " if r.get("context") else ""
+        return f"{ctx}<q>{html.escape(r['text'])}</q>"
+    text = " · ".join(f"<q>{html.escape(r['text'])}</q>" for r in recs[:10])
+    more = f" · and {len(recs) - 10} more" if len(recs) > 10 else ""
+    return f'<span class="cp-recs">{text}{more}</span>'
+
+
+def points_section(doc, sources):
+    """--data-links: the Sources block extended as the page's Citation points section (FORMATS.md section 2.6):
+    its sources, one line each (#src-<ID>), then one row per point, numbered as its markers, at the point's
+    anchor: the address, the verbatim text, the headings it supports, and links back to the data."""
+    d = html.escape(doc.data, quote=True)
+    rows = []
+    for p in doc.points.values():
+        sid, a = p["sid"], p["anchor"]
+        uses = {}
+        for kind, label, hid in p["uses"]:
+            uses.setdefault(kind, []).append(f'<a href="#{hid}">{html.escape(label)}</a>')
+        used = "".join(
+            f'<span class="cp-use"><b>{USE_WORD[k]}</b> · {", ".join(uses[k])}</span>'
+            for k in USE_WORD
+            if k in uses
+        )
+        rows.append(
+            f'<li class="cp-row" id="{a}"><span class="cp-n">{p["n"]}</span>'
+            f'<a class="cp-addr" href="{d}data-received.html#{sid}" title="Open {sid} in Original data received">'
+            f'{html.escape(address(p))}</a><span class="cp-text">{verbatim(doc, p)}</span>'
+            f'<span class="cp-used">{used}</span><a class="cp-all" href="{d}citation-points.html#{a}" '
+            f'aria-label="Point {p["n"]} in Citation points" title="Open in Citation points">↗</a></li>'
+        )
+    count = f"{plural(len(rows), 'point')} from {plural(len(sources), 'record')}"
+    return (
+        '<section class="cp" id="citation-points" aria-labelledby="cp-h"><div class="cp-head">'
+        f'<h2 id="cp-h">Citation points</h2><span class="cp-count">{count}</span></div>'
+        f'<ol class="cp-srcs">{"".join(sources)}</ol><ol class="cp-list">{"".join(rows)}</ol></section>'
+    )
+
+
+def build(md_path, mode, sources_path, data=None):
     text = pathlib.Path(md_path).read_text(encoding="utf-8")
     lines = list(enumerate(text.splitlines(), start=1))
     meta, lines = front_matter(lines)
-    doc = Doc(load_sources(sources_path), pathlib.Path(md_path).resolve().parent, sources_path is not None)
+    doc = Doc(
+        load_sources(sources_path), pathlib.Path(md_path).resolve().parent, sources_path is not None, data
+    )
+    if data is not None:
+        doc.slugs.update({"intro", "citation-points", "cp-h"})  # the ids the page itself gives
     blocks = parse_blocks(lines)
     collect_ids(blocks, doc)
 
@@ -817,7 +1117,9 @@ def build(md_path, mode, sources_path):
             intro += f'<p class="lead">{doc.inline(quotes[0])}</p>'
         if len(quotes) > 1:
             intro += f'<p class="support">{doc.inline(quotes[1])}</p>'
-        intro = f'<section class="intro">{intro}</section>'
+        # --data-links: the element a citation in the title or lead supports
+        intro_id = "" if data is None else ' id="intro"'
+        intro = f'<section class="intro"{intro_id}>{intro}</section>'
         blocks = blocks[k:]
 
     sheets, cur = [], []
@@ -861,7 +1163,7 @@ def build(md_path, mode, sources_path):
 
 
 def main(argv):
-    args, mode, sources, strict = [], "a4", None, False
+    args, mode, sources, strict, data = [], "a4", None, False, None
     it = iter(argv[1:])
     for a in it:
         if a in ("--a4", "--screen"):
@@ -874,6 +1176,12 @@ def main(argv):
                 sys.exit("build_doc: --sources needs a file")
         elif a.startswith("--sources="):
             sources = a.split("=", 1)[1]
+        elif a == "--data-links":
+            data = next(it, None)
+            if data is None:
+                sys.exit("build_doc: --data-links needs a path prefix, such as ../")
+        elif a.startswith("--data-links="):
+            data = a.split("=", 1)[1]
         elif a in ("-h", "--help"):
             print(__doc__)
             return 0
@@ -882,7 +1190,7 @@ def main(argv):
     if len(args) != 2:
         sys.exit(__doc__)
     try:
-        out = build(args[0], mode, sources)
+        out = build(args[0], mode, sources, data)
     except (BuildError, OSError, json.JSONDecodeError) as e:
         sys.exit(f"build_doc: error: {e}")
     if strict and WARNINGS:

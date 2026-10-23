@@ -1,106 +1,375 @@
 {
   "about": "baby-sienna citation contract, version 2. bs.py check reads it and hard-codes none of it: the closed citation types, each source kind's inputs, locator grammar and printed label, the citation rules per element category, where web sources may be cited, the AI terms, and the three provenance-line forms of a document. Id patterns and enums live in the schemas. formats/FORMATS.md explains this file and does not restate it. Every regex is valid in Python re and in ECMAScript.",
   "version": 2,
-
-  "types": {"grounded": "Grounded", "inferred": "Inferred", "absent": "Gap"},
-
+  "types": {
+    "grounded": "Grounded",
+    "inferred": "Inferred",
+    "absent": "Gap"
+  },
   "kinds": {
     "sheet": {
       "label": "Workbook",
-      "deckKind": "workbook",
-      "read": [".csv", ".tsv", ".xlsx", ".xlsm"],
-      "unchecked": [".xls", ".ods"],
-      "record": "^([^\\s!\\[\\];\"“”](?:[^!\\[\\];\"“”]{0,38}[^\\s!\\[\\];\"“”])?)!([A-Z]{1,3})([1-9][0-9]{0,6})$",
+      "read": [
+        ".csv",
+        ".tsv",
+        ".xlsx",
+        ".xlsm"
+      ],
+      "unchecked": [
+        ".xls",
+        ".ods"
+      ],
+      "record": "^([^\\s!\\[\\];\"\u201c\u201d](?:[^!\\[\\];\"\u201c\u201d]{0,38}[^\\s!\\[\\];\"\u201c\u201d])?)!([A-Z]{1,3})([1-9][0-9]{0,6})$",
       "spans": {
-        "range": "^([^\\s!\\[\\];\"“”](?:[^!\\[\\];\"“”]{0,38}[^\\s!\\[\\];\"“”])?)!([A-Z]{1,3})([1-9][0-9]{0,6}):([A-Z]{1,3})([1-9][0-9]{0,6})$",
-        "row": "^([^\\s!\\[\\];\"“”](?:[^!\\[\\];\"“”]{0,38}[^\\s!\\[\\];\"“”])?) row ([1-9][0-9]{0,6})$",
-        "rows": "^([^\\s!\\[\\];\"“”](?:[^!\\[\\];\"“”]{0,38}[^\\s!\\[\\];\"“”])?) rows ([1-9][0-9]{0,6})-([1-9][0-9]{0,6})$"
+        "range": "^([^\\s!\\[\\];\"\u201c\u201d](?:[^!\\[\\];\"\u201c\u201d]{0,38}[^\\s!\\[\\];\"\u201c\u201d])?)!([A-Z]{1,3})([1-9][0-9]{0,6}):([A-Z]{1,3})([1-9][0-9]{0,6})$",
+        "row": "^([^\\s!\\[\\];\"\u201c\u201d](?:[^!\\[\\];\"\u201c\u201d]{0,38}[^\\s!\\[\\];\"\u201c\u201d])?) row ([1-9][0-9]{0,6})$",
+        "rows": "^([^\\s!\\[\\];\"\u201c\u201d](?:[^!\\[\\];\"\u201c\u201d]{0,38}[^\\s!\\[\\];\"\u201c\u201d])?) rows ([1-9][0-9]{0,6})-([1-9][0-9]{0,6})$"
       },
-      "examples": ["Steps!C3", "Steps!C2:D4", "Steps row 5", "Steps rows 2-4"],
+      "examples": [
+        "Steps!C3",
+        "Steps!C2:D4",
+        "Steps row 5",
+        "Steps rows 2-4"
+      ],
       "order": "sheets in workbook order, then row, then column"
     },
     "document": {
       "label": "Document",
-      "deckKind": "document",
-      "read": [".md", ".txt", ".docx", ".pdf", ".eml", ".vsdx"],
-      "unchecked": [".doc", ".odt", ".rtf", ".pptx", ".msg", ".mbox", ".png", ".jpg", ".jpeg"],
-      "record": "^(?:p([1-9][0-9]{0,4}) )?¶([1-9][0-9]{0,5})$",
+      "read": [
+        ".md",
+        ".txt",
+        ".docx",
+        ".pdf",
+        ".eml",
+        ".vsdx"
+      ],
+      "unchecked": [
+        ".doc",
+        ".odt",
+        ".rtf",
+        ".pptx",
+        ".msg",
+        ".mbox",
+        ".png",
+        ".jpg",
+        ".jpeg"
+      ],
+      "record": "^(?:p([1-9][0-9]{0,4}) )?\u00b6([1-9][0-9]{0,5})$",
       "spans": {
-        "paragraphs": "^(?:p([1-9][0-9]{0,4}) )?¶([1-9][0-9]{0,5})-([1-9][0-9]{0,5})$",
+        "paragraphs": "^(?:p([1-9][0-9]{0,4}) )?\u00b6([1-9][0-9]{0,5})-([1-9][0-9]{0,5})$",
         "page": "^p([1-9][0-9]{0,4})$"
       },
-      "examples": ["¶4", "p2 ¶3", "¶2-4", "p2"],
+      "examples": [
+        "\u00b64",
+        "p2 \u00b63",
+        "\u00b62-4",
+        "p2"
+      ],
       "order": "page, then paragraph: a file with pages numbers paragraphs within each page, a file without pages through the whole file"
     },
     "transcript": {
       "label": "Meeting notes",
-      "deckKind": "meeting-notes",
-      "read": [".txt", ".vtt", ".srt"],
-      "unchecked": [".docx", ".pdf", ".mp3", ".m4a", ".wav", ".mp4"],
+      "read": [
+        ".txt",
+        ".vtt",
+        ".srt"
+      ],
+      "unchecked": [
+        ".docx",
+        ".pdf",
+        ".mp3",
+        ".m4a",
+        ".wav",
+        ".mp4"
+      ],
       "record": "^([0-9]{2}):([0-5][0-9]):([0-5][0-9])(?:\\.([0-9]{3}))?$",
       "spans": {
         "time": "^([0-9]{2}):([0-5][0-9]):([0-5][0-9])(?:\\.([0-9]{3}))?-([0-9]{2}):([0-5][0-9]):([0-5][0-9])(?:\\.([0-9]{3}))?$"
       },
-      "examples": ["00:00:31", "00:00:05-00:00:47"],
+      "examples": [
+        "00:00:31",
+        "00:00:05-00:00:47"
+      ],
       "order": "start time, strictly increasing"
     },
     "web": {
       "label": "Website",
-      "deckKind": "website",
-      "read": [".html", ".htm", ".md", ".txt"],
-      "unchecked": [".mhtml", ".pdf", ".png"],
-      "record": "^(?:p([1-9][0-9]{0,4}) )?¶([1-9][0-9]{0,5})$",
+      "read": [
+        ".html",
+        ".htm",
+        ".md",
+        ".txt"
+      ],
+      "unchecked": [
+        ".mhtml",
+        ".pdf",
+        ".png"
+      ],
+      "record": "^(?:p([1-9][0-9]{0,4}) )?\u00b6([1-9][0-9]{0,5})$",
       "spans": {
-        "paragraphs": "^(?:p([1-9][0-9]{0,4}) )?¶([1-9][0-9]{0,5})-([1-9][0-9]{0,5})$",
+        "paragraphs": "^(?:p([1-9][0-9]{0,4}) )?\u00b6([1-9][0-9]{0,5})-([1-9][0-9]{0,5})$",
         "page": "^p([1-9][0-9]{0,4})$"
       },
-      "examples": ["¶3", "¶2-3"],
+      "examples": [
+        "\u00b63",
+        "\u00b62-3"
+      ],
       "order": "as document"
     }
   },
-
-  "containers": [".zip", ".7z", ".rar", ".tar", ".gz"],
-
+  "containers": [
+    ".zip",
+    ".7z",
+    ".rar",
+    ".tar",
+    ".gz"
+  ],
   "categories": {
     "process-map": {
-      "system":        {"allowed": ["grounded"], "require": [["grounded"]], "note": "map-8: its label occurs in a record it cites. Printed as a Sources entry used by the system"},
-      "lane":          {"allowed": ["grounded", "inferred"], "require": [], "note": "map-3: a lane that holds no step needs a grounded citation for its role. Printed as a Sources entry used by the lane"},
-      "node.grounded": {"allowed": ["grounded", "inferred"], "require": [["grounded"]], "note": ""},
-      "node.inferred": {"allowed": ["inferred"], "require": [["inferred"]], "note": "map-7: the reading printed on the card is at most cardReadingMax characters"},
-      "node.gap":      {"allowed": ["grounded", "inferred"], "require": [["grounded"]], "note": "the step exists in the sources; its gap card proves what is missing (map-6)"},
-      "group":         {"allowed": [], "require": [], "note": "no citation: a view is our framing of the board"},
-      "edge":          {"allowed": ["grounded", "inferred"], "require": [], "note": "Optional connection evidence is checked and printed separately from the endpoints. Existing maps remain compatible."},
-      "gap":           {"allowed": ["grounded", "inferred", "absent"], "require": [["absent"], ["grounded"]], "note": "a cited weakness is not a gap: a gap proves with an absent search what the sources do not say; a weakness the sources state is a clarification"},
-      "clarification": {"allowed": ["grounded", "inferred", "absent"], "require": [["grounded"]], "note": "the grounded citations are what the sources show"}
+      "system": {
+        "allowed": [
+          "grounded"
+        ],
+        "require": [
+          [
+            "grounded"
+          ]
+        ],
+        "note": "map-8: its label occurs in a record it cites. Its marker is in the system key; its Citation points row names the system under Used by"
+      },
+      "system.software": {
+        "allowed": [
+          "grounded",
+          "inferred"
+        ],
+        "require": [
+          [
+            "grounded",
+            "inferred"
+          ]
+        ],
+        "note": "inv-1: Named in the sources when a grounded record holds its name; otherwise its inferred reading is the evidence. Printed by Original data received and the systems inventory, not by the board"
+      },
+      "lane": {
+        "allowed": [
+          "grounded",
+          "inferred"
+        ],
+        "require": [],
+        "note": "map-3: a lane that holds no step needs a grounded citation for its role. Its marker is in the gutter; its Citation points row names the lane under Used by"
+      },
+      "node.grounded": {
+        "allowed": [
+          "grounded",
+          "inferred"
+        ],
+        "require": [
+          [
+            "grounded"
+          ]
+        ],
+        "note": ""
+      },
+      "node.inferred": {
+        "allowed": [
+          "inferred"
+        ],
+        "require": [
+          [
+            "inferred"
+          ]
+        ],
+        "note": "map-7: the reading printed on the card is at most cardReadingMax characters"
+      },
+      "node.gap": {
+        "allowed": [
+          "grounded",
+          "inferred"
+        ],
+        "require": [
+          [
+            "grounded"
+          ]
+        ],
+        "note": "the step exists in the sources; its gap card proves what is missing (map-6)"
+      },
+      "group": {
+        "allowed": [],
+        "require": [],
+        "note": "no citation: a view is our framing of the board"
+      },
+      "edge": {
+        "allowed": [
+          "grounded",
+          "inferred"
+        ],
+        "require": [],
+        "note": "Optional connection evidence is checked and printed separately from the endpoints. Existing maps remain compatible."
+      },
+      "gap": {
+        "allowed": [
+          "grounded",
+          "inferred",
+          "absent"
+        ],
+        "require": [
+          [
+            "absent"
+          ],
+          [
+            "grounded"
+          ]
+        ],
+        "note": "a cited weakness is not a gap: a gap proves with an absent search what the sources do not say; a weakness the sources state is a clarification"
+      },
+      "clarification": {
+        "allowed": [
+          "grounded",
+          "inferred",
+          "absent"
+        ],
+        "require": [
+          [
+            "grounded"
+          ]
+        ],
+        "note": "the grounded citations are what the sources show"
+      },
+      "gap.none": {
+        "allowed": [
+          "grounded",
+          "inferred",
+          "absent"
+        ],
+        "require": [
+          [
+            "grounded",
+            "inferred"
+          ]
+        ],
+        "note": "None found (map-6): the only gap card, listing no step, when no step is in gap state and every step's owner and outcome is in a record it cites (a step whose order no record states is asked by an order clarification instead). It cites those records (grounded, or inferred from them); an absent search may add to it, never alone"
+      },
+      "clarification.none": {
+        "allowed": [
+          "grounded",
+          "inferred",
+          "absent"
+        ],
+        "require": [
+          [
+            "grounded",
+            "inferred"
+          ]
+        ],
+        "note": "None found (map-6): the only clarification card, listing no step, when nothing on the map is left to confirm; it cites what shows that (grounded, or inferred). An inferred step beside it is warned"
+      }
     },
     "process-map-ai-opportunity": {
-      "ai.named":      {"allowed": ["grounded", "inferred"], "require": [["grounded"]], "quoteWithAiTerm": true, "note": "ai-3: the client asked for it in their own words, in a source that is not web"},
-      "ai.suggested":  {"allowed": ["grounded", "inferred"], "require": [["inferred"]], "note": "our idea, read from the records"}
+      "ai.named": {
+        "allowed": [
+          "grounded",
+          "inferred"
+        ],
+        "require": [
+          [
+            "grounded"
+          ]
+        ],
+        "quoteWithAiTerm": true,
+        "note": "ai-3: the client asked for it in their own words, in a source that is not web"
+      },
+      "ai.suggested": {
+        "allowed": [
+          "grounded",
+          "inferred"
+        ],
+        "require": [
+          [
+            "inferred"
+          ]
+        ],
+        "note": "our idea, read from the records"
+      }
     },
     "document": {
-      "sentence":      {"allowed": ["grounded", "inferred", "absent"], "require": [["grounded", "inferred", "absent"]], "note": "through a bracket in the sentence, or a provenance line straight after its block. A Gap line must be PROVEN"}
+      "sentence": {
+        "allowed": [
+          "grounded",
+          "inferred",
+          "absent"
+        ],
+        "require": [
+          [
+            "grounded",
+            "inferred",
+            "absent"
+          ]
+        ],
+        "note": "through a bracket in the sentence, or a provenance line straight after its block. A Gap line must be PROVEN"
+      }
     },
-    "proposal": {
-      "claim":         {"allowed": ["grounded"], "require": [["grounded"]], "orToConfirm": true, "note": "or to_confirm, never both (deck-3). The only place a citation may name a whole source"}
+    "inventory": {
+      "module": {
+        "allowed": [
+          "grounded",
+          "inferred"
+        ],
+        "require": [
+          [
+            "inferred"
+          ]
+        ],
+        "note": "our suggestion, read from the records, like ai.suggested. inv-2 checks its software and steps against the map"
+      },
+      "module.observed": {
+        "allowed": [
+          "grounded"
+        ],
+        "require": [
+          [
+            "grounded"
+          ]
+        ],
+        "note": "Source-observed module/capability, never a suggestion; inv-2 checks its software and steps. A checker must verify the source actually describes this use."
+      }
     }
   },
-
   "web": {
-    "allowedIn": ["process-map-ai-opportunity/ai.suggested", "document/sentence", "proposal/claim"],
-    "neverAloneIn": ["process-map-ai-opportunity/ai.suggested"]
+    "allowedIn": [
+      "process-map-ai-opportunity/ai.suggested",
+      "document/sentence",
+      "inventory/module"
+    ],
+    "neverAloneIn": [
+      "process-map-ai-opportunity/ai.suggested",
+      "inventory/module"
+    ]
   },
-
   "aiTerms": {
-    "caseSensitiveWords": ["AI", "LLM", "GenAI", "ML"],
-    "caseInsensitiveWords": ["artificial intelligence", "machine learning", "generative AI", "copilot", "chatgpt", "chatbot", "automate", "automated", "automation", "automatically"]
+    "caseSensitiveWords": [
+      "AI",
+      "LLM",
+      "GenAI",
+      "ML"
+    ],
+    "caseInsensitiveWords": [
+      "artificial intelligence",
+      "machine learning",
+      "generative AI",
+      "copilot",
+      "chatgpt",
+      "chatbot",
+      "automate",
+      "automated",
+      "automation",
+      "automatically"
+    ]
   },
-
   "cardReadingMax": 48,
-
   "documentLines": {
-    "Grounded": "^Grounded · (.+)$",
-    "Inferred": "^Inferred · ([^·\\[\\]]+?) · from (.+)$",
-    "Gap": "^Gap · not in (.+?): “([^”]+)”$",
+    "Grounded": "^Grounded \u00b7 (.+)$",
+    "Inferred": "^Inferred \u00b7 ([^\u00b7\\[\\]]+?) \u00b7 from (.+)$",
+    "Gap": "^Gap \u00b7 not in (.+?): \u201c([^\u201d]+)\u201d$",
     "bracket": "\\[([^\\[\\]]+)\\]",
     "bracketPart": "^([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*)(?:\\s+(.+))?$"
   }

@@ -161,10 +161,46 @@ cite.c a:hover{color:var(--accent)}
 .sources li{display:grid;grid-column:1/-1;grid-template-columns:subgrid;margin:0}
 .sources b{font-weight:600;color:var(--ink)}
 .sources .note{color:var(--muted)}
-.sources li:target{background:var(--soft)}
+.sources li:target,.cp-srcs li:target{background:var(--soft)}
 /* doc: an id with no name in the sources file is a gap, shown in the accent */
 cite.c.missing,cite.c.missing a,.prov a.missing,.sources .missing b{color:var(--accent)}
 .sources .missing{color:var(--muted)}
+/* doc: in a workspace (--data-links) each citation is one small numbered marker, the look of every
+   template, and the Sources block becomes the Citation points section, the only place full
+   addresses and verbatim text appear.
+   Marker   <sup class="cp-mks"><a class="cp-mk" href="#src-wb1-steps-d3" data-tip="WB1 Steps!D3 · “…”">3</a></sup>
+   Section  <section class="cp" id="citation-points"> h2, ol.cp-srcs (li#src-<ID>), ol.cp-list (li.cp-row#<anchor>) */
+.cp-mks{margin-left:1px;color:var(--muted);font-size:8.5px;font-style:normal;font-weight:600;line-height:0;vertical-align:super;white-space:nowrap}
+a.cp-mk{position:relative;color:var(--muted);text-decoration:none;border-radius:2px}
+a.cp-mk:hover,a.cp-mk:focus-visible{color:var(--accent);text-decoration:underline}
+a.cp-mk:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+a.cp-mk.missing{color:var(--accent)}
+a.cp-mk:is(:hover,:focus-visible)::after{content:attr(data-tip);position:absolute;left:-4px;top:calc(100% + 14px);z-index:5;width:max-content;max-width:min(300px,70vw);padding:5px 8px;background:#fff;border:1px solid var(--line);border-radius:2px;box-shadow:0 4px 14px #12301f14;color:var(--text);font-size:10px;font-weight:400;line-height:1.4;letter-spacing:0;white-space:normal;text-decoration:none;pointer-events:none}
+.cp{margin-top:16px;padding-top:10px;border-top:1px solid var(--line)}
+.cp-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-bottom:7px}
+.cp-head h2{font-size:12px;margin:0}
+.cp-count{font-size:9px;color:var(--muted)}
+.cp-srcs{list-style:none;margin:0 0 6px;padding:0;display:grid;grid-template-columns:max-content 1fr;gap:0 16px;font-size:10px;line-height:1.5}
+.cp-srcs li{display:grid;grid-column:1/-1;grid-template-columns:subgrid;margin:0}
+.cp-srcs b{font-weight:600;color:var(--ink)}
+.cp-srcs .note{color:var(--muted)}
+.cp-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.cp-row{display:grid;grid-template-columns:14px minmax(84px,max-content) minmax(0,1fr) minmax(90px,max-content) 10px;gap:0 12px;align-items:baseline;margin:0;padding:2px;border-bottom:1px solid var(--line);font-size:10px;line-height:1.4;color:var(--muted)}
+.cp-row:target{background:var(--soft);box-shadow:inset 2px 0 0 var(--accent)}
+/* doc: a Used by link lands on its heading, or on the title and lead */
+.flow :is(h2,h3):target,.intro:target{background:var(--soft);box-shadow:0 0 0 4px var(--soft)}
+.cp-n{font-size:9px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.cp-addr{font-family:var(--mono);font-size:9.5px;color:var(--ink);text-decoration:none;white-space:nowrap}
+.cp-text{min-width:0;overflow-wrap:anywhere}
+.cp-text q{quotes:"“" "”";color:var(--text)}
+.cp-absent{color:var(--muted)}
+.cp-used{font-size:9.5px;text-align:right}
+.cp-use{display:block}
+.cp-used b{font-weight:600;color:var(--ink)}
+.cp-used a{text-decoration:none;border-bottom:1px solid var(--line);white-space:nowrap}
+.cp-used a:hover{border-color:var(--accent)}
+.cp-all{color:var(--muted);text-decoration:none;text-align:right}
+.cp-all:hover,.cp-all:focus-visible{color:var(--accent)}
 
 /* 10. Footer --------------------------------------------------------------- */
 .page>footer{margin-top:auto;display:flex;justify-content:space-between;gap:16px;border-top:1px solid var(--line);padding-top:9px;font-size:8px;color:var(--muted);text-transform:uppercase}
@@ -178,7 +214,8 @@ cite.c.missing,cite.c.missing a,.prov a.missing,.sources .missing b{color:var(--
   .page+.page{margin-top:0;break-before:page}
   .page.screen{page:long;padding:0;max-width:none}
   h2,h3{break-after:avoid}
-  .example,.callout,.closing,pre,tr,ol.steps li,.sources li{break-inside:avoid}
+  .example,.callout,.closing,pre,tr,ol.steps li,.sources li,.cp-row{break-inside:avoid}
+  a.cp-mk::after{content:none}
   pre{white-space:pre-wrap;overflow:visible}
   pre,pre code,td,th{overflow-wrap:anywhere} /* nothing wider than the paper */
   td,th{min-width:5em} /* but short words in a squeezed column stay whole */
@@ -206,4 +243,8 @@ cite.c.missing,cite.c.missing a,.prov a.missing,.sources .missing b{color:var(--
   .closing{grid-template-columns:1fr;gap:6px}
   h1{font-size:27px}
   h1 span{font-size:16px}
+  .cp-row{grid-template-columns:14px minmax(0,1fr) 10px}
+  .cp-text,.cp-used{grid-column:2/3}
+  .cp-used{text-align:left}
+  .cp-all{grid-row:1;grid-column:3}
 }

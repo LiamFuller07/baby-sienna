@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{title}}</title>
+<style>
+{{css}}
+.page{max-width:1200px}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <p class="kicker">Systems inventory</p>
+    <h1>{{title}}</h1>
+    <p class="lede">{{lede}}</p>
+  </header>
+  <main>
+    {{body}}
+    {{points}}
+  </main>
+  <footer class="foot"><span>{{foot}}</span></footer>
+</div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<script>
+{{js}}
+</script>
+</body>
+</html>

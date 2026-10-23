@@ -2,24 +2,24 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "citation.schema.json",
   "title": "Citation",
-  "description": "One citation, in its JSON form. The closed set has three types: grounded (the record says it), inferred (our reading of records) and absent (the needle is in none of the records searched). Every citation names records of a source file in records/. An object with no 'type' is grounded, so the proposal deck's {source, locator} cites are grounded citations as they stand. In Markdown and in map prose a grounded citation is written [SRC locator]. Resolution, quotes, needles and the rules per element category are checked by bs.py check against citation-types.json.",
+  "description": "One citation, in its JSON form. The closed set has three types: grounded (the record says it), inferred (our reading of records) and absent (the needle is in none of the records searched). Every citation names records of a source file in records/. An object with no 'type' is grounded. In Markdown and in map prose a grounded citation is written [SRC locator]. Resolution, quotes, needles and the rules per element category are checked by bs.py check against citation-types.json.",
   "$ref": "#/$defs/citation",
   "$defs": {
     "sourceId": {
-      "description": "A source id: capitals, digits and hyphens, at most 12 characters. It is the file name of records/<id>.json. The same pattern as the document and proposal builders.",
+      "description": "A source id: capitals, digits and hyphens, at most 12 characters. It is the file name of records/<id>.json. The same pattern as the document builder.",
       "type": "string",
       "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)*$",
       "maxLength": 12
     },
     "locator": {
-      "description": "A record locator or a span, in the grammar of the source's kind (citation-types.json > kinds). It never holds [ ] ; or double quotes, so it can sit inside a [ ] marker. Grounded and inferred citations need one, except in a proposal deck; an absent span may leave it out to search the whole source.",
+      "description": "A record locator or a span, in the grammar of the source's kind (citation-types.json > kinds). It never holds [ ] ; or double quotes, so it can sit inside a [ ] marker. Grounded and inferred citations need one; an absent span may leave it out to search the whole source.",
       "type": "string",
       "minLength": 1,
       "maxLength": 60,
       "pattern": "^[^\\[\\];\"“”]+$"
     },
     "ref": {
-      "description": "A reference: a source id and a locator. No locator means the whole source, which only an absent span or a proposal cite may use.",
+      "description": "A reference: a source id and a locator. No locator means the whole source, which only an absent span may use.",
       "type": "object",
       "additionalProperties": false,
       "required": [

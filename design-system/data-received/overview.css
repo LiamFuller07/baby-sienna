@@ -1,0 +1,266 @@
+/* overview.css: shared by Original data received (template.html) and the systems inventory (inventory.html).
+   The map tokens, the header, the four-column page grid of the Overview tables, the numbered citation markers,
+   the Citation points section and the tooltip. build_received.py inlines it into both pages. */
+:root{
+  --bg:#faf9f6;--paper:#fff;--panel:#f3efe7;--lane-alt:#ece8e0;
+  --ink:#111;--muted:#626260;--soft:#7b7b78;
+  --line:#dedbd6;--line-strong:#c8c8c4;--flow:#454542;
+  --accent:#ff5600;--accent-ink:#b84000;--peach:#fbd9c4;
+  --radius:2px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  /* the page grid: every Overview table shares these column edges */
+  --c1:260px;--c2:160px;--c4:280px;--cg:24px;--cf:48px;--cs:72px;--indent:20px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:24px}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+button,input{font:inherit;color:inherit}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+code{font-family:var(--mono);font-size:12px}
+.ic{width:14px;height:14px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.num{font-variant-numeric:tabular-nums}
+.mut{color:var(--muted)}
+
+.page{max-width:1280px;margin:0 auto;padding:48px 40px 64px}
+.kicker{margin:0;color:var(--accent-ink);font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+h1{margin:10px 0 8px;font-size:32px;line-height:1.12;font-weight:600;letter-spacing:-.01em}
+.lede{margin:0;color:var(--muted);font-size:15px;max-width:90ch;font-variant-numeric:tabular-nums}
+
+/* ---------- on this page, and the key ---------- */
+.toc{display:grid;grid-template-columns:var(--c1) minmax(0,1fr);column-gap:var(--cg);align-items:baseline;margin-top:28px;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:13.5px}
+.toc-h,.key-h{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.toc-l{display:flex;flex-wrap:wrap;gap:8px 36px;margin:0;padding:0;list-style:none}
+.toc a{display:inline-flex;gap:8px;align-items:baseline;text-decoration:none;white-space:nowrap}
+.toc a:hover .toc-t{text-decoration:underline;text-decoration-color:var(--ink);text-underline-offset:3px}
+.toc-n{font:12px var(--mono);color:var(--muted)}
+.toc-n:empty{display:none}
+.toc-c{color:var(--muted);font-variant-numeric:tabular-nums}
+.key{display:grid;grid-template-columns:var(--c1) minmax(0,1fr);column-gap:var(--cg);margin-top:14px;font-size:12px;color:var(--muted)}
+.key-i{display:flex;flex-wrap:wrap;gap:6px 26px}
+.lg{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.key .lg b{font-weight:700;color:var(--flow)}
+.key .lg .step{font-size:11px}
+
+/* ---------- sections ---------- */
+section.sec{margin-top:64px}
+.sh{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--cg);align-items:end;padding-bottom:14px}
+.sh-n{display:block;margin-bottom:6px;font:12px var(--mono);color:var(--muted)}
+.sh h2{display:flex;align-items:center;gap:10px;margin:0;font-size:20px;line-height:1.25;font-weight:600;letter-spacing:-.005em}
+.sh-d{margin:6px 0 0;max-width:72ch;color:var(--muted);font-size:13.5px}
+.sh-d code{font-size:12px;color:var(--flow)}
+.sh-a{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 18px;padding-bottom:2px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.none{margin:0;padding:14px 0;border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}
+.none code{font-size:12px;color:var(--flow)}
+
+/* ---------- the four tables: one grid ---------- */
+table.t{width:100%;border-collapse:collapse;table-layout:fixed}
+.t col.k1{width:var(--c1)}
+.t col.k2{width:calc(var(--c2) + var(--cg))}
+.t col.k4{width:calc(var(--c4) + var(--cg))}
+.t col.kf{width:calc(var(--cf) + var(--cg))}
+.t col.kc{width:calc(var(--c2) - var(--cf))}
+.t col.ks{width:calc(var(--cs) + var(--cg))}
+.t col.kr{width:calc(var(--c4) - var(--cs))}
+.t th,.t td{padding:0 0 0 var(--cg);text-align:left;vertical-align:top}
+.t th:first-child,.t td:first-child{padding-left:0}
+.t thead th{padding-bottom:9px;border-bottom:1px solid var(--line-strong);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.th-n{margin-left:4px;font-weight:400;letter-spacing:0;text-transform:none}
+.t tbody td{padding-top:15px;padding-bottom:15px;border-bottom:1px solid var(--line)}
+.t .r{text-align:right}
+.nm{display:flex;align-items:flex-start;gap:9px;min-width:0;font-weight:600}
+.nm .ic{margin-top:3px}
+.nm-t{min-width:0;overflow-wrap:anywhere}
+.lead{margin:0}
+.lead.strong{font-weight:600}
+.lead .warn{color:var(--accent-ink)}
+
+/* evidence: the provenance line (FORMATS.md section 2.6), with numbered markers */
+.prov{margin:5px 0 0;font-size:12px;line-height:1.6}
+.pv{display:block}
+.pv b{font-weight:700}
+.pv-g{color:var(--flow)}
+.pv-i{color:var(--muted)}
+.pv-i b{color:var(--flow)}
+/* the marker of every template, as the map pages draw it: a muted superscript numeral (³ or ³,⁷); it links to its
+   row in Citation points */
+.cp-mks{margin-left:1px;color:var(--muted);font-size:9.5px;font-style:normal;font-weight:700;line-height:0;vertical-align:super;white-space:nowrap}
+a.cp-mk{color:var(--muted);text-decoration:none;border-radius:var(--radius)}
+a.cp-mk:hover,a.cp-mk:focus-visible,a.cp-mk.is-tip{color:var(--accent-ink);text-decoration:underline}
+a.cp-mk:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.key-mk{display:inline-block;min-width:8px;line-height:1}
+
+/* step chips: links to the process map */
+.steps{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.steps-n{min-width:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.step{display:inline-block;padding:1px 6px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--paper);font:11.5px/1.5 var(--mono);color:var(--ink);text-decoration:none;white-space:nowrap}
+.step.inferred{border-style:dashed;border-color:var(--soft)}
+a.step:hover,.step.is-tip{border-color:var(--ink)}
+.steps .step[hidden]{display:none}
+.more{padding:1px 4px;border:0;background:none;font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline dotted var(--line-strong);text-underline-offset:3px}
+.more:hover{color:var(--ink)}
+.sys-list{list-style:none;margin:0;padding:0}
+.sys-list li{display:flex;align-items:center;gap:8px}
+.sys-list li+li{margin-top:4px}
+.sys-list a{text-decoration:none}
+.sys-list a:hover{text-decoration:underline;text-decoration-color:var(--ink)}
+/* our suggestion: the outlined square */
+.sq{display:inline-block;flex:none;width:12px;height:12px;border:1.5px solid var(--accent);border-radius:var(--radius);background:var(--paper)}
+.sq.is-observed{border-color:var(--flow);background:var(--panel)}
+.nm .sq{margin-top:4px}
+
+/* ---------- 01 folders of data ---------- */
+.chev{display:inline-grid;place-items:center;width:14px;height:14px;flex:none}
+.chev .ic{width:12px;height:12px;transition:transform .12s}
+.fold[aria-expanded="true"] .chev .ic{transform:rotate(90deg)}
+.fold,.fold-x{display:flex;align-items:center;gap:6px;min-width:0;font-weight:600}
+.fold{width:100%;margin:-4px 0;padding:4px 0;border:0;background:none;text-align:left;cursor:pointer}
+.fold-x{padding-left:20px}
+.fold:hover .fname{text-decoration:underline;text-decoration-color:var(--ink);text-underline-offset:3px}
+.fcell{display:flex;align-items:center;gap:6px;min-width:0;padding-left:calc(var(--lvl,0)*var(--indent))}
+.fname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t.folders tr.root td,.t.folders tr.folder td{padding-top:12px;padding-bottom:12px}
+.t.folders tr.root td{font-weight:600}
+.t.folders tr.root .fcell{padding-left:20px}
+.t.folders tr.file td{padding-top:9px;padding-bottom:9px;font-size:13.5px}
+.t.folders tr.file .fcell{padding-left:calc(var(--lvl,0)*var(--indent) + 20px)}
+.t.folders tr.file .fname{font-weight:400}
+.cv-u{display:block;font-size:12px;font-weight:400;color:var(--muted)}
+.kinds{display:inline-flex;flex-wrap:wrap;gap:4px 16px}
+.kinds>span{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.fk-n{margin-left:6px;color:var(--muted)}
+.fk-n.warn{color:var(--accent-ink)}
+.sh-a .lg{gap:6px}
+
+/* ---------- citation points: the markup and look of every template (process-map README section 3.1) ---------- */
+.cp{margin-top:72px;padding:18px 20px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)}
+.cp-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0 0 6px}
+.cp-head h2{margin:0;padding-left:10px;border-left:3px solid var(--ink);font-size:16px;font-weight:600;line-height:1.2}
+.cp-count{color:var(--muted);font-size:12px;font-weight:600}
+.cp-srcs{display:grid;gap:3px;margin:10px 0 12px;padding:0;list-style:none;color:var(--muted);font-size:12px;line-height:1.45}
+.cp-srcs a{color:var(--ink);font-family:var(--mono);font-size:11px;font-weight:700;text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.cp-srcs a:hover{border-color:var(--accent)}
+.cp-list{margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.cp-row{display:grid;grid-template-columns:24px minmax(130px,170px) minmax(0,1fr) minmax(120px,auto) 14px;gap:2px 14px;align-items:baseline;padding:7px 6px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.45}
+.cp-n{color:var(--muted);font-size:10.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.cp-addr{color:var(--ink);font-family:var(--mono);font-size:11px;font-weight:400;text-decoration:none;overflow-wrap:anywhere}
+a.cp-addr:hover,a.cp-addr:focus-visible{text-decoration:underline;text-decoration-color:var(--accent)}
+.cp-text q{quotes:"\201C" "\201D";color:var(--ink)}
+.cp-recs{display:block}
+.cp-absent{color:var(--accent-ink)}
+.cp-used b{color:var(--flow);font-weight:700}
+.cp-used{text-align:right;font-size:11.5px}
+.cp-used a{color:var(--flow);font-weight:700;text-decoration:none;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+.cp-used a:hover{border-color:var(--accent)}
+.cp-use{display:block}
+.cp-all{color:var(--muted);font-size:12px;text-decoration:none;text-align:right}
+.cp-all:hover,.cp-all:focus-visible{color:var(--accent-ink)}
+
+/* landing: a 2px accent rule, then fade */
+@keyframes land-bg{0%,40%{background-color:var(--panel)}100%{background-color:rgba(243,239,231,0)}}
+@keyframes land-rule{0%,40%{background-color:var(--panel);box-shadow:inset 2px 0 0 var(--accent)}100%{background-color:rgba(243,239,231,0);box-shadow:inset 2px 0 0 rgba(255,86,0,0)}}
+@keyframes land-out{0%,40%{background-color:var(--panel);box-shadow:-12px 0 0 var(--panel),-14px 0 0 var(--accent)}100%{background-color:rgba(243,239,231,0);box-shadow:-12px 0 0 rgba(243,239,231,0),-14px 0 0 rgba(255,86,0,0)}}
+.cp-row:target,.cp-row.flash{background:var(--panel);box-shadow:inset 3px 0 0 var(--accent)}
+.t tr:target>td:first-child,.t tr.flash>td:first-child{animation:land-out 2.6s ease-out}
+.t tr:target>td,.t tr.flash>td{animation:land-bg 2.6s ease-out}
+
+/* ---------- tooltip ---------- */
+.tip{position:fixed;z-index:20;left:0;top:0;width:max-content;max-width:min(360px,calc(100vw - 32px));padding:8px 11px 9px;background:var(--paper);border:1px solid var(--line-strong);border-radius:var(--radius);box-shadow:0 8px 24px rgba(17,17,17,.08);font-size:12.5px;line-height:1.45;pointer-events:none;overflow-wrap:anywhere}
+.tip[hidden]{display:none}
+.tip p{margin:0}
+.tip p+p{margin-top:4px}
+.tp-h{font-weight:600}
+.tp-m{color:var(--muted)}
+.tp-f{padding-top:6px;margin-top:8px!important;border-top:1px solid var(--line);color:var(--muted);font:11.5px var(--mono)}
+
+.foot{display:flex;justify-content:space-between;gap:16px;margin-top:56px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.foot code{font-size:11.5px}
+
+@media (prefers-reduced-motion:reduce){
+  .t tr:target>td,.t tr.flash>td,.t tr:target>td:first-child,.t tr.flash>td:first-child{animation-timing-function:step-end}
+  .chev .ic{transition:none}
+}
+
+@media screen and (max-width:1100px){
+  :root{--c1:210px;--c2:150px;--c4:236px;--cg:20px}
+  .page{padding-left:28px;padding-right:28px}
+}
+
+/* ---------- phone: stacked rows ---------- */
+@media screen and (max-width:900px){
+  .page{padding:28px 16px 44px}
+  h1{font-size:26px}
+  .lede{font-size:14px}
+  .toc,.key{grid-template-columns:1fr;row-gap:10px}
+  .toc{padding:12px 0}
+  .toc-l{flex-direction:column;gap:8px}
+  .key-i{display:grid;gap:7px}
+  .key .lg{white-space:normal}
+  section.sec{margin-top:48px}
+  .sh{grid-template-columns:1fr;row-gap:10px}
+  .sh-a{justify-content:flex-start}
+  table.t,.t tbody{display:block}
+  .t colgroup,.t thead{display:none}
+  .t tr{display:flex;flex-direction:column;gap:7px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .t tbody td{display:block;padding:0!important;border:0}
+  .t td[data-label]{display:grid;grid-template-columns:76px minmax(0,1fr);column-gap:12px}
+  .t td[data-label]::before{content:attr(data-label);padding-top:2px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .t td[data-label]>*{grid-column:2}
+  .t tr[hidden]{display:none}
+  /* folders: name and converted on one line, then kinds, size and received */
+  .t.folders tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:3px}
+  .t.folders td.c-name{grid-column:1;grid-row:1;min-width:0}
+  .t.folders td.c-conv{grid-column:2;grid-row:1;text-align:right;color:var(--muted);font-size:13px}
+  .t.folders td.c-kinds{grid-column:1/-1;grid-row:2;padding-left:calc(var(--lvl,0)*var(--indent) + 40px)!important;color:var(--muted);font-size:12.5px}
+  .t.folders td.c-files,.t.folders td.c-size,.t.folders td.c-recv{display:none!important}
+  .t.folders tr.root td.c-conv{color:var(--ink)}
+  .t.folders tr[hidden]{display:none}
+  .cv-u{display:inline;margin-left:6px}
+  .cp{padding:14px 12px 8px}
+  .cp-row{grid-template-columns:24px minmax(0,1fr) 14px;padding:8px 2px}
+  .cp-text,.cp-used{grid-column:2/4}
+  .cp-used{text-align:left}
+  .cp-all{grid-row:1;grid-column:3}
+  .foot{flex-direction:column;gap:4px}
+}
+
+@media print{
+  :root{--cg:10px}
+  body{background:#fff;font-size:9.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{max-width:none;padding:0}
+  h1{font-size:20px;margin:4px 0 4px}
+  .lede{font-size:10.5px}
+  .toc,.key,.tip,.more,.chev{display:none!important}
+  section.sec{margin-top:20px;break-inside:auto}
+  .sh{padding-bottom:6px;break-after:avoid}
+  .sh h2{font-size:13px}
+  .sh-d{font-size:9.5px;margin-top:2px}
+  .sh-a,.sh-n{font-size:8.5px}
+  .t col.k1{width:21%}.t col.k2{width:14%}.t col.k4{width:25%}
+  .t col.kf{width:6%}.t col.kc{width:10%}.t col.ks{width:8%}.t col.kr{width:15%}
+  .t thead th{font-size:8px;padding-bottom:4px}
+  .t tbody td{padding-top:5px!important;padding-bottom:5px!important}
+  .t tr{break-inside:avoid}
+  .t.folders tr.file[hidden]{display:table-row!important}
+  .steps .step[hidden]{display:inline-block!important}
+  .prov{font-size:8.5px;margin-top:2px}
+  .step{font-size:8px;padding:0 4px}
+  .cp-mks{font-size:7.5px}
+  .t.folders tr.file td{font-size:9px}
+  .ic{width:11px;height:11px}
+  .sq{width:9px;height:9px}
+  .nm .sq{margin-top:2px}
+  .cv-u{font-size:8.5px}
+  .cp{margin-top:20px;padding:10px 12px 6px}
+  .cp-head,.cp-srcs{break-inside:avoid;break-after:avoid}
+  .cp-head h2{font-size:13px}
+  .cp-srcs,.cp-row{font-size:8.5px}
+  .cp-row{padding:3px 4px;break-inside:avoid}
+  .cp-addr,.cp-srcs a,.cp-used{font-size:8px}
+  .foot{margin-top:16px;font-size:8.5px;break-before:avoid}
+  .fname{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+  a{text-decoration:none}
+}
