@@ -11,7 +11,7 @@ description: Use when writing or fixing process-map-ai-opportunity/<name>.json, 
 - [ ] **At least one AI item**: `ai[] {id, title, origin, does, nodes or groups, cite, agentic}` (ai-2).
 - [ ] **Origin, named or suggested**: `ai[].origin`: `named` (a grounded quote) or `suggested` (an inferred reading) (ai-3).
 - [ ] **What it would do**: `ai[].does`: one to three sentences (prose-4).
-- [ ] **The agentic version of every item**: `ai[].agentic {trigger, steps, decides, systems, logging}` (ai-4).
+- [ ] **The agentic version of every item**: `ai[].agentic {trigger, steps, decides, systems, logging}` (ai-4); `systems` is `[]` when the base names no system the agent would use, and the page prints None named.
 - [ ] **List view, the default**: computed: the first tab, selected on load, one row per item (build-7).
 - [ ] **Flow view**: computed from the base: the second tab, every base node on it (build-6).
 - [ ] **On-the-map view**: computed: the third tab, the base board with the layer (build-5).

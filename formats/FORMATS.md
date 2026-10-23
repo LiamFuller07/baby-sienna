@@ -135,6 +135,8 @@ A record holds `locator` (unique in the file, in its kind's grammar), `text` (ve
 | process-map · edge | none | nothing | no citation: the nodes at its ends hold the evidence. A branch label's numbers come from a record its decision cites |
 | process-map · gap | grounded, inferred, absent | absent **and** grounded | a cited weakness is not a gap: a gap proves with an absent search what the sources do not say; a weakness the sources state is a clarification |
 | process-map · clarification | grounded, inferred, absent | grounded | the grounded citations are what the sources show |
+| process-map · gap.none | grounded, inferred, absent | grounded or inferred or absent | None found (map-6): the only gap card, listing no step; it cites what shows the sources leave no step out, such as the records that name each step's owner and order |
+| process-map · clarification.none | grounded, inferred, absent | grounded or inferred or absent | None found (map-6): the only clarification card, listing no step; it cites what shows nothing on the map is left to confirm |
 | process-map-ai-opportunity · ai.named | grounded, inferred | grounded, with a quote holding an AI term | ai-3: the client asked for it in their own words, in a source that is not web |
 | process-map-ai-opportunity · ai.suggested | grounded, inferred | inferred | our idea, read from the records |
 | document · sentence | grounded, inferred, absent | grounded or inferred or absent | through a bracket in the sentence, or a provenance line straight after its block. A Gap line must be PROVEN |
@@ -328,7 +330,7 @@ Citation points lists every citation point the workspace's pages use, so it is t
 | map-3 | A lane that holds no step cites its role with a grounded citation |
 | map-4 | A decision has ≥ 2 conditional branches with different labels; conditional edges leave decisions, and every edge from a decision is conditional |
 | map-5 | No self-loops and no duplicate edges |
-| map-6 | Each gap-state step is listed by exactly one gap card; gap cards list only gap-state steps |
+| map-6 | Each gap-state step is listed by exactly one gap card; gap cards list only gap-state steps. A None found card (`none: true`, `nodes: []`) is the only card of its kind and cites why the sources supply none |
 | map-7 | An inferred node's reading, printed on its card, is ≤ `cardReadingMax` (48) characters |
 | map-8 | A system's label occurs in a record it cites |
 | map-9 | An AI term in a map occurs in a record the element cites |

@@ -1680,33 +1680,45 @@ def system_key(systems, mm):
     return '<ul class="pm-key" aria-label="Systems">' + "".join(item(x) for x in systems) + "</ul>"
 
 
+def card_steps(pre, c):
+    """A card's Steps line; a None found card lists no step (map-6)."""
+    if c.get("none"):
+        return '<span class="pm-ev-steps">None found · no step listed</span>'
+    return (
+        '<span class="pm-ev-steps">Steps: '
+        + ", ".join(f'<a href="#{pre}{x}">{x}</a>' for x in c["nodes"])
+        + "</span>"
+    )
+
+
+def card_li(pre, c, i, target):
+    cls = " ".join(k for k, on in (("is-target", target == c["id"]), ("is-none", c.get("none"))) if on)
+    return f'<li id="{pre}{c["id"]}" data-n="{0 if c.get("none") else i}"' + (
+        f' class="{cls}">' if cls else ">"
+    )
+
+
 def gaps_html(mm, target=None):
-    """The Gaps card: required, so it always lists at least one gap (build-7)."""
+    """The Gaps card: required, so it always lists at least one gap, or its one None found card (build-7)."""
     pre = mm.pre
     body = '<ol class="pm-ev-list pm-ev-gaps">'
     for g, i, title, text, prov in mm.gap_html:
-        t = ' class="is-target"' if target == g["id"] else ""
-        steps = ", ".join(f'<a href="#{pre}{x}">{x}</a>' for x in g["nodes"])
-        body += (
-            f'<li id="{pre}{g["id"]}" data-n="{i}"{t}><strong>{title}</strong>{text}'
-            f'<span class="pm-ev-steps">Steps: {steps}</span>{prov}</li>'
-        )
+        body += f"{card_li(pre, g, i, target)}<strong>{title}</strong>{text}{card_steps(pre, g)}{prov}</li>"
     body += "</ol>"
     return f'<article class="pm-ev-card" id="{pre}gaps"><h2>Gaps</h2>{body}</article>'
 
 
 def clar_html(mm, target=None):
-    """The Clarifications card: required, so it always lists at least one question (build-7)."""
+    """The Clarifications card: required, so it always lists at least one question, or its one None found card
+    (build-7)."""
     pre = mm.pre
     body = '<ol class="pm-ev-list pm-ev-clar">'
     for c, i, title, shows, ask, prov in mm.clar_html:
-        t = ' class="is-target"' if target == c["id"] else ""
-        steps = ", ".join(f'<a href="#{pre}{x}">{x}</a>' for x in c["nodes"])
         body += (
-            f'<li id="{pre}{c["id"]}" data-n="{i}"{t}><strong>{title}</strong>'
+            f"{card_li(pre, c, i, target)}<strong>{title}</strong>"
             f'<span class="pm-ev-row"><b>What the sources show:</b> {shows}</span>'
             f'<span class="pm-ev-row"><b>To confirm:</b> {ask}</span>'
-            f'<span class="pm-ev-steps">Steps: {steps}</span>{prov}</li>'
+            f"{card_steps(pre, c)}{prov}</li>"
         )
     body += "</ol>"
     return (
@@ -2170,10 +2182,14 @@ class AiModel:
                         f"{esc(d['who'])} {esc(d['what'])}</span></li>"
                     )
         nd = len(a["decides"])
-        meta = f"{plural(len(a['steps']), 'step')} · {nd} {'place' if nd == 1 else 'places'} a person decides · {plural(len(a['systems']), 'system')}"
-        syss = "".join(
-            f'<span class="pm-ai-sys">{icon_svg(mm.systems[sid]["icon"])}{esc(mm.systems[sid]["label"])}</span>'
-            for sid in a["systems"]
+        ns = plural(len(a["systems"]), "system") if a["systems"] else "no system named"
+        meta = f"{plural(len(a['steps']), 'step')} · {nd} {'place' if nd == 1 else 'places'} a person decides · {ns}"
+        syss = (
+            "".join(
+                f'<span class="pm-ai-sys">{icon_svg(mm.systems[sid]["icon"])}{esc(mm.systems[sid]["label"])}</span>'
+                for sid in a["systems"]
+            )
+            or '<span class="pm-ai-sys is-none">None named on the base map</span>'
         )
         return (
             f'<details class="pm-ai-agentic"{" open" if open_ else ""}><summary><span class="pm-ai-ag-title">Agentic version</span>'

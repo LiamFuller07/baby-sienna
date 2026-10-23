@@ -124,9 +124,9 @@ Each template's required elements are in `design-system/<template>/template.json
 - [ ] **Header**: `meta`: kicker, title, client and date (schema-1).
 - [ ] **Lanes**: `lanes[] {id, label}`: at least one, each a role (map-3).
 - [ ] **Steps with owners**: `nodes[]`: at least one step, each in the lane of the role that owns it, with its `owner`, state and cite; only a gap-state step may leave `owner` out, its gap card saying so (build-7).
-- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow (map-5).
-- [ ] **Gaps card**: `gaps[] {id, title, text, nodes, cite}`: at least one, proven by an absent search (cite-4).
-- [ ] **Clarifications card**: `clarifications[] {id, title, shows, ask, nodes, cite}`: at least one (cite-4).
+- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow; a step whose order no source states is listed instead by a clarification that asks where it comes (map-5).
+- [ ] **Gaps card**: `gaps[] {id, title, text, nodes, cite}`: at least one, proven by an absent search (cite-4); or, when the sources leave no step out, one None found card (`none: true`, `nodes: []`) that cites why (map-6). Never invent a gap.
+- [ ] **Clarifications card**: `clarifications[] {id, title, shows, ask, nodes, cite}`: at least one (cite-4); or one None found card (`none: true`, `nodes: []`) that cites why nothing is left to confirm (map-6).
 - [ ] **Citation points section, with in-place markers**: computed from every `cite`: one numbered marker on each cited element, and one row per point (build-7).
 
 Optional: the system key (`systems[]`) and the views band (`groups[]`, two or more).
@@ -147,7 +147,7 @@ Optional: the system key (`systems[]`) and the views band (`groups[]`, two or mo
 - [ ] **At least one AI item**: `ai[] {id, title, origin, does, nodes or groups, cite, agentic}` (ai-2).
 - [ ] **Origin, named or suggested**: `ai[].origin`: `named` (a grounded quote) or `suggested` (an inferred reading) (ai-3).
 - [ ] **What it would do**: `ai[].does`: one to three sentences (prose-4).
-- [ ] **The agentic version of every item**: `ai[].agentic {trigger, steps, decides, systems, logging}` (ai-4).
+- [ ] **The agentic version of every item**: `ai[].agentic {trigger, steps, decides, systems, logging}` (ai-4); `systems` is `[]` when the base names no system the agent would use, and the page prints None named.
 - [ ] **List view, the default**: computed: the first tab, selected on load, one row per item (build-7).
 - [ ] **Flow view**: computed from the base: the second tab, every base node on it (build-6).
 - [ ] **On-the-map view**: computed: the third tab, the base board with the layer (build-5).

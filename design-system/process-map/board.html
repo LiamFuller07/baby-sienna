@@ -170,6 +170,7 @@ a{color:inherit}
 .pm-ev-list > li::before{position:absolute;top:0;left:0;display:grid;width:20px;height:20px;place-items:center;border-radius:50%;content:attr(data-n);font-size:10px;font-weight:800;line-height:1}
 .pm-ev-gaps > li::before{background:var(--accent);color:var(--ink)}
 .pm-ev-clar > li::before{border:1.5px dashed var(--accent);color:var(--accent-ink)}
+.pm-ev-list > li.is-none::before{border:1.5px solid var(--line-strong);background:none;color:var(--muted)}
 .pm-ev-list > li.is-target,.pm-ev-list > li:target{background:var(--lane-0);box-shadow:0 0 0 8px var(--lane-0)}
 .pm-ev-row{display:block;margin-top:3px}
 .pm-ev-row b{color:var(--flow);font-weight:700}

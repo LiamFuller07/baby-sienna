@@ -5,9 +5,9 @@
 - [ ] **Header**: `process-map/<name>.json › meta`: kicker, title, client and date (schema-1).
 - [ ] **Lanes**: `lanes[] {id, label}`: at least one, each a role (map-3).
 - [ ] **Steps with owners**: `nodes[]`: at least one step, each in the lane of the role that owns it, with its `owner`, state and cite. Only a gap-state step may leave `owner` out: its gap card says what is missing (build-7).
-- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow (map-5).
-- [ ] **Gaps card**: `gaps[]`: at least one, proven by an absent search (cite-4).
-- [ ] **Clarifications card**: `clarifications[]`: at least one (cite-4).
+- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow; a step whose order no source states is listed instead by a clarification that asks where it comes (map-5).
+- [ ] **Gaps card**: `gaps[]`: at least one, proven by an absent search (cite-4); or, when the sources leave no step out, one None found card (`none: true`, `nodes: []`) that cites why (map-6). Never invent a gap.
+- [ ] **Clarifications card**: `clarifications[]`: at least one (cite-4); or one None found card (`none: true`, `nodes: []`) that cites why nothing is left to confirm (map-6).
 - [ ] **Citation points section, with in-place markers**: computed from every `cite`: one numbered marker (`a.cp-mk`) on each cited element, and `section#citation-points` with one `li.cp-row` per point the page uses, each with its verbatim text, Used by, and links to `data-received.html#<ID>` and `citation-points.html#<anchor>` (build-7).
 
 Optional: the system key (`systems[]`) and the views band (`groups[]`, two or more).
@@ -129,8 +129,8 @@ Driven by: the data fields each element reads. `(derived)` is computed by the bu
 | 10 | Edges | flow · branch with its label pill · feedback (dashed) · hover | `edges[]`; feedback (derived) | `#pm-edge` |
 | 11 | Board shell | Fit · 100% (sticky gutter, drag to pan) · phone (compact gutter). A page opens at Fit, or at 100% when Fit would draw the board below 0.6 of its size (titles under about 7px) and always on a phone | (ui) | `#pm-shell` |
 | 12 | Tooltip | step · decision · truncated title · citation marker | (derived): id · group, title, lane, owner, systems, an inferred reading, marks, and `Citation points 3, 4`. A marker's tooltip is one line, on hover and on keyboard focus: the address and the first words of the verbatim text, read from its row. It only repeats printed facts. On an AI page a step's tooltip also gains the AI lines | `#pm-tip` |
-| 13 | Gaps card | list · targeted item. Required, so never empty: when the sources leave nothing missing, record the absent search you tried for what a reader would expect (an owner, an outcome) | `gaps[]`: numbered badge, title, text with citation markers, `Steps: REC-01`, and the provenance line `Gap · “Team” not found¹⁵ · “outcome” not found¹⁶` then `Grounded¹³` | `#pm-gaps` |
-| 14 | Clarifications card | list · targeted item. Required, so never empty | `clarifications[]`: title, `What the sources show:` `shows`, `To confirm:` `ask`, `Steps: APP-01`, the provenance line with its markers | `#pm-clar` |
+| 13 | Gaps card | list · targeted item. Required, so never empty: when the sources leave no step out, its one None found card (`none: true`, `nodes: []`, no number, `None found · no step listed`) says so and cites why; never invent a gap | `gaps[]`: numbered badge, title, text with citation markers, `Steps: REC-01`, and the provenance line `Gap · “Team” not found¹⁵ · “outcome” not found¹⁶` then `Grounded¹³` | `#pm-gaps` |
+| 14 | Clarifications card | list · targeted item. Required, so never empty: when nothing is left to confirm, one None found card cites why. A step whose order no source states is listed here, asking where it comes | `clarifications[]`: title, `What the sources show:` `shows`, `To confirm:` `ask`, `Steps: APP-01`, the provenance line with its markers | `#pm-clar` |
 | 15 | Citation points section | per point · span point (its records' texts, up to 10) · absent search (`Searched for “Team”: not found · PROVEN`) · inferred reading · targeted row | every citation point the page uses (derived; section 3.1). A reading no element prints (a lane's, a system's, a node's) is printed in its first record's row: `Inferred · <reading> · RES-01`. It follows Gaps and Clarifications, full width | `#pm-cp` |
 | 16 | Footer | flags · no flags · phone (the sides stack) | Left: `meta.footer`, default `Source · process map`. Right: `Contains Client A confidential information` (confidential) · `Draft` (draft) · `22 Oct 2026`, each clause only when it applies | `#pm-footer` |
 | 17 | Empty states | lane with no steps (`No steps in this lane`) · no systems · no flags · 0 or 1 group (no band) | empty arrays | `#pm-empty` |

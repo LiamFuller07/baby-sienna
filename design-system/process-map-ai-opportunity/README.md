@@ -6,7 +6,7 @@
 - [ ] **At least one AI item**: `ai[]`. An empty layer passes check and draws its empty state, but build refuses it (ai-2).
 - [ ] **Origin, named or suggested**: `ai[].origin`: `named` with a grounded quote, or `suggested` with an inferred reading (ai-3).
 - [ ] **What it would do**: `ai[].does`, one to three sentences (prose-4).
-- [ ] **The agentic version of every item**: `ai[].agentic {trigger, steps, decides, systems, logging}` (ai-4).
+- [ ] **The agentic version of every item**: `ai[].agentic {trigger, steps, decides, systems, logging}` (ai-4); `systems` is `[]` when the base names no system the agent would use, and the page prints None named.
 - [ ] **List view, the default**: computed: the first tab, selected on load, with one row per item (build-7).
 - [ ] **Flow view**: computed from the base: the second tab, with every base node on it (build-6).
 - [ ] **On-the-map view**: computed: the third tab, the base board (`svg.pm-board`) with the layer (build-5).
@@ -118,7 +118,7 @@ Driven by: the data fields each element reads. `(derived)` is computed by the bu
 | 3 | List | list · empty: one dashed row, **No AI opportunities identified for this process yet.** | `ai[]`, named by the client first, then our suggestions, each by id; heading `AI opportunities` and `7 items · named by the client first` | `#ai-list` |
 | 4 | List row | default · targeted | one item: square, `AI-01` and title, origin tag (`Named by the client` filled, `Our suggestion` outlined), `Show on map`; left, "What it would do" then "Steps it touches" (or "Where it applies") as chips (`REV-01 Review request`, `G02 Review and approval · whole view`, `All views`); right, the evidence; then the agentic version | `#ai-row` |
 | 5 | Evidence | grounded quote · grounded without a quote · inferred | A grounded citation shows its `quote`, or else the text of its first record, then `Grounded · Speaker A ¹⁸` (the record's context for a transcript, the domain for a web page) with its marker. An inferred one shows **Basis:** the reading, then `Inferred · from ¹⁹,²⁰`. Markers link to Citation points | `#ai-evidence` |
-| 6 | Agentic version | folded (default) · open · print (open) · absent | `agentic.*`; the meta line `3 steps · 1 place a person decides · 2 systems` (derived). Steps on a numbered spine, each `decides` entry after its step as **Person decides** · `Team B checks the entry…`, then systems with the base icons, then logging. No orange inside | `#ai-agentic` |
+| 6 | Agentic version | folded (default) · open · print (open) · absent | `agentic.*`; the meta line `3 steps · 1 place a person decides · 2 systems` (derived; `no system named` when `systems` is `[]`, and Systems reads None named on the base map). Steps on a numbered spine, each `decides` entry after its step as **Person decides** · `Team B checks the entry…`, then systems with the base icons, then logging. No orange inside | `#ai-agentic` |
 | 7 | Flow | desktop (one line, rows above, scrolls inside its card) · phone (vertical list) · print (scaled to the page) | the base map's nodes and edges (section 3), its badges, the points' markers; the count (derived) | `#ai-flow` |
 | 8 | AI lane | on a step · on several steps (bar) · a whole view · every step · a step's number under a square that shares its column | `ai[].nodes`, `.groups`, `.origin` | `#ai-lane` |
 | 9 | Halo | default · thick (focus, hover) · faded · hidden (layer off) · peek (layer off, item highlighted) | a step in `ai[].nodes`. One per step, never dashed | `#ai-halo` |

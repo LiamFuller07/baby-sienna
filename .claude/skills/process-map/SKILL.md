@@ -10,9 +10,9 @@ description: Use when writing or fixing process-map/<name>.json, the current-sta
 - [ ] **Header**: `meta`: kicker, title, client and date (schema-1).
 - [ ] **Lanes**: `lanes[] {id, label}`: at least one, each a role (map-3).
 - [ ] **Steps with owners**: `nodes[]`: at least one step, each in the lane of the role that owns it, with its `owner`, state and cite; only a gap-state step may leave `owner` out, its gap card saying so (build-7).
-- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow (map-5).
-- [ ] **Gaps card**: `gaps[] {id, title, text, nodes, cite}`: at least one, proven by an absent search (cite-4).
-- [ ] **Clarifications card**: `clarifications[] {id, title, shows, ask, nodes, cite}`: at least one (cite-4).
+- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow; a step whose order no source states is listed instead by a clarification that asks where it comes (map-5).
+- [ ] **Gaps card**: `gaps[] {id, title, text, nodes, cite}`: at least one, proven by an absent search (cite-4); or, when the sources leave no step out, one None found card (`none: true`, `nodes: []`) that cites why (map-6). Never invent a gap.
+- [ ] **Clarifications card**: `clarifications[] {id, title, shows, ask, nodes, cite}`: at least one (cite-4); or one None found card (`none: true`, `nodes: []`) that cites why nothing is left to confirm (map-6).
 - [ ] **Citation points section, with in-place markers**: computed from every `cite`: one numbered marker on each cited element, and one row per point the page uses (build-7).
 
 Optional: the system key (`systems[]`) and the views band (`groups[]`, two or more). Fulfil every required element. The work is done only when `python3 bs.py status <ws>` shows them all fulfilled: `7 of 7`.

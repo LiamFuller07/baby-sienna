@@ -11,7 +11,7 @@
   {"id": "does", "title": "What it would do", "required": true,
    "fulfilled_by": "process-map-ai-opportunity/<name>.json › ai[].does: one to three sentences", "rule": "prose-4"},
   {"id": "agentic", "title": "The agentic version of every item", "required": true,
-   "fulfilled_by": "process-map-ai-opportunity/<name>.json › ai[].agentic {trigger, steps, decides, systems, logging}", "rule": "ai-4"},
+   "fulfilled_by": "process-map-ai-opportunity/<name>.json › ai[].agentic {trigger, steps, decides, systems, logging}; systems may be [] when the base map names no system the agent would use (the page prints None named)", "rule": "ai-4"},
   {"id": "list", "title": "List view, the default", "required": true,
    "fulfilled_by": "computed by build_map.py: the first tab, data-view=list and selected, and one li.pm-ai-item row per item in #ai-list", "rule": "build-7"},
   {"id": "flow", "title": "Flow view", "required": true,

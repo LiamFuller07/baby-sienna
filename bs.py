@@ -1608,7 +1608,15 @@ def check_map(rep, path, data, idx, schemas):
     ):
         for i, c in enumerate(arr):
             w, evs = f"{where}#/{key}/{i}", card_evs[c["id"]]
-            check_category(rep, w, "process-map", "gap" if key == "gaps" else "clarification", evs)
+            if c.get("none") and len(arr) > 1:
+                rep.err(
+                    "map-6",
+                    w,
+                    f"{c['id']} says None found, but the map lists {len(arr) - 1} other {key[:-1]} cards",
+                    "a None found card is the only card of its kind: remove it, or remove the others",
+                )
+            cat = "gap" if key == "gaps" else "clarification"
+            check_category(rep, w, "process-map", cat + (".none" if c.get("none") else ""), evs)
             for f in fields:
                 check_prose(rep, f"{w}/{f}", c[f], pool(evs), ctx, "claim", brackets="cite")
     # layout (map-10)
@@ -1814,6 +1822,13 @@ def check_ai(rep, path, data, idx, schemas, maps):
             for s in ag["systems"]:
                 if s not in sys_ids:
                     rep.err("ai-4", f"{w}/agentic/systems", f"system {s} is not in base {data['base']}")
+            if not ag["systems"] and sys_ids:
+                rep.warn(
+                    "ai-4",
+                    f"{w}/agentic/systems",
+                    f"{it['id']} names no system, but base {data['base']} names {len(sys_ids)}; the page prints None named",
+                    "list the base systems the agent would read or write",
+                )
             for f in ("trigger", "logging"):
                 check_prose(rep, f"{w}/agentic/{f}", ag[f], recs, ctx, "design")
             for j, s in enumerate(ag["steps"]):
@@ -3064,7 +3079,9 @@ def map_elements(d, ids, f="process-map/<name>.json"):
     item is (why, the file and JSON pointer that fulfils it)."""
     steps = [n for n in d["nodes"] if n.get("kind", "step") == "step"]
     joined = {x for e in d.get("edges", []) for x in (e["from"], e["to"])}
-    lost = [n["id"] for n in d["nodes"] if n["id"] not in joined] if len(d["nodes"]) > 1 else []
+    # a step whose order no source states is fulfilled by a clarification that asks where it comes
+    asked = {x for c in d.get("clarifications", []) for x in c["nodes"]}
+    lost = [n["id"] for n in d["nodes"] if n["id"] not in joined | asked] if len(d["nodes"]) > 1 else []
     edges = {
         (el.attrs.get("data-from"), el.attrs.get("data-to"))
         for el in (ids["board"].walk() if "board" in ids else [])
@@ -3106,8 +3123,11 @@ def map_elements(d, ids, f="process-map/<name>.json"):
             *((n["id"] not in ids, f"{n['id']} is not on the board") for n in d["nodes"]),
         ),
         "flows": first(
-            (not d.get("edges"), "the map has no edge"),
-            (bool(lost), f"no edge joins {lost[0] if lost else ''}"),
+            (not d.get("edges") and not asked, "the map has no edge"),
+            (
+                bool(lost),
+                f"no edge joins {lost[0] if lost else ''}, and no clarification asks where it comes in the order",
+            ),
             *(
                 ((e["from"], e["to"]) not in edges, f"the edge {e['from']} -> {e['to']} is not on the board")
                 for e in d.get("edges", [])
@@ -4122,6 +4142,11 @@ MUTATIONS = [
         _json(PM, lambda d: d["gaps"][0]["nodes"].append("APP-01")),
     ),
     (
+        "map-6",
+        "a None found gap card beside another gap card",
+        _json(PM, lambda d: d["gaps"].append(dict(NONE_GAP, id="GAP-02"))),
+    ),
+    (
         "map-7",
         "an inferred reading too long for the card",
         _json(
@@ -4508,6 +4533,23 @@ LEAD = (
     "> How a request moves from Team A to a recorded outcome, from the step list and the follow-up call.\n\n"
     "> Placeholder content: every name and figure in this document is invented.\n\n"
 )
+NONE_GAP = {
+    "id": "GAP-01",
+    "title": "No step is missing from the sources",
+    "text": "Every step on the board is in the step list, with the team that does it.",
+    "none": True,
+    "nodes": [],
+    "cite": [{"source": "WB1", "locator": "Steps rows 2-6"}],
+}
+
+
+def _honest(d):
+    """current-state with no gap: REC-01, the gap step, leaves the map, and its card says None found."""
+    d["nodes"] = [n for n in d["nodes"] if n["id"] != "REC-01"]
+    d["edges"] = [e for e in d["edges"] if "REC-01" not in (e["from"], e["to"])]
+    d["gaps"] = [NONE_GAP]
+
+
 REFUSALS = [  # one required element (template.json) taken from each template: check still passes, build refuses (build-7)
     ("process-map/current-state", "Clarifications card", _json(PM, lambda d: d.pop("clarifications"))),
     (
@@ -4902,6 +4944,34 @@ def selftest_contracts(builtin):
             (
                 -1 not in at and at == sorted(at),
                 f"design-system/{folder}/README.md opens with its template.json checklist",
+            )
+        )
+    # an honest absence builds, said and cited rather than invented: a None found gap card, a step whose order a
+    # clarification asks for (it has no edge), and an agentic version that names no system
+    with tempfile.TemporaryDirectory() as tmp:
+        built = []
+        for k, fns in enumerate(
+            (
+                [_json(PM, _honest), _json(AI, lambda d: _item(d, "AI-02")["agentic"].update(systems=[]))],
+                [
+                    _json(PM, lambda d: d.update(edges=[e for e in d["edges"] if e["to"] != "REC-01"])),
+                    _json(PM, lambda d: d["clarifications"][0]["nodes"].append("REC-01")),
+                ],
+            )
+        ):
+            ws = pathlib.Path(tmp) / f"ws{k}"
+            shutil.copytree(HERE / "examples", ws, ignore=shutil.ignore_patterns("out"))
+            for fn in fns:
+                fn(ws)
+            for target in ("process-map/current-state", "process-map-ai-opportunity/current-state-ai")[
+                : 2 - k
+            ]:
+                code, said = quiet(build, ws, target, builtin)
+                built.append(code == 0 and not refused(said, page_label(*target.split("/"))))
+        out.append(
+            (
+                all(built),
+                "a None found card, an order a clarification asks for and an agentic version with no system build",
             )
         )
     # the readers: xlsx, docx, vtt and srt round-trip through convert's core
