@@ -13,6 +13,7 @@ Only these three assets are taken. Any other image in the file (logos of other f
 illustrations) is never extracted.
 Python 3 standard library only. Running it twice gives byte-identical files.
 """
+
 import base64
 import hashlib
 import pathlib

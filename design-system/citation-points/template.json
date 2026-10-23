@@ -1,0 +1,16 @@
+{
+ "template": "citation-points",
+ "title": "Citation points",
+ "elements": [
+  {"id": "points", "title": "At least one citation point", "required": true,
+   "fulfilled_by": "the cite arrays of process-map/<name>.json, process-map-ai-opportunity/<name>.json and inventory/<name>.json, and the [ ] brackets and Grounded, Inferred and Gap lines of document/<name>.md", "rule": "cite-1"},
+  {"id": "resolves", "title": "Every point resolves", "required": true,
+   "fulfilled_by": "records/<ID>.json › records[]: each point's locator reaches at least one record", "rule": "cite-1"},
+  {"id": "used-by", "title": "Used by for every point", "required": true,
+   "fulfilled_by": "computed: the element of a section file that cites the point, linked to the page that shows it", "rule": "build-1"},
+  {"id": "source-groups", "title": "One group per record file", "required": false,
+   "fulfilled_by": "computed from records/<ID>.json: title, kind, captured, legacy, linked to its row in Original data received", "rule": "build-1"},
+  {"id": "filter", "title": "Filter and Show only unused records", "required": false,
+   "fulfilled_by": "computed: the page's own script", "rule": "build-2"}
+ ]
+}

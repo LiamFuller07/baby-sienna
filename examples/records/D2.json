@@ -1,0 +1,16 @@
+{
+ "id": "D2",
+ "title": "Systems notes (placeholder)",
+ "kind": "document",
+ "captured": "2026-10-12",
+ "detail": "Shared by Team A after the walkthrough call",
+ "file": "inputs/notes/systems-notes.md",
+ "sha256": "0cef466d659ee8d7db28a79b177b4b944e28cc84a3a27fb2961257d06aa32426",
+ "coverage": "complete",
+ "records": [
+  {"locator": "¶1", "text": "Systems notes"},
+  {"locator": "¶2", "text": "Team A keeps the tracker in Software A.", "context": "Systems notes"},
+  {"locator": "¶3", "text": "The finance system is Software C, where Finance holds the budget.", "context": "Systems notes"},
+  {"locator": "¶4", "text": "Suppliers confirm orders in the supplier portal, Software E.", "context": "Systems notes"}
+ ]
+}

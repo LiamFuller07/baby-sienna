@@ -3,6 +3,7 @@ title: Request handling summary
 label: Client A · Request handling
 date: 22 October 2026
 footer: Request handling summary
+mode: a4
 ---
 
 # Request handling (summary)

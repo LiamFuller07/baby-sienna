@@ -46,6 +46,18 @@
         "id": {"$ref": "#/$defs/slug"},
         "label": {"type": "string", "minLength": 1, "maxLength": 40},
         "icon": {"enum": ["spreadsheet", "database", "document", "email", "shared-drive", "web-app"]},
+        "cite": {"$ref": "citation.schema.json#/$defs/cites"},
+        "role": {"description": "Optional. What the system does in this process, in a few words: label prose checked against the system's own records. Printed by Original data received and the systems inventory, not by the board.", "type": "string", "minLength": 3, "maxLength": 60},
+        "software": {"$ref": "#/$defs/software"}
+      }
+    },
+    "software": {
+      "description": "Optional. The product behind a system (formats/FORMATS.md section 3.1). Printed by Original data received and the systems inventory, not by the board. Named in the sources when a grounded citation's records hold the name; otherwise it carries an inferred citation (inv-1).",
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "category", "cite"],
+      "properties": {
+        "name": {"description": "The product as the sources name it. Placeholder data uses Software A to Software E.", "type": "string", "minLength": 1, "maxLength": 40},
+        "category": {"description": "Our generic label, not a claim. One name has one category in a map (inv-1).", "enum": ["spreadsheet app", "ticketing tool", "ERP suite", "email client", "document store", "database", "web app", "other"]},
         "cite": {"$ref": "citation.schema.json#/$defs/cites"}
       }
     },

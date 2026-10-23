@@ -10,8 +10,16 @@
   "footer": "Source · current-state process map"
  },
  "systems": [
-  {"id": "email", "label": "Email", "icon": "email", "cite": [{"source": "WB1", "locator": "Steps!C2"}]},
-  {"id": "tracker", "label": "Tracker", "icon": "spreadsheet", "cite": [{"source": "WB1", "locator": "Steps!C3"}]}
+  {"id": "email", "label": "Email", "icon": "email", "cite": [{"source": "WB1", "locator": "Steps!C2"}],
+   "role": "How Team A sends each request",
+   "software": {"name": "Software B", "category": "email client",
+    "cite": [{"type": "inferred", "reading": "Team A sends each request by email, which we read as the mail tool Software B",
+              "from": [{"source": "T1", "locator": "00:00:05"}, {"source": "WB1", "locator": "Steps!D2"}]}]}},
+  {"id": "tracker", "label": "Tracker", "icon": "spreadsheet", "cite": [{"source": "WB1", "locator": "Steps!C3"}],
+   "role": "Where Team B logs and checks each request",
+   "software": {"name": "Software A", "category": "ticketing tool",
+    "cite": [{"type": "inferred", "reading": "Team B logs each request in a shared tracker, which we read as the ticketing tool Software A",
+              "from": [{"source": "T1", "locator": "00:00:18"}, {"source": "D1", "locator": "¶3"}]}]}}
  ],
  "lanes": [
   {"id": "team-a", "label": "Team A"},
@@ -26,13 +34,13 @@
    "cite": [{"source": "WB1", "locator": "Steps row 2"}, {"source": "T1", "locator": "00:00:05"}]},
   {"id": "LOG-01", "title": "Log request", "lane": "team-b", "group": "G01", "state": "grounded", "owner": "Team B", "systems": ["tracker"],
    "cite": [{"source": "WB1", "locator": "Steps row 3"}]},
-  {"id": "REV-01", "title": "Review request", "lane": "team-b", "group": "G02", "state": "grounded",
+  {"id": "REV-01", "title": "Review request", "lane": "team-b", "group": "G02", "state": "grounded", "owner": "Team B",
    "cite": [{"source": "WB1", "locator": "Steps row 4"}, {"source": "T1", "locator": "00:00:18", "quote": "checks it is complete"}]},
   {"id": "REV-02", "title": "Request complete?", "kind": "decision", "lane": "team-b", "group": "G02", "state": "grounded",
    "cite": [{"source": "WB1", "locator": "Steps row 5"}]},
-  {"id": "RES-01", "title": "Complete and resubmit", "lane": "team-a", "group": "G02", "state": "inferred",
+  {"id": "RES-01", "title": "Complete and resubmit", "lane": "team-a", "group": "G02", "state": "inferred", "owner": "Team A",
    "cite": [{"type": "inferred", "reading": "Team A completes the request again", "from": [{"source": "T1", "locator": "00:00:31"}, {"source": "WB1", "locator": "Steps!D5"}]}]},
-  {"id": "APP-01", "title": "Approve request", "lane": "team-b", "group": "G02", "state": "grounded",
+  {"id": "APP-01", "title": "Approve request", "lane": "team-b", "group": "G02", "state": "grounded", "owner": "Team B",
    "cite": [{"source": "WB1", "locator": "Steps row 6"}, {"source": "T1", "locator": "00:00:47"}]},
   {"id": "REC-01", "title": "Record outcome", "lane": "team-b", "group": "G02", "state": "gap", "systems": ["tracker"],
    "cite": [{"source": "WB1", "locator": "Steps row 7"}]}

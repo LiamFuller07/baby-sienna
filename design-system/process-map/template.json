@@ -1,0 +1,24 @@
+{
+ "template": "process-map",
+ "title": "Process map",
+ "elements": [
+  {"id": "header", "title": "Header", "required": true,
+   "fulfilled_by": "process-map/<name>.json › meta: kicker, title, client and date", "rule": "schema-1"},
+  {"id": "lanes", "title": "Lanes", "required": true,
+   "fulfilled_by": "process-map/<name>.json › lanes[] {id, label}: at least one, each a role", "rule": "map-3"},
+  {"id": "steps", "title": "Steps with owners", "required": true,
+   "fulfilled_by": "process-map/<name>.json › nodes[]: at least one step, each in the lane of the role that owns it, with its owner, state and cite (only a gap-state step may leave owner out: its gap card says what is missing)", "rule": "build-7"},
+  {"id": "flows", "title": "Flows", "required": true,
+   "fulfilled_by": "process-map/<name>.json › edges[] {from, to}: every node joined to the flow", "rule": "map-5"},
+  {"id": "gaps", "title": "Gaps card", "required": true,
+   "fulfilled_by": "process-map/<name>.json › gaps[] {id, title, text, nodes, cite}: at least one, proven by an absent search", "rule": "cite-4"},
+  {"id": "clarifications", "title": "Clarifications card", "required": true,
+   "fulfilled_by": "process-map/<name>.json › clarifications[] {id, title, shows, ask, nodes, cite}: at least one", "rule": "cite-4"},
+  {"id": "citation-points", "title": "Citation points section, with in-place markers", "required": true,
+   "fulfilled_by": "computed by build_map.py from every cite in the file: one numbered marker (a.cp-mk) on each cited element, and section#citation-points with one li.cp-row per point the page uses", "rule": "build-7"},
+  {"id": "systems", "title": "System key", "required": false,
+   "fulfilled_by": "process-map/<name>.json › systems[] {id, label, icon, cite}, with nodes[].systems", "rule": "map-8"},
+  {"id": "views", "title": "Views band", "required": false,
+   "fulfilled_by": "process-map/<name>.json › groups[] {id, label}: two or more, with nodes[].group", "rule": "map-2"}
+ ]
+}

@@ -1,0 +1,23 @@
+[project]
+name = "baby-sienna"
+version = "0.1.0"
+description = "A template toolkit: a folder of client inputs becomes cited, self-contained pages."
+requires-python = ">=3.10"
+dependencies = []  # bs.py and every builder use the standard library only
+
+[dependency-groups]
+# uv sync installs these. bs.py uses jsonschema when it is present, else its built-in checker.
+dev = [
+    "jsonschema>=4.26,<5",
+    "ruff>=0.15.20,<0.16",
+]
+
+[tool.ruff]
+line-length = 110
+extend-exclude = ["reference", "work"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+# ruff format wraps code at 110. What it cannot wrap stays as written: the HTML, CSS and message
+# strings the pages and findings are made of, and the docstrings that are the --help text.
+ignore = ["E501"]

@@ -7,7 +7,6 @@
   "kinds": {
     "sheet": {
       "label": "Workbook",
-      "deckKind": "workbook",
       "read": [".csv", ".tsv", ".xlsx", ".xlsm"],
       "unchecked": [".xls", ".ods"],
       "record": "^([^\\s!\\[\\];\"“”](?:[^!\\[\\];\"“”]{0,38}[^\\s!\\[\\];\"“”])?)!([A-Z]{1,3})([1-9][0-9]{0,6})$",
@@ -21,7 +20,6 @@
     },
     "document": {
       "label": "Document",
-      "deckKind": "document",
       "read": [".md", ".txt", ".docx"],
       "unchecked": [".pdf", ".doc", ".odt", ".rtf", ".pptx", ".eml", ".msg", ".mbox", ".png", ".jpg", ".jpeg"],
       "record": "^(?:p([1-9][0-9]{0,4}) )?¶([1-9][0-9]{0,5})$",
@@ -34,7 +32,6 @@
     },
     "transcript": {
       "label": "Meeting notes",
-      "deckKind": "meeting-notes",
       "read": [".txt", ".vtt", ".srt"],
       "unchecked": [".docx", ".pdf", ".mp3", ".m4a", ".wav", ".mp4"],
       "record": "^([0-9]{2}):([0-5][0-9]):([0-5][0-9])(?:\\.([0-9]{3}))?$",
@@ -46,7 +43,6 @@
     },
     "web": {
       "label": "Website",
-      "deckKind": "website",
       "read": [".html", ".htm", ".md", ".txt"],
       "unchecked": [".mhtml", ".pdf", ".png"],
       "record": "^(?:p([1-9][0-9]{0,4}) )?¶([1-9][0-9]{0,5})$",
@@ -63,8 +59,9 @@
 
   "categories": {
     "process-map": {
-      "system":        {"allowed": ["grounded"], "require": [["grounded"]], "note": "map-8: its label occurs in a record it cites. Printed as a Sources entry used by the system"},
-      "lane":          {"allowed": ["grounded", "inferred"], "require": [], "note": "map-3: a lane that holds no step needs a grounded citation for its role. Printed as a Sources entry used by the lane"},
+      "system":        {"allowed": ["grounded"], "require": [["grounded"]], "note": "map-8: its label occurs in a record it cites. Its marker is in the system key; its Citation points row names the system under Used by"},
+      "system.software": {"allowed": ["grounded", "inferred"], "require": [["grounded", "inferred"]], "note": "inv-1: Named in the sources when a grounded record holds its name; otherwise its inferred reading is the evidence. Printed by Original data received and the systems inventory, not by the board"},
+      "lane":          {"allowed": ["grounded", "inferred"], "require": [], "note": "map-3: a lane that holds no step needs a grounded citation for its role. Its marker is in the gutter; its Citation points row names the lane under Used by"},
       "node.grounded": {"allowed": ["grounded", "inferred"], "require": [["grounded"]], "note": ""},
       "node.inferred": {"allowed": ["inferred"], "require": [["inferred"]], "note": "map-7: the reading printed on the card is at most cardReadingMax characters"},
       "node.gap":      {"allowed": ["grounded", "inferred"], "require": [["grounded"]], "note": "the step exists in the sources; its gap card proves what is missing (map-6)"},
@@ -80,14 +77,14 @@
     "document": {
       "sentence":      {"allowed": ["grounded", "inferred", "absent"], "require": [["grounded", "inferred", "absent"]], "note": "through a bracket in the sentence, or a provenance line straight after its block. A Gap line must be PROVEN"}
     },
-    "proposal": {
-      "claim":         {"allowed": ["grounded"], "require": [["grounded"]], "orToConfirm": true, "note": "or to_confirm, never both (deck-3). The only place a citation may name a whole source"}
+    "inventory": {
+      "module":        {"allowed": ["grounded", "inferred"], "require": [["inferred"]], "note": "our suggestion, read from the records, like ai.suggested. inv-2 checks its software and steps against the map"}
     }
   },
 
   "web": {
-    "allowedIn": ["process-map-ai-opportunity/ai.suggested", "document/sentence", "proposal/claim"],
-    "neverAloneIn": ["process-map-ai-opportunity/ai.suggested"]
+    "allowedIn": ["process-map-ai-opportunity/ai.suggested", "document/sentence", "inventory/module"],
+    "neverAloneIn": ["process-map-ai-opportunity/ai.suggested", "inventory/module"]
   },
 
   "aiTerms": {

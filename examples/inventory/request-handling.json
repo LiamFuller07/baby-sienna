@@ -1,0 +1,15 @@
+{
+ "type": "inventory",
+ "map": "current-state",
+ "modules": [
+  {"id": "MOD-01", "title": "Module A1 · request intake", "software": "Software A", "steps": ["LOG-01"], "likelihood": "likely",
+   "cite": [{"type": "inferred", "reading": "Requests are logged in the tracker by hand, which an intake module could take over",
+             "from": [{"source": "WB1", "locator": "Steps!D3"}, {"source": "T1", "locator": "00:01:02"}]}]},
+  {"id": "MOD-02", "title": "Module A2 · approval limits", "software": "Software A", "steps": ["APP-01"], "likelihood": "possible",
+   "cite": [{"type": "inferred", "reading": "Team B approves requests up to 5,000, a limit an approvals module could hold",
+             "from": [{"source": "T1", "locator": "00:00:47"}, {"source": "WB1", "locator": "Steps!D6"}]}]},
+  {"id": "MOD-03", "title": "Module B1 · shared inbox", "software": "Software B", "steps": ["SUB-01"], "likelihood": "possible",
+   "cite": [{"type": "inferred", "reading": "Each request arrives by email, which a shared inbox could gather in one place",
+             "from": [{"source": "T1", "locator": "00:00:05"}, {"source": "WB1", "locator": "Steps!D2"}]}]}
+ ]
+}

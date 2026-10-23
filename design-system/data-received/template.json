@@ -1,0 +1,22 @@
+{
+ "template": "data-received",
+ "title": "Original data received",
+ "outputs": {
+  "out/data-received.html": ["folders-of-data", "systems-identified", "software-used", "modules-likely", "folder-view", "citation-points"],
+  "out/systems-inventory.html": ["systems-identified", "software-used", "modules-likely", "citation-points"]
+ },
+ "elements": [
+  {"id": "folders-of-data", "title": "Folders of data", "required": true,
+   "fulfilled_by": "computed from inputs/: at least one file", "rule": "ws-1"},
+  {"id": "systems-identified", "title": "Systems identified", "required": true,
+   "fulfilled_by": "process-map/<name>.json › systems[] (id, label, icon, cite, role), with nodes[].systems", "rule": "map-8"},
+  {"id": "software-used", "title": "Software used", "required": true,
+   "fulfilled_by": "process-map/<name>.json › systems[].software (name, category, cite)", "rule": "inv-1"},
+  {"id": "modules-likely", "title": "Modules likely to be used", "required": true,
+   "fulfilled_by": "inventory/<name>.json › modules[] (id, title, software, steps, likelihood, cite)", "rule": "inv-2"},
+  {"id": "folder-view", "title": "Folder view", "required": true,
+   "fulfilled_by": "computed from inputs/ and records/: one row per file", "rule": "ws-1"},
+  {"id": "citation-points", "title": "Citation points section", "required": true,
+   "fulfilled_by": "computed from the cites of process-map/<name>.json › systems[].cite and .software.cite, and inventory/<name>.json › modules[].cite: every cited row carries a numbered marker, and section#citation-points lists exactly the points the page uses", "rule": "build-7"}
+ ]
+}

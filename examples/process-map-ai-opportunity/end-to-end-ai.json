@@ -1,0 +1,308 @@
+{
+ "type": "process-map-ai-opportunity",
+ "base": "end-to-end",
+ "meta": {
+  "kicker": "AI opportunities",
+  "title": "Purchase requests: AI opportunities",
+  "subtitle": "Where AI could help along the purchase process, named by Client A or suggested by us."
+ },
+ "ai": [
+  {
+   "id": "AI-01",
+   "title": "Read each request form into the tracker",
+   "origin": "named",
+   "does": "Reads the request form from the email and fills in the tracker, so Team A no longer logs each request by hand.",
+   "nodes": [
+    "LOG-01"
+   ],
+   "cite": [
+    {
+     "source": "T3",
+     "locator": "00:04:02",
+     "quote": "We would like AI to read the request form and log it for us"
+    }
+   ],
+   "agentic": {
+    "trigger": "A request form arrives by email.",
+    "steps": [
+     "Read the request form.",
+     "Fill in the tracker fields from the form.",
+     "Flag any field the form leaves empty.",
+     "Send the new entry to Team A."
+    ],
+    "decides": [
+     {
+      "after": 4,
+      "who": "Team A",
+      "what": "checks the entry and accepts it or corrects it"
+     }
+    ],
+    "systems": [
+     "form",
+     "email",
+     "tracker"
+    ],
+    "logging": "Each run records the form, the fields it filled and what Team A changed."
+   }
+  },
+  {
+   "id": "AI-02",
+   "title": "Chase suppliers that have not confirmed",
+   "origin": "named",
+   "does": "Watches for orders the supplier has not confirmed and sends a reminder, so Team C only handles the replies.",
+   "nodes": [
+    "ORD-01"
+   ],
+   "cite": [
+    {
+     "source": "T3",
+     "locator": "00:04:18",
+     "quote": "If we could automate the chasing"
+    },
+    {
+     "source": "T3",
+     "locator": "00:03:14"
+    }
+   ],
+   "agentic": {
+    "trigger": "An order has no confirmation in the supplier portal.",
+    "steps": [
+     "Find orders with no confirmation.",
+     "Draft a reminder to the supplier.",
+     "Send the reminder once Team C agrees.",
+     "Mark the order as chased in the tracker."
+    ],
+    "decides": [
+     {
+      "after": 2,
+      "who": "Team C",
+      "what": "reads each reminder and sends it or holds it"
+     }
+    ],
+    "systems": [
+     "portal",
+     "email",
+     "tracker"
+    ],
+    "logging": "Each reminder is kept with the order, with who sent it and when."
+   }
+  },
+  {
+   "id": "AI-03",
+   "title": "Draft the approval pack",
+   "origin": "named",
+   "does": "Puts the request, the chosen quote and the budget code into a draft pack for Team B to check before it goes to the approver.",
+   "nodes": [
+    "PCK-01"
+   ],
+   "cite": [
+    {
+     "source": "T3",
+     "locator": "00:04:35",
+     "quote": "An AI draft of the approval pack would help Team B too"
+    }
+   ],
+   "agentic": {
+    "trigger": "The quotes are compared and the budget code is confirmed.",
+    "steps": [
+     "Collect the request, the quotes and the budget code.",
+     "Draft the approval pack.",
+     "Send the draft to Team B."
+    ],
+    "decides": [
+     {
+      "after": 3,
+      "who": "Team B",
+      "what": "edits the draft and sends it to the approver"
+     }
+    ],
+    "systems": [
+     "drive",
+     "tracker"
+    ],
+    "logging": "Each draft is saved beside the final pack, so the changes Team B made can be seen."
+   }
+  },
+  {
+   "id": "AI-04",
+   "title": "Compare supplier quotes side by side",
+   "origin": "suggested",
+   "does": "Lays the quotes out in one table with price and terms, so Team C picks from one view instead of comparing by hand.",
+   "nodes": [
+    "QUO-01",
+    "CMP-01"
+   ],
+   "cite": [
+    {
+     "type": "inferred",
+     "reading": "Team C compares the quotes by hand, which repeats work for each request",
+     "from": [
+      {
+       "source": "T3",
+       "locator": "00:01:37"
+      },
+      {
+       "source": "T3",
+       "locator": "00:01:21"
+      }
+     ]
+    }
+   ],
+   "agentic": {
+    "trigger": "The quotes for a request have arrived in the supplier portal.",
+    "steps": [
+     "Read each quote.",
+     "Build one table of price and terms.",
+     "Mark the cheapest suitable quote."
+    ],
+    "decides": [
+     {
+      "after": 3,
+      "who": "Team C",
+      "what": "chooses the quote"
+     }
+    ],
+    "systems": [
+     "portal"
+    ],
+    "logging": "The table and the chosen quote are saved with the request."
+   }
+  },
+  {
+   "id": "AI-05",
+   "title": "Match invoices to orders and deliveries",
+   "origin": "suggested",
+   "does": "Checks each invoice against its order and the delivery, and passes clean matches to Finance for payment.",
+   "nodes": [
+    "INV-01"
+   ],
+   "cite": [
+    {
+     "type": "inferred",
+     "reading": "Finance matches each invoice to the order and the delivery by hand",
+     "from": [
+      {
+       "source": "T3",
+       "locator": "00:03:30"
+      },
+      {
+       "source": "WB3",
+       "locator": "Process!D26"
+      }
+     ]
+    }
+   ],
+   "agentic": {
+    "trigger": "An invoice arrives.",
+    "steps": [
+     "Find the order and the delivery for the invoice.",
+     "Compare the amounts and the items.",
+     "Pass clean matches on and list the rest."
+    ],
+    "decides": [
+     {
+      "after": 3,
+      "who": "Finance",
+      "what": "approves each payment and resolves each mismatch"
+     }
+    ],
+    "systems": [
+     "ledger"
+    ],
+    "logging": "Each match records the invoice, the order, the delivery and the decision."
+   }
+  },
+  {
+   "id": "AI-06",
+   "title": "Check requests are complete on arrival",
+   "origin": "suggested",
+   "does": "Checks each new request for missing details before it is logged, so fewer requests go back to the requester.",
+   "groups": [
+    "G01"
+   ],
+   "cite": [
+    {
+     "type": "inferred",
+     "reading": "Incomplete requests go back to the requester and cause rework",
+     "from": [
+      {
+       "source": "T3",
+       "locator": "00:00:33"
+      },
+      {
+       "source": "WB3",
+       "locator": "Process!D5"
+      }
+     ]
+    }
+   ],
+   "agentic": {
+    "trigger": "A request form arrives by email.",
+    "steps": [
+     "Check each required field.",
+     "List what is missing.",
+     "Draft a reply to the requester."
+    ],
+    "decides": [
+     {
+      "after": 3,
+      "who": "Team A",
+      "what": "sends the reply or logs the request as it is"
+     }
+    ],
+    "systems": [
+     "form",
+     "email"
+    ],
+    "logging": "Each check records the fields it found missing and what Team A did."
+   }
+  },
+  {
+   "id": "AI-07",
+   "title": "Keep the requester informed at every stage",
+   "origin": "suggested",
+   "does": "Sends the requester a short note each time the request moves to a new view, so fewer people ask where a request is.",
+   "groups": "all",
+   "cite": [
+    {
+     "type": "inferred",
+     "reading": "The requester hears only at intake and at ordering today",
+     "from": [
+      {
+       "source": "WB3",
+       "locator": "Process!D10"
+      },
+      {
+       "source": "WB3",
+       "locator": "Process!D24"
+      }
+     ]
+    },
+    {
+     "source": "WEB1",
+     "locator": "¶3"
+    }
+   ],
+   "agentic": {
+    "trigger": "A request changes stage in the tracker.",
+    "steps": [
+     "Read the new stage.",
+     "Draft a short note to the requester.",
+     "Send the note once Team A agrees."
+    ],
+    "decides": [
+     {
+      "after": 2,
+      "who": "Team A",
+      "what": "reads the note and sends it or holds it"
+     }
+    ],
+    "systems": [
+     "tracker",
+     "email"
+    ],
+    "logging": "Each note is kept with the request, with when it was sent."
+   }
+  }
+ ]
+}

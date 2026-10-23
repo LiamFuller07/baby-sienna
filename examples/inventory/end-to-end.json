@@ -1,0 +1,18 @@
+{
+ "type": "inventory",
+ "map": "end-to-end",
+ "modules": [
+  {"id": "MOD-01", "title": "Module C1 · budget control", "software": "Software C", "steps": ["RSV-01", "COM-01"], "likelihood": "likely",
+   "cite": [{"type": "inferred", "reading": "Finance reserves the budget and commits it once the order is raised, which a budget module could hold",
+             "from": [{"source": "T3", "locator": "00:01:05"}, {"source": "T3", "locator": "00:02:41"}]}]},
+  {"id": "MOD-02", "title": "Module C2 · invoice matching", "software": "Software C", "steps": ["INV-01", "PAY-01"], "likelihood": "likely",
+   "cite": [{"type": "inferred", "reading": "Invoices are matched to the order and the delivery before payment, which a matching module could do",
+             "from": [{"source": "T3", "locator": "00:03:30"}, {"source": "WB3", "locator": "Process!D26"}]}]},
+  {"id": "MOD-03", "title": "Module E1 · order confirmation", "software": "Software E", "steps": ["ORD-01", "UPD-01"], "likelihood": "possible",
+   "cite": [{"type": "inferred", "reading": "Suppliers confirm orders in the portal but some never do, so its confirmation reminders could do the chasing",
+             "from": [{"source": "T3", "locator": "00:02:58"}, {"source": "T3", "locator": "00:03:14"}]}]},
+  {"id": "MOD-04", "title": "Module A3 · duplicate check", "software": "Software A", "steps": ["DUP-01"], "likelihood": "possible",
+   "cite": [{"type": "inferred", "reading": "Duplicate requests are found in the tracker and closed, which a duplicate check could flag as they arrive",
+             "from": [{"source": "WB3", "locator": "Process!D6"}, {"source": "WB3", "locator": "Process!C6"}]}]}
+ ]
+}
