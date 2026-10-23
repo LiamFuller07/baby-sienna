@@ -46,4 +46,4 @@ fix citations in the section files → `python3 bs.py check <ws>` until it exits
 
 ## Example
 
-`examples/out/citation-points.html`: 115 citation points from 7 record files, built from every section file in `examples/`. README: `design-system/citation-points/README.md`.
+`examples/out/citation-points.html`: every citation point (`bs.py build` prints `n citation points from m record files`), built from every section file in `examples/`. README: `design-system/citation-points/README.md`.

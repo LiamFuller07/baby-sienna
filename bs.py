@@ -1368,8 +1368,8 @@ def map_counts(data):
         "steps": sum(1 for n in nodes if n.get("kind", "step") == "step"),
         "decisions": sum(1 for n in nodes if n.get("kind") == "decision"),
         "groups": len(data.get("groups", [])),
-        "gaps": len(data.get("gaps", [])),
-        "clarifications": len(data.get("clarifications", [])),
+        "gaps": sum(1 for g in data.get("gaps", []) if not g.get("none")),
+        "clarifications": sum(1 for c in data.get("clarifications", []) if not c.get("none")),
         "systems": len(data.get("systems", [])),
     }
 
@@ -1617,6 +1617,43 @@ def check_map(rep, path, data, idx, schemas):
                 )
             cat = "gap" if key == "gaps" else "clarification"
             check_category(rep, w, "process-map", cat + (".none" if c.get("none") else ""), evs)
+            if c.get("order"):  # it asks where its steps come, so none of them may have an edge
+                for nid in c["nodes"]:
+                    if any(nid in (e["from"], e["to"]) for e in edges):
+                        rep.err(
+                            "map-5",
+                            w + "/nodes",
+                            f"{c['id']} asks where {nid} comes in the order, but an edge joins {nid}",
+                            "an order clarification lists only steps that no edge joins: drop order: true, or the step",
+                        )
+            if key == "gaps" and c.get("none"):  # it says no step is missing: every owner is in a record
+                asked = {
+                    x for o in clars for x in o["nodes"]
+                }  # an owner a clarification asks about is disclosed
+                for n in nodes:
+                    # an owner is named by its words before any (…): "Team A (TA)" is named "Team A"
+                    name = re.sub(r"\s*\([^)]*\)\s*$", "", n.get("owner", ""))
+                    if (
+                        name
+                        and n["id"] not in asked
+                        and not any(fold_ci(name) in fold_ci(r["text"]) for r in pool(node_evs[n["id"]]))
+                    ):
+                        rep.err(
+                            "map-6",
+                            w,
+                            f"{c['id']} says no step is missing, but {n['id']}'s owner “{n['owner']}” is in no record it cites",
+                            "cite the record that names the owner, list the step in a clarification that asks who owns it, "
+                            "or make it a gap-state step on a gap card",
+                        )
+            if key == "clarifications" and c.get("none"):
+                for n in nodes:
+                    if n["state"] == "inferred":
+                        rep.warn(
+                            "map-6",
+                            w,
+                            f"{c['id']} says nothing is left to confirm, but {n['id']} is an inferred reading",
+                            "list each inferred step in a clarification that asks the client to confirm it",
+                        )
             for f in fields:
                 check_prose(rep, f"{w}/{f}", c[f], pool(evs), ctx, "claim", brackets="cite")
     # layout (map-10)
@@ -1822,13 +1859,29 @@ def check_ai(rep, path, data, idx, schemas, maps):
             for s in ag["systems"]:
                 if s not in sys_ids:
                     rep.err("ai-4", f"{w}/agentic/systems", f"system {s} is not in base {data['base']}")
-            if not ag["systems"] and sys_ids:
-                rep.warn(
-                    "ai-4",
-                    f"{w}/agentic/systems",
-                    f"{it['id']} names no system, but base {data['base']} names {len(sys_ids)}; the page prints None named",
-                    "list the base systems the agent would read or write",
+            if not ag["systems"]:
+                named = sorted(
+                    {s for nid in nodes if nid in node_by for s in node_by[nid].get("systems", [])}
                 )
+                scope = [
+                    n
+                    for n in base["nodes"]
+                    if groups == "all" or (isinstance(groups, list) and n.get("group") in groups)
+                ]
+                if named:
+                    rep.err(
+                        "ai-4",
+                        f"{w}/agentic/systems",
+                        f"{it['id']} names no system, but the steps it touches use {', '.join(named)}",
+                        "list the base systems the agent would read or write",
+                    )
+                elif any(n.get("systems") for n in scope):
+                    rep.warn(
+                        "ai-4",
+                        f"{w}/agentic/systems",
+                        f"{it['id']} names no system, though steps in its views use some; the page prints None named",
+                        "confirm the agent uses none of them, or list the ones it would read or write",
+                    )
             for f in ("trigger", "logging"):
                 check_prose(rep, f"{w}/agentic/{f}", ag[f], recs, ctx, "design")
             for j, s in enumerate(ag["steps"]):
@@ -3079,8 +3132,8 @@ def map_elements(d, ids, f="process-map/<name>.json"):
     item is (why, the file and JSON pointer that fulfils it)."""
     steps = [n for n in d["nodes"] if n.get("kind", "step") == "step"]
     joined = {x for e in d.get("edges", []) for x in (e["from"], e["to"])}
-    # a step whose order no source states is fulfilled by a clarification that asks where it comes
-    asked = {x for c in d.get("clarifications", []) for x in c["nodes"]}
+    # a step whose order no source states is fulfilled by an order clarification (order: true), which asks where it comes
+    asked = {x for c in d.get("clarifications", []) if c.get("order") for x in c["nodes"]}
     lost = [n["id"] for n in d["nodes"] if n["id"] not in joined | asked] if len(d["nodes"]) > 1 else []
     edges = {
         (el.attrs.get("data-from"), el.attrs.get("data-to"))
@@ -3123,10 +3176,13 @@ def map_elements(d, ids, f="process-map/<name>.json"):
             *((n["id"] not in ids, f"{n['id']} is not on the board") for n in d["nodes"]),
         ),
         "flows": first(
-            (not d.get("edges") and not asked, "the map has no edge"),
+            (len(d["nodes"]) > 1 and not d.get("edges"), "the map has no edge"),
             (
                 bool(lost),
-                f"no edge joins {lost[0] if lost else ''}, and no clarification asks where it comes in the order",
+                (
+                    f"no edge joins {lost[0] if lost else ''}, and no order clarification asks where it comes",
+                    f"{f}#/edges: the edge the records state, or a clarification with order: true that lists it",
+                ),
             ),
             *(
                 ((e["from"], e["to"]) not in edges, f"the edge {e['from']} -> {e['to']} is not on the board")
@@ -4147,6 +4203,33 @@ MUTATIONS = [
         _json(PM, lambda d: d["gaps"].append(dict(NONE_GAP, id="GAP-02"))),
     ),
     (
+        "cite-4",
+        "a None found gap card that cites only an absent search",
+        _json(PM, lambda d: (_honest(d), d["gaps"][0].update(cite=[ABSENT_TEAM]))),
+    ),
+    (
+        "map-6",
+        "a None found gap card over a step whose owner no record names",
+        _json(
+            PM,
+            lambda d: (
+                d["gaps"].clear(),
+                d["gaps"].append(dict(NONE_GAP)),
+                _node(d, "REC-01").update(state="grounded", owner="Team C"),
+            ),
+        ),
+    ),
+    (
+        "map-5",
+        "an order clarification listing a step an edge joins",
+        _json(PM, lambda d: d["clarifications"][0].update(order=True)),
+    ),
+    (
+        "ai-4",
+        "an agentic version naming no system over a step that uses one",
+        _json(AI, lambda d: _item(d, "AI-02")["agentic"].update(systems=[])),
+    ),
+    (
         "map-7",
         "an inferred reading too long for the card",
         _json(
@@ -4543,15 +4626,38 @@ NONE_GAP = {
 }
 
 
+ABSENT_TEAM = {"type": "absent", "needle": "Team", "in": [{"source": "WB1", "locator": "Steps row 7"}]}
+ORDER_CLAR = {
+    "id": "P02",
+    "title": "Where does recording the outcome come?",
+    "shows": "The step list names the step, but not the step it follows.",
+    "ask": "Which step does it follow, and who records it?",
+    "order": True,
+    "nodes": ["REC-01"],
+    "cite": [{"source": "WB1", "locator": "Steps row 7"}],
+}
+
+
+def _unjoined(d):
+    """current-state with REC-01 left off the flow: no edge reaches it."""
+    d["edges"] = [e for e in d["edges"] if e["to"] != "REC-01"]
+
+
 def _honest(d):
     """current-state with no gap: REC-01, the gap step, leaves the map, and its card says None found."""
     d["nodes"] = [n for n in d["nodes"] if n["id"] != "REC-01"]
     d["edges"] = [e for e in d["edges"] if "REC-01" not in (e["from"], e["to"])]
-    d["gaps"] = [NONE_GAP]
+    d["gaps"] = [dict(NONE_GAP)]  # a copy: a break may change the card
 
 
-REFUSALS = [  # one required element (template.json) taken from each template: check still passes, build refuses (build-7)
+REFUSALS = [  # one required element (template.json) taken from each template, and Flows excused by a clarification
+    # that does not ask for the order: check still passes, build refuses (build-7)
     ("process-map/current-state", "Clarifications card", _json(PM, lambda d: d.pop("clarifications"))),
+    (  # P01 asks who sets the limit, not where REC-01 comes: only an order clarification excuses a step
+        "process-map/current-state",
+        "Flows",
+        _json(PM, lambda d: (_unjoined(d), d["clarifications"][0]["nodes"].append("REC-01"))),
+    ),
     (
         "process-map-ai-opportunity/current-state-ai",
         "The agentic version of every item",
@@ -4820,8 +4926,8 @@ def selftest_refusals(builtin):
         ws = pathlib.Path(tmp) / "clean"
         shutil.copytree(HERE / "examples", ws, ignore=shutil.ignore_patterns("out"))
         _, clean = quiet(build, ws, None, builtin)
-        for target, element, fn in REFUSALS:
-            ws = pathlib.Path(tmp) / target.replace("/", "-")
+        for k, (target, element, fn) in enumerate(REFUSALS):
+            ws = pathlib.Path(tmp) / f"{k}-{target.replace('/', '-')}"
             shutil.copytree(HERE / "examples", ws, ignore=shutil.ignore_patterns("out"))
             fn(ws)
             label = page_label(*(target.split("/") if "/" in target else (target, None)))
@@ -4946,32 +5052,27 @@ def selftest_contracts(builtin):
                 f"design-system/{folder}/README.md opens with its template.json checklist",
             )
         )
-    # an honest absence builds, said and cited rather than invented: a None found gap card, a step whose order a
-    # clarification asks for (it has no edge), and an agentic version that names no system
+    # an honest absence builds, said and cited rather than invented: a None found gap card, a step whose order an
+    # order clarification asks for (it has no edge), and an all-views agentic version that names no system
     with tempfile.TemporaryDirectory() as tmp:
         built = []
         for k, fns in enumerate(
             (
-                [_json(PM, _honest), _json(AI, lambda d: _item(d, "AI-02")["agentic"].update(systems=[]))],
-                [
-                    _json(PM, lambda d: d.update(edges=[e for e in d["edges"] if e["to"] != "REC-01"])),
-                    _json(PM, lambda d: d["clarifications"][0]["nodes"].append("REC-01")),
-                ],
+                [_json(PM, _honest), _json(AI, lambda d: _item(d, "AI-04")["agentic"].update(systems=[]))],
+                [_json(PM, lambda d: (_unjoined(d), d["clarifications"].append(dict(ORDER_CLAR))))],
             )
         ):
             ws = pathlib.Path(tmp) / f"ws{k}"
             shutil.copytree(HERE / "examples", ws, ignore=shutil.ignore_patterns("out"))
             for fn in fns:
                 fn(ws)
-            for target in ("process-map/current-state", "process-map-ai-opportunity/current-state-ai")[
-                : 2 - k
-            ]:
+            for target in ("process-map/current-state", "process-map-ai-opportunity/current-state-ai"):
                 code, said = quiet(build, ws, target, builtin)
                 built.append(code == 0 and not refused(said, page_label(*target.split("/"))))
         out.append(
             (
                 all(built),
-                "a None found card, an order a clarification asks for and an agentic version with no system build",
+                "a None found card, an order clarification and an all-views agentic version with no system build",
             )
         )
     # the readers: xlsx, docx, vtt and srt round-trip through convert's core

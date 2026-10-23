@@ -63,7 +63,7 @@ if (!check || check.exit !== 0) {
 
 phase('Review')
 const review = await agent(
-  `Review ${ws}/${file} against ${ws}/records/ with your duties: grounded node titles, absent needles, named AI items, edges, UNCHECKED record files, names where roles belong. Report each finding with where (file and pointer or line), rule (the duty), message and the smallest fix. exit: 0 with no findings, else 1.`,
+  `Review ${ws}/${file} against ${ws}/records/ with your duties: grounded node titles, absent needles, named AI items, edges, UNCHECKED record files, None found cards, order clarifications, agentic versions with systems: [], names where roles belong (every duty in .claude/agents/checker.md). Report each finding with where (file and pointer or line), rule (the duty), message and the smallest fix. exit: 0 with no findings, else 1.`,
   { label: `checker ${file}`, phase: 'Review', schema: FINDINGS, agentType: 'checker' },
 )
 let answers = null

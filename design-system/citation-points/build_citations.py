@@ -456,8 +456,12 @@ def collect(ws, rules, records, bd):
             for i, el in enumerate(objs(d.get(key))):
                 if not is_str(el.get("id")):
                     continue
-                shown = {"gaps": f"Gap {i + 1}", "clarifications": f"Clarification {i + 1}"}.get(
-                    key, el["id"]
+                shown = (  # as the map's builder names it (build_map.py card_name)
+                    f"{key.capitalize()} · None found"
+                    if key != "nodes" and el.get("none")
+                    else {"gaps": f"Gap {i + 1}", "clarifications": f"Clarification {i + 1}"}.get(
+                        key, el["id"]
+                    )
                 )
                 use = (pg, shown, f"{pg['file']}#{el['id']}")  # named as the page shows it
                 pts.cites(el.get("cite"), use)

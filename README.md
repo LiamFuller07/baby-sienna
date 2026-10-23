@@ -12,7 +12,7 @@ A template toolkit: a folder of client material becomes cited, self-contained HT
 | **process-map** | A current-state swimlane board: roles, steps, decisions, flows, gaps and clarifications | `examples/out/process-map/end-to-end.html` |
 | **process-map-ai-opportunity** | AI opportunities over a map: the list first, then the flow and the board | `examples/out/process-map-ai-opportunity/end-to-end-ai.html` |
 | **citation-points** | Every citation point the workspace's pages use, with its verbatim text and what cites it | `examples/out/citation-points.html` |
-| **document** | A Source document: an A4 one-pager or a long screen page, every claim cited | `examples/out/document/request-handling-summary.html` |
+| **document** | A Source document: an A4 one-pager or a long screen page, every claim cited | `examples/out/document/end-to-end-summary.html` (the small one: `examples/out/document/request-handling-summary.html`) |
 
 Build the examples with `python3 bs.py build examples` (or `uv run python bs.py build examples`), then open `examples/out/`.
 

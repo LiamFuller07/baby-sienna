@@ -684,7 +684,7 @@ def mk_svg(e, x, y, anchor_mid=False):
     )
 
 
-def prov_html(pairs, cls="pm-prov"):
+def prov_html(pairs, cls="pm-prov", gap="Gap"):
     """FORMATS 2.6, with markers for addresses: one Gap clause with each needle and its searches, one Grounded
     clause, one Inferred clause per reading; each its own colour. Full addresses are in Citation points."""
     gaps = [(c, es) for c, es in pairs if ctype(c) == "absent"]
@@ -698,7 +698,7 @@ def prov_html(pairs, cls="pm-prov"):
             if any(e["partial"] for c, es in gaps for e in es)
             else ""
         )
-        parts.append(f'<span class="pm-prov-gap"><b>Gap</b> · {" · ".join(bits)}{tag}</span>')
+        parts.append(f'<span class="pm-prov-gap"><b>{gap}</b> · {" · ".join(bits)}{tag}</span>')
     if grounded:
         parts.append(f'<span class="pm-prov-grounded"><b>Grounded</b>{mks(grounded)}</span>')
     for c, es in inferred:
@@ -1288,8 +1288,8 @@ class MapModel:
             "steps": sum(1 for n in self.nodes if not n.dec),
             "decisions": sum(1 for n in self.nodes if n.dec),
             "groups": len(self.groups),
-            "gaps": len(self.gaps),
-            "clarifications": len(self.clars),
+            "gaps": sum(1 for g in self.gaps if not g.get("none")),
+            "clarifications": sum(1 for c in self.clars if not c.get("none")),
             "systems": len(self.systems),
         }
 
@@ -1327,17 +1327,17 @@ class MapModel:
             self.npairs[n.id] = reg.cites(n.d["cite"], (n.id, pre + n.id))
         self.gap_html = []
         for i, g in enumerate(self.gaps):
-            u = (f"Gap {i + 1}", pre + g["id"])  # Used by names an element as its page shows it
+            u = (card_name("gaps", g, i), pre + g["id"])  # Used by names an element as its page shows it
             title = prose_html(g["title"], reg, u)
             text = prose_html(g["text"], reg, u)
             pairs = reg.cites(g["cite"], u)
-            self.gap_html.append((g, i + 1, title, text, prov_html(pairs)))
+            self.gap_html.append((g, i + 1, title, text, prov_html(pairs, gap=prov_gap(g))))
         self.clar_html = []
         for i, c in enumerate(self.clars):
-            u = (f"Clarification {i + 1}", pre + c["id"])
+            u = (card_name("clarifications", c, i), pre + c["id"])
             title, shows, ask = (prose_html(c[k], reg, u) for k in ("title", "shows", "ask"))
             pairs = reg.cites(c["cite"], u)
-            self.clar_html.append((c, i + 1, title, shows, ask, prov_html(pairs)))
+            self.clar_html.append((c, i + 1, title, shows, ask, prov_html(pairs, gap=prov_gap(c))))
         self.notes()
 
     def point(self, key):
@@ -1680,22 +1680,37 @@ def system_key(systems, mm):
     return '<ul class="pm-key" aria-label="Systems">' + "".join(item(x) for x in systems) + "</ul>"
 
 
+def card_name(key, c, i):
+    """A card as its page shows it, for Used by (build_citations.py names it the same): Gap 2, Clarification 1, or
+    Gaps · None found."""
+    if c.get("none"):
+        return f"{key.capitalize()} · None found"
+    return f"{'Gap' if key == 'gaps' else 'Clarification'} {i + 1}"
+
+
+def prov_gap(c):
+    """The label of a card's absent searches: on a None found card a search is evidence, not a gap."""
+    return "Searched" if c.get("none") else "Gap"
+
+
 def card_steps(pre, c):
-    """A card's Steps line; a None found card lists no step (map-6)."""
+    """A card's Steps line: a None found card lists no step (map-6); an order clarification asks where its steps
+    come (map-5)."""
     if c.get("none"):
         return '<span class="pm-ev-steps">None found · no step listed</span>'
+    lead = "Order to confirm" if c.get("order") else "Steps"
     return (
-        '<span class="pm-ev-steps">Steps: '
+        f'<span class="pm-ev-steps">{lead}: '
         + ", ".join(f'<a href="#{pre}{x}">{x}</a>' for x in c["nodes"])
         + "</span>"
     )
 
 
 def card_li(pre, c, i, target):
+    """A card's item: numbered as its badges, except a None found card, which has no number and no badge."""
     cls = " ".join(k for k, on in (("is-target", target == c["id"]), ("is-none", c.get("none"))) if on)
-    return f'<li id="{pre}{c["id"]}" data-n="{0 if c.get("none") else i}"' + (
-        f' class="{cls}">' if cls else ">"
-    )
+    n = "" if c.get("none") else f' data-n="{i}"'
+    return f'<li id="{pre}{c["id"]}"{n}' + (f' class="{cls}">' if cls else ">")
 
 
 def gaps_html(mm, target=None):
@@ -2189,7 +2204,7 @@ class AiModel:
                 f'<span class="pm-ai-sys">{icon_svg(mm.systems[sid]["icon"])}{esc(mm.systems[sid]["label"])}</span>'
                 for sid in a["systems"]
             )
-            or '<span class="pm-ai-sys is-none">None named on the base map</span>'
+            or '<span class="pm-ai-sys is-none">None named</span>'
         )
         return (
             f'<details class="pm-ai-agentic"{" open" if open_ else ""}><summary><span class="pm-ai-ag-title">Agentic version</span>'
@@ -2594,7 +2609,9 @@ class FlowView:
         mp = [self.col[p] for p in preds if self.row.get(p) == 0]
         op = [self.col[p] for p in preds if self.row.get(p, 0) > 0]
         ms = [self.col[s] for s in succs if self.row.get(s) == 0]
-        lo = max([c + 1 for c in op] + mp + [0])
+        lo = max(
+            [c + 1 for c in op] + mp + ([0] if preds or succs else [board])
+        )  # a loose step keeps its column
         hi = max(lo, min([board] + ms))
         prefs = []
         for c in ([max(mp)] if mp else []) + ([max(op) + 1] if op else []) + [board]:
@@ -3447,7 +3464,9 @@ class FlowView:
         pre = mm.pre
         on = set(self.main)
         parent, kids = {}, {nid: [] for nid in self.ix}
-        rest = [n.id for n in mm.nodes if n.id not in on]
+        linked = {x for e in self.E for x in (e["from"], e["to"])}
+        loose = [n.id for n in mm.nodes if n.id not in on and n.id not in linked]  # its order is to confirm
+        rest = [n.id for n in mm.nodes if n.id not in on and n.id in linked]
         for back in (False, True):  # forward edges first; a step only a loop leads to comes after
             moved = True
             while moved:
@@ -3513,6 +3532,8 @@ class FlowView:
                 )
                 out += f'<li class="pm-fl-pg">{esc(gd["id"])} · {esc(gd["label"])}<span class="pm-fl-psq">{views}</span></li>'
             out += row(nid, 0)
+        if loose:  # no edge says where these come: listed apart, with no connector, never under another step
+            out += '<li class="pm-fl-pg">Order to confirm</li>' + "".join(row(nid, 0) for nid in loose)
         alls = "".join(
             f'<p class="pm-fl-pall"><span class="pm-ai-mark is-{i["origin"]}" aria-hidden="true">{i["id"][3:]}</span>'
             f"<span><b>{i['id']}</b> {esc(i['title'])} · every step</span></p>"
@@ -3758,6 +3779,19 @@ def first(folder, ws):
     return files[0]
 
 
+def real_card(cards, fallback):
+    """The first card that is neither None found nor an order question, as a plain card (the specimen variants
+    give it their own steps), or the fallback."""
+    c = next((c for c in cards or [] if not c.get("none") and not c.get("order")), fallback)
+    return {k: v for k, v in c.items() if k not in ("none", "order")}
+
+
+def none_card(c, id_, title, text):
+    """A None found card made from a real one: no steps, and only its grounded and inferred citations."""
+    keep = [x for x in c["cite"] if ctype(x) != "absent"]
+    return dict(c, id=id_, title=title, text=text, none=True, nodes=[], cite=keep or c["cite"])
+
+
 def pm_specimen(ws, idx, base_path):
     m = load_json(base_path, base_path.name)
     where = f"process-map/{base_path.name}"
@@ -3857,20 +3891,18 @@ def pm_specimen(ws, idx, base_path):
     for d in vd:
         d.pop("group", None)
         d["lane"] = lane1
-    clar0 = (
-        m.get("clarifications")
-        or [
-            {
-                "title": "Who confirms this step?",
-                "shows": "The step is listed.",
-                "ask": "Who does it?",
-                "cite": gcite[:1],
-            }
-        ]
-    )[0]
-    gap0 = (
-        m.get("gaps") or [{"title": "No owner is named", "text": "The step has no owner.", "cite": gcite[:1]}]
-    )[0]
+    clar0 = real_card(
+        m.get("clarifications"),
+        {
+            "title": "Who confirms this step?",
+            "shows": "The step is listed.",
+            "ask": "Who does it?",
+            "cite": gcite[:1],
+        },
+    )
+    gap0 = real_card(
+        m.get("gaps"), {"title": "No owner is named", "text": "The step has no owner.", "cite": gcite[:1]}
+    )
     vm = variant(
         m,
         systems=m.get("systems", []) + extra_sys,
@@ -4252,6 +4284,37 @@ def pm_specimen(ws, idx, base_path):
     # 13, 14 cards
     gid = (m.get("gaps") or [{}])[0].get("id")
     cid = (m.get("clarifications") or [{}])[0].get("id")
+    g_real = real_card(m.get("gaps"), {"cite": gcite[:1]})
+    c_real = real_card(m.get("clarifications"), {"title": "", "shows": "", "ask": "", "cite": gcite[:1]})
+    none_found_gap = none_card(
+        g_real, "GAP-01", "No step is missing from the sources", "Every step is in a record with its owner."
+    )
+    none_found_clar = dict(
+        none_card(c_real, "P01", "Nothing is left to confirm", ""),
+        shows="Every step is in a record with its owner.",
+        ask="Nothing.",
+    )
+    none_found_clar.pop("text")
+    outs = {e["from"] for e in m.get("edges", [])}
+    leaf_n = next(
+        (n for n in reversed(m["nodes"]) if n.get("kind", "step") == "step" and n["id"] not in outs),
+        m["nodes"][-1],
+    )
+    leaf = leaf_n["id"]
+    order_clar = next(
+        (c for c in m.get("clarifications", []) if c.get("order")),
+        dict(
+            c_real,
+            id="P01",
+            title="Where does this step come?",
+            shows="The step list names the step, but not the step it follows.",
+            ask="Which step does it follow?",
+            nodes=[leaf],
+            order=True,
+            cite=[c for c in leaf_n["cite"] if ctype(c) == "grounded"] or c_real["cite"],
+        ),
+    )
+    loose_m = variant(m, edges=[e for e in m.get("edges", []) if leaf not in (e["from"], e["to"])])
     add(
         "pm-gaps",
         "Gaps card",
@@ -4259,6 +4322,13 @@ def pm_specimen(ws, idx, base_path):
         [
             sp_fig(["list"], gaps_html(mk(m, "g1-")), block=True, gen=False),
             sp_fig(["targeted item"], gaps_html(mk(m, "g2-"), target=gid), block=True, gen=False),
+            sp_fig(
+                ["None found"],
+                gaps_html(mk(variant(m, gaps=[none_found_gap]), "g3-")),
+                block=True,
+                gen=True,
+                note="The only card: no number, no step, its citations say why.",
+            ),
         ],
         "360px",
     )
@@ -4269,6 +4339,19 @@ def pm_specimen(ws, idx, base_path):
         [
             sp_fig(["list"], clar_html(mk(m, "c1-")), block=True, gen=False),
             sp_fig(["targeted item"], clar_html(mk(m, "c2-"), target=cid), block=True, gen=False),
+            sp_fig(
+                ["order to confirm"],
+                clar_html(mk(variant(loose_m, clarifications=[order_clar]), "c3-")),
+                block=True,
+                gen=not any(c.get("order") for c in m.get("clarifications", [])),
+                note="order: true. It lists only steps no edge joins, and excuses them from Flows.",
+            ),
+            sp_fig(
+                ["None found"],
+                clar_html(mk(variant(m, clarifications=[none_found_clar]), "c4-")),
+                block=True,
+                gen=True,
+            ),
         ],
         "360px",
     )
@@ -4368,8 +4451,8 @@ def pm_specimen(ws, idx, base_path):
         groups=[{"id": "G01", "label": "Intake"}],
         nodes=en,
         edges=[{"from": "EMP-01", "to": "EMP-02"}],
-        gaps=[dict(m["gaps"][0], nodes=["EMP-02"])],
-        clarifications=[dict(m["clarifications"][0], nodes=["EMP-01"])],
+        gaps=[dict(gap0, id="GAP-01", nodes=["EMP-02"])],
+        clarifications=[dict(clar0, id="P01", nodes=["EMP-01"])],
     )
     add(
         "pm-empty",
@@ -4565,6 +4648,14 @@ def ai_specimen(ws, idx, base_path, layer_path):
         [
             sp_fig(["folded"], agr(agi, "g1-"), block=True, wide=True, gen=False),
             sp_fig(["open", "print (open)"], agr(agi, "g2-", True), block=True, wide=True, gen=False),
+            sp_fig(
+                ["no system named"],
+                agr(dict(agi, agentic=dict(agi["agentic"], systems=[])), "g4-", True),
+                block=True,
+                wide=True,
+                gen=True,
+                note="systems: []. Only when the steps it touches use no system (ai-4).",
+            ),
             sp_fig(
                 ["absent"],
                 row("", "g3-", noag or dict(by[rid], agentic=None)),

@@ -18,7 +18,7 @@ Five templates. Each has a design system in `design-system/<template>/` (its REA
 
 **citation-points: every citation point in the workspace.** A computed page: the union of every page's own Citation points section. For each point: its record and locator, the verbatim text, what uses it (linked to the element), and a link back to its file's row in Original data received. Example: `examples/out/citation-points.html`.
 
-**document: the Source document.** One `document/<name>.md` in the document type's Markdown subset becomes an A4 one-pager or a long screen page, for a reference-point document. Every claim carries a numbered marker, and the page ends with its Citation points section. Example: `examples/out/document/request-handling-summary.html`.
+**document: the Source document.** One `document/<name>.md` in the document type's Markdown subset becomes an A4 one-pager or a long screen page, for a reference-point document. Every claim carries a numbered marker, and the page ends with its Citation points section. Example: `examples/out/document/end-to-end-summary.html`, the showcase (the end-to-end purchase process of the map and the AI layer above: the document on one A4 sheet, its Citation points section on a second). `examples/out/document/request-handling-summary.html` is the small one.
 
 ---
 
@@ -124,9 +124,9 @@ Each template's required elements are in `design-system/<template>/template.json
 - [ ] **Header**: `meta`: kicker, title, client and date (schema-1).
 - [ ] **Lanes**: `lanes[] {id, label}`: at least one, each a role (map-3).
 - [ ] **Steps with owners**: `nodes[]`: at least one step, each in the lane of the role that owns it, with its `owner`, state and cite; only a gap-state step may leave `owner` out, its gap card saying so (build-7).
-- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow; a step whose order no source states is listed instead by a clarification that asks where it comes (map-5).
-- [ ] **Gaps card**: `gaps[] {id, title, text, nodes, cite}`: at least one, proven by an absent search (cite-4); or, when the sources leave no step out, one None found card (`none: true`, `nodes: []`) that cites why (map-6). Never invent a gap.
-- [ ] **Clarifications card**: `clarifications[] {id, title, shows, ask, nodes, cite}`: at least one (cite-4); or one None found card (`none: true`, `nodes: []`) that cites why nothing is left to confirm (map-6).
+- [ ] **Flows**: `edges[] {from, to}`: every node joined to the flow, and at least one edge when the map has two or more nodes; a step whose order no source states is listed instead by an order clarification (`order: true`) that asks where it comes, and has no edge (map-5). A map needs at least one order a record states; when the records state none, do not draw the map yet: ask the client for the order first, or write a document instead.
+- [ ] **Gaps card**: `gaps[] {id, title, text, nodes, cite}`: at least one, proven by an absent search (cite-4); or, when no step is in gap state and every step's owner and outcome is in a record it cites (a step whose order no record states is asked by an order clarification instead), one None found card (`none: true`, `nodes: []`) that cites those records, grounded or inferred (map-6). Never invent a gap.
+- [ ] **Clarifications card**: `clarifications[] {id, title, shows, ask, nodes, cite}`: at least one (cite-4); or one None found card (`none: true`, `nodes: []`) that cites why nothing is left to confirm, grounded or inferred (map-6). An order clarification (`order: true`) asks where its steps come.
 - [ ] **Citation points section, with in-place markers**: computed from every `cite`: one numbered marker on each cited element, and one row per point (build-7).
 
 Optional: the system key (`systems[]`) and the views band (`groups[]`, two or more).
@@ -147,7 +147,7 @@ Optional: the system key (`systems[]`) and the views band (`groups[]`, two or mo
 - [ ] **At least one AI item**: `ai[] {id, title, origin, does, nodes or groups, cite, agentic}` (ai-2).
 - [ ] **Origin, named or suggested**: `ai[].origin`: `named` (a grounded quote) or `suggested` (an inferred reading) (ai-3).
 - [ ] **What it would do**: `ai[].does`: one to three sentences (prose-4).
-- [ ] **The agentic version of every item**: `ai[].agentic {trigger, steps, decides, systems, logging}` (ai-4); `systems` is `[]` when the base names no system the agent would use, and the page prints None named.
+- [ ] **The agentic version of every item**: `ai[].agentic {trigger, steps, decides, systems, logging}` (ai-4); `systems` is `[]` only when the steps the item touches use no system (an error otherwise, ai-4), and the page prints None named.
 - [ ] **List view, the default**: computed: the first tab, selected on load, one row per item (build-7).
 - [ ] **Flow view**: computed from the base: the second tab, every base node on it (build-6).
 - [ ] **On-the-map view**: computed: the third tab, the base board with the layer (build-5).
@@ -183,7 +183,7 @@ Optional and computed: one group per record file; the filter and **Show only unu
 | Reads | `records/*.json`, `design-system/document/README.md`, `formats/FORMATS.md` section 4 |
 | Writes | `<ws>/document/<name>.md` (front matter keys `title`, `label`, `date`, `footer`, `mode: a4\|screen`) |
 | Build | `uv run python bs.py build <ws> document/<name>` |
-| Skill · README · example | `.claude/skills/document/SKILL.md` · `design-system/document/README.md` · `examples/document/request-handling-summary.md` → `examples/out/document/request-handling-summary.html` |
+| Skill · README · example | `.claude/skills/document/SKILL.md` · `design-system/document/README.md` · `examples/document/end-to-end-summary.md` → `examples/out/document/end-to-end-summary.html` (the small one: `examples/document/request-handling-summary.md` → `examples/out/document/request-handling-summary.html`) |
 
 - [ ] **Title and lead**: the `#` title, then a `>` lead block right under it (doc-1).
 - [ ] **At least one claim section**: a `##` heading with at least one cited claim under it (doc-3).
@@ -221,6 +221,8 @@ Every claim cites a record. Nothing is uncited except computed counts. A missing
 | map group, edge | none: they carry no citation |
 | map gap | an absent search **and** a grounded citation |
 | map clarification | grounded |
+| map gap or clarification, None found (`none: true`) | grounded or inferred: the records that show nothing is missing; an absent search may add to it, never alone. The only card of its kind (map-6) |
+| map clarification, order (`order: true`) | grounded; it lists only steps no edge joins (map-5) |
 | AI item, named | a grounded quote holding an AI term, from a source that is not web (ai-3) |
 | AI item, suggested | inferred; web pages may add to it, never alone (cite-5) |
 | inventory module | inferred |
@@ -250,7 +252,7 @@ Two Claude Code workflow scripts run the agents. Run one with the Workflow tool,
 |---|---|---|---|
 | `.claude/agents/converter.md` | `inputs/` | `records/` only | transcribes, never interprets: units verbatim, in reading order, with the right kind, locators and coverage |
 | `.claude/agents/author.md` | `records/`, the template's README and skill | one section file | writes it, loops on `bs.py check` until it exits 0, fulfils every required element |
-| `.claude/agents/checker.md` | everything | nothing | the duties no rule can decide (`formats/FORMATS.md` section 6): grounded node titles, absent needles, named AI items, edges, UNCHECKED record files |
+| `.claude/agents/checker.md` | everything | nothing | the duties no rule can decide (`formats/FORMATS.md` section 6): grounded node titles, absent needles, named AI items, edges, UNCHECKED record files, None found cards, order clarifications and agentic versions with `systems: []` |
 
 The supporting skills: `.claude/skills/convert/SKILL.md` (inputs → records) and `.claude/skills/cite/SKILL.md` (the three types and the rules).
 

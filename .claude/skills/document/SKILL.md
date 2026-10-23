@@ -80,4 +80,4 @@ The Citation points section is computed onto the last A4 sheet, about one line p
 
 ## Example
 
-`examples/document/request-handling-summary.md` → `examples/out/document/request-handling-summary.html`. The type's own guide is `design-system/document/example.md`. README: `design-system/document/README.md`.
+`examples/document/end-to-end-summary.md` → `examples/out/document/end-to-end-summary.html`, the showcase: the end-to-end purchase process of `examples/process-map/end-to-end.json` and `examples/process-map-ai-opportunity/end-to-end-ai.json`, its AI items and points to confirm linked to their cards by id. Its `<!-- page -->` after the callout keeps the document on one A4 sheet and gives its Citation points section the second. The small one is `examples/document/request-handling-summary.md` → `examples/out/document/request-handling-summary.html`. The type's own guide is `design-system/document/example.md`. README: `design-system/document/README.md`.

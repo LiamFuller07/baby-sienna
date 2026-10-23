@@ -25,7 +25,7 @@ Supports every template. Every claim cites a record that `bs.py check` can resol
 python3 bs.py check --rules      # the generated table, formats/FORMATS.md section 2.3
 ```
 
-- **Map:** a system needs grounded (its label in a record it cites); a node grounded (state grounded or gap) or inferred (state inferred); a gap an absent search **and** a grounded citation; a clarification grounded; a lane nothing unless it holds no step. Groups and edges carry none.
+- **Map:** a system needs grounded (its label in a record it cites); a node grounded (state grounded or gap) or inferred (state inferred); a gap an absent search **and** a grounded citation; a clarification grounded; a None found gap or clarification card (`none: true`) grounded or inferred, an absent search adding to it but never alone; a lane nothing unless it holds no step. Groups and edges carry none.
 - **AI item:** named needs a grounded quote holding an AI term, from a source that is not web (ai-3); suggested needs inferred.
 - **Inventory module:** inferred.
 - **Document sentence:** any of the three, by a bracket in the sentence or a line straight after its block. A Gap line must be PROVEN.
@@ -47,4 +47,4 @@ python3 bs.py check --rules      # the generated table, formats/FORMATS.md secti
 
 ## Example
 
-Every file in `examples/` cites; `examples/out/citation-points.html` lists all 115 points. README: `formats/FORMATS.md` section 2.
+Every file in `examples/` cites; `examples/out/citation-points.html` lists every point (`bs.py build` prints how many). README: `formats/FORMATS.md` section 2.
